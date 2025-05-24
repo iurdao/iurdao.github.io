@@ -91,13 +91,22 @@ html {
   }
 }
 
+@font-face {
+  font-family: Unbounded;
+  src: url('/assets/font/Unbounded-Bold.woff2');
+  font-style: normal;
+  font-weight: normal;
+  unicode-range: U+0025-00FF;
+}
+
 .site-brand {
   line-height: $header-height;
   margin-right: 50px;
 
   .site-brand-inner {
-    @include relative-font-size(1.125);
-    font-weight: $base-font-weight;
+    @include relative-font-size(1.618);
+    font-family: Unbounded, serif;
+    font-weight: $base-font-weight * 2.0;
     letter-spacing: -1px;
     transition: 0.1s filter color;
 
@@ -132,6 +141,7 @@ html {
     line-height: $base-line-height;
     color: $header-text-color;
     transition: 0.1s ease-in-out;
+    font-family: Unbounded, serif;
 
     // Gaps between nav items, but not on the last one
     &:not(:last-child) {
@@ -604,7 +614,7 @@ html {
 
   .page-banner-inner {
     @include vertical-center(relative);
-
+    font-family: Unbounded, serif;
     color: $banner-text-color;
     padding: 10px 5px;
     text-shadow: 1px 1px 2px #33333355;

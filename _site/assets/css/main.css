@@ -297,13 +297,21 @@ html[data-scroll-status=down] .framework .sidebar {
   position: relative;
 }
 
+@font-face {
+  font-family: Unbounded;
+  src: url("/assets/font/Unbounded-Bold.woff2");
+  font-style: normal;
+  font-weight: normal;
+  unicode-range: U+0025-00FF;
+}
 .site-brand {
   line-height: 63.84px;
   margin-right: 50px;
 }
 .site-brand .site-brand-inner {
-  font-size: 15.75px;
-  font-weight: 400;
+  font-size: 22.652px;
+  font-family: Unbounded, serif;
+  font-weight: 800;
   letter-spacing: -1px;
   transition: 0.1s filter color;
 }
@@ -333,6 +341,7 @@ html[data-scroll-status=down] .framework .sidebar {
   line-height: 1.6;
   color: black;
   transition: 0.1s ease-in-out;
+  font-family: Unbounded, serif;
 }
 .site-nav .page-link:not(:last-child) {
   margin-right: 24px;
@@ -738,6 +747,7 @@ html[data-scroll-status=down] .framework .sidebar {
   position: relative;
   top: 50%;
   transform: translateY(-50%);
+  font-family: Unbounded, serif;
   color: #fdfdfd;
   padding: 10px 5px;
   text-shadow: 1px 1px 2px rgba(51, 51, 51, 0.3333333333);
