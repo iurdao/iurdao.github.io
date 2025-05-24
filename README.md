@@ -1,7 +1,7 @@
 # IURDAO: Illuminating the Polkadot Ecosystem 💡
 
 [![GitHub Issues](https://img.shields.io/github/issues/iurdao/iurdao.github.io.svg)](https://github.com/iurdao/iurdao.github.io/issues)
-[![GitHub Pull Requests](https://img.shields.io/github/pulls/iurdao/iurdao.github.io.svg)](https://github.com/iurdao/iurdao.github.io/pulls)
+![GitHub commit activity](https://img.shields.io/github/commit-activity/t/iurdao/iurdao.github.io)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 Welcome to the official GitHub repository for the IURDAO blog! IURDAO is an educational media organization dedicated to fostering knowledge creation, code analysis, and popular science within the Polkadot ecosystem. Our mission is to demystify complex concepts, analyze critical code implementations, and make Polkadot accessible to everyone.
