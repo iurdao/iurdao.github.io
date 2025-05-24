@@ -1,22 +1,30 @@
 ---
 layout: post
-title: CoreVM Engine
-subtitle: CoreVM Engine
+title: Inside PolkaVM - Unveiling the Core VM Engine
+subtitle: A Deep Dive into Secure, Efficient, and Configurable Program Execution
 categories: Technics
 tags: CoreVM Engine JAM PolkaVM
 ---
 
-# CoreVM Engine
-
-The Core VM Engine is the central execution system of PolkaVM, responsible for loading, compiling, and running guest programs in a secure and efficient manner. It provides the foundation for program execution, memory management, sandboxing, and interaction between host and guest code. For information about program representation, see [Program Representation](https://deepwiki.com/paritytech/polkavm/4-program-representation), and for the sandboxing system, see [Sandboxing](https://deepwiki.com/paritytech/polkavm/3-sandboxing).
+The Core VM Engine is the central execution system of PolkaVM, responsible for loading, compiling, and running guest programs in a secure and efficient manner. It provides the foundation for program execution, memory management, sandboxing, and interaction between host and guest code. For information about program representation, see [Program Representation](), and for the sandboxing system, see [Sandboxing](https://iurdao.github.io/technics/2025/05/24/Sandboxing.html).
 
 ## Architecture Overview
 
 The Core VM Engine consists of several key components that work together to enable secure and efficient execution of programs.
 
-Core VM Engine ArchitectureEngineModuleConfigurationRaw InstanceBackendInterpreter BackendCompiler BackendArchitecture-specific code generationSandbox implementationLinux SandboxGeneric Sandbox
-
-
+```mermaid!
+flowchart TD
+    A[Engine] --> B[Module]
+    B --> C[Raw Instance]
+    C --> D[Backend]
+    D --> E[Interpreter Backend]
+    D --> F[Compiler Backend]
+    F --> G[Architecture-specific code generation ]
+    A --> H[Configuration]
+    A --> I[Sandbox implementation]
+    I --> J[Linux Sandbox]
+    I --> K[Generic Sandbox]
+```
 
 Sources: [crates/polkavm/src/api.rs96-234](https://github.com/paritytech/polkavm/blob/910adbda/crates/polkavm/src/api.rs#L96-L234) [crates/polkavm/src/api.rs962-2044](https://github.com/paritytech/polkavm/blob/910adbda/crates/polkavm/src/api.rs#L962-L2044) [crates/polkavm/src/lib.rs1-172](https://github.com/paritytech/polkavm/blob/910adbda/crates/polkavm/src/lib.rs#L1-L172)
 
@@ -26,8 +34,60 @@ Sources: [crates/polkavm/src/api.rs96-234](https://github.com/paritytech/polkavm
 
 The `Engine` is the main entry point for using PolkaVM. It holds global state and configuration, and is responsible for creating new modules and managing sandbox workers.
 
-Engine+selected\_backend: BackendKind+selected\_sandbox: Option\<SandboxKind>+interpreter\_enabled: bool+crosscheck: bool+state: Arc\<EngineState>+allow\_dynamic\_paging: bool+allow\_experimental: bool+new(config: \&Config) : -> Result\<Engine, Error>+backend() : -> BackendKind+idle\_worker\_pids() : -> Vec\<u32>«enumeration»BackendKindCompilerInterpreter«enumeration»SandboxKindLinuxGenericEngineState+sandboxing\_enabled: bool+sandbox\_global: Option\<GlobalStateKind>+sandbox\_cache: Option\<WorkerCacheKind>+compiler\_cache: CompilerCache+module\_cache: ModuleCache
+```mermaid!
+classDiagram
+    Engine --> BackendKind
+    Engine --> SandboxKind
+    Engine --> EngineState
+    
+    class Engine {
+        +selected_backend: BackendKind
 
+        +selected_sandbox: Option~SandboxKind~
+
+        +interpreter_enabled: bool
+
+        +crosscheck: bool
+
+        +state: Arc~EngineState~
+
+        +allow_dynamic_paging: bool
+
+        +allow_experimental: bool
+
+        +new(config: &Config) -> Result~Engine, Error~
+
+        +backend（） -> BackendKind
+
+        +idle_worker_pids（） -> Vec~u32~
+    }
+
+    class BackendKind {
+        <<enumeration>>
+        Compiler
+        Interpreter
+    }
+
+
+    class SandboxKind {
+        <<enumeration>>
+        Linux
+        Generic
+    }
+
+    class EngineState {
+
+        +sandboxing_enabled: bool
+
+        +sandbox_global: Option~GlobalStateKind~
+
+        +sandbox_cache: Option~WorkerCacheKind~
+
+        +compiler_cache: CompilerCache
+
+        +module_cache: ModuleCache
+    }
+```
 
 
 Sources: [crates/polkavm/src/api.rs96-234](https://github.com/paritytech/polkavm/blob/910adbda/crates/polkavm/src/api.rs#L96-L234) [crates/polkavm/src/config.rs7-49](https://github.com/paritytech/polkavm/blob/910adbda/crates/polkavm/src/config.rs#L7-L49) [crates/polkavm/src/config.rs51-85](https://github.com/paritytech/polkavm/blob/910adbda/crates/polkavm/src/config.rs#L51-L85)
@@ -36,8 +96,61 @@ Sources: [crates/polkavm/src/api.rs96-234](https://github.com/paritytech/polkavm
 
 A `Module` represents a compiled program that can be instantiated for execution. It contains the program code, memory layout, and metadata about exports and imports.
 
-Module+blob() : : \&ProgramBlob+memory\_map() : : \&MemoryMap+default\_sp() : : RegValue+exports() : : Iterator\<ProgramExport>+imports() : : Imports+is\_64\_bit() : : bool+new(engine: \&Engine, config: \&ModuleConfig, bytes: ArcBytes) : -> Result\<Module, Error>+from\_blob(engine: \&Engine, config: \&ModuleConfig, blob: ProgramBlob) : -> Result\<Module, Error>+instantiate() : -> Result\<RawInstance, Error>ModulePrivate+engine\_state: Option\<Arc\<EngineState>>+crosscheck: bool+blob: ProgramBlob+compiled\_module: CompiledModuleKind+interpreted\_module: Option\<InterpretedModule>+memory\_map: MemoryMap+gas\_metering: Option\<GasMeteringKind>+is\_strict: bool+step\_tracing: bool+dynamic\_paging: bool+page\_size\_mask: u32+page\_shift: u32+instruction\_set: RuntimeInstructionSet+cost\_model: CostModelRef
+```mermaid!
+classDiagram
+    class Module {
 
+        +blob（） &ProgramBlob
+
+        +memory_map（） &MemoryMap
+
+        +default_sp（） RegValue
+
+        +exports（） Iterator~ProgramExport~
+
+        +imports（） Imports
+
+        +is_64_bit（） bool
+
+        +new(engine: &Engine, config: &ModuleConfig, bytes: ArcBytes) -> Result~Module, Error~
+
+        +from_blob(engine: &Engine, config: &ModuleConfig, blob: ProgramBlob) -> Result~Module, Error~
+
+        +instantiate（）-> Result~RawInstance, Error~
+}
+
+class ModulePrivate {
+    +engine_state: Option~Arc~EngineState~~
+
++crosscheck: bool
+
++blob: ProgramBlob
+
++compiled_module: CompiledModuleKind
+
++interpreted_module: Option~InterpretedModule~
+
++memory_map: MemoryMap
+
++gas_metering: Option~GasMeteringKind~
+
++is_strict: bool
+
++step_tracing: bool
+
++dynamic_paging: bool
+
++page_size_mask: u32
+
++page_shift: u32
+
++instruction_set: RuntimeInstructionSet
+
++cost_model: CostModelRef
+}
+
+Module --> ModulePrivate
+```
 
 
 Sources: [crates/polkavm/src/api.rs258-780](https://github.com/paritytech/polkavm/blob/910adbda/crates/polkavm/src/api.rs#L258-L780) [crates/polkavm/src/api.rs386-655](https://github.com/paritytech/polkavm/blob/910adbda/crates/polkavm/src/api.rs#L386-L655)
@@ -46,7 +159,98 @@ Sources: [crates/polkavm/src/api.rs258-780](https://github.com/paritytech/polkav
 
 A `RawInstance` is an instantiated module that can be executed. It holds the execution state including registers, memory, and a pointer to the current instruction.
 
-RawInstance+module: Module+backend: InstanceBackend+crosscheck\_instance: Option\<Box\<InterpretedInstance>>+module() : -> \&Module+is\_64\_bit() : -> bool+run() : -> Result\<InterruptKind, Error>+reg(reg: Reg) : -> RegValue+set\_reg(reg: Reg, value: RegValue)+read\_u8(address: u32) : -> Result\<u8, MemoryAccessError>+read\_u16(address: u32) : -> Result\<u16, MemoryAccessError>+read\_u32(address: u32) : -> Result\<u32, MemoryAccessError>+read\_u64(address: u32) : -> Result\<u64, MemoryAccessError>+write\_u8(address: u32, value: u8) -> ResultUnsupported markdown: del+write\_u16(address: u32, value: u16) -> ResultUnsupported markdown: del+write\_u32(address: u32, value: u32) -> ResultUnsupported markdown: del+write\_u64(address: u32, value: u64) -> ResultUnsupported markdown: del«enumeration»InstanceBackendCompiledLinux(SandboxInstance\<SandboxLinux>)CompiledGeneric(SandboxInstance\<SandboxGeneric>)Interpreted(InterpretedInstance)
+```mermaid!
+
+classDiagram
+    class RawInstance {
+
+       +module: Module
+
++backend: InstanceBackend
+
++crosscheck_instance: Option~Box~InterpretedInstance~~
+
++module(&self) -> &Module
+
++is_64_bit(&self) -> bool
+
++run(&mut self) -> Result~InterruptKind，Error ~
+
++reg(&self, reg: Reg) -> RegValue
+
++set_reg(&mut self, reg: Reg, value: RegValue)
+
++set_gas(&mut self, gas: Gas)
+
++program_counter(&self) -> Option~ProgramCounter~
+
++next_program_counter(&self) -> Option~ProgramCounter~
+
++set_next_program_counter(&mut self, pc: ProgramCounter) 
+
++clear_regs(&mut self) 
+
++set_accessible_aux_size(&mut self, size: u32) -> Result~（），Error~
+
++reset_memory(&mut self) -> Result~（）, Error~
+
++is_memory_accessible(&self, address: u32, size: u32, is_writable: bool) -> bool
+
++read_memory_into~'slice, B~(&self, address: u32, buffer: &'slice mut B) -> Result~&'slice mut [u8], MemoryAccessError~
+
++write_memory(&mut self, address: u32, data: &[u8]) -> Result~（）, MemoryAccessError~
+
++read_memory(&self, address: u32, length: u32) -> Result~Vec~u8~, MemoryAccessError~
+
++zero_memory(&mut self, address: u32, length: u32) -> Result~（）, MemoryAccessError~
+
++protect_memory(&mut self, address: u32, length: u32) -> Result~（）, MemoryAccessError~
+
++free_pages(&mut self, address: u32, length: u32) -> Result~（）, Error~
+
++heap_size(&self) -> u32
+
++sbrk(&mut self, size: u32) -> Result~ Option~u32~, Error ~
+
++prepare_call_untyped(&mut self, pc: ProgramCounter, args: &[RegValue])
+
++prepare_call_typed~FnArgs~(&mut self, pc: ProgramCounter, args: FnArgs)
+
++get_result_typed~FnResult~(&self) -> FnResult
+
++pid(&self) -> Option~u32~
+
++next_native_program_counter(&self) -> Option~usize~
+
++read_u8(address: u32) : -> Result~u8, MemoryAccessError~
+
++read_u16(address: u32) : -> Result~u16, MemoryAccessError~
+
++read_u32(address: u32) : -> Result~u32, MemoryAccessError~
+
++read_u64(address: u32) : -> Result~u64, MemoryAccessError~
+
++write_u8(address: u32, value: u8) -> Result~（）, MemoryAccessError~
+
++write_u16(address: u32, value: u16) -> Result~（）, MemoryAccessError~
+
++write_u32(address: u32, value: u32) -> Result~（）, MemoryAccessError~
+
++write_u64(address: u32, value: u64) -> Result~（）, MemoryAccessError~
+}
+
+class InstanceBackend{
+    ~~enumeratio~~
+    ompiledLinux(SandboxInstance~SandboxLinux~)
+
+    CompiledGeneric(SandboxInstance~SandboxGeneric~)
+
+    Interpreted(InterpretedInstance)
+}
+
+RawInstance --> InstanceBackend
+
+```
 
 
 
@@ -56,7 +260,40 @@ Sources: [crates/polkavm/src/api.rs962-2044](https://github.com/paritytech/polka
 
 The execution flow of the Core VM Engine encompasses program loading, instantiation, and the execution cycle.
 
-"Execution Backend""RawInstance""Module""Engine""Host Program""Execution Backend""RawInstance""Module""Engine""Host Program"alt\[Normal Execution]\[Host Call]\[Error Condition]create(config)new module(blob)from\_blob(engine, config, blob)ModuleModuleinstantiate()new(module)initializeRawInstanceset\_reg(...)run()run()InterruptKind::FinishedInterruptKind::FinishedInterruptKind::Ecalli(n)InterruptKind::Ecalli(n)set\_reg(...)run()InterruptKind::Trap/NotEnoughGas/SegfaultInterruptKind::Trap/NotEnoughGas/Segfault
+```mermaid!
+
+sequenceDiagram
+    participant A as Host Program
+    participant B as Engine
+    participant C as Module
+    participant D as RawInstance
+    participant E as Execution Backend
+    A->>B: create(config)
+    A->>B: new module(blob)
+    B->>C: from_blob(engine, config, blob)
+    C-->>B: Module
+    B-->>A: Module
+    A->>C: instantiate()
+    C->>D: new(module)
+    C->>E: initialize
+    C-->>A: initialize
+    A->>D: set_reg(...)
+    A->>D: run()
+    D->>E: run()
+    alt Normal Execution
+        E-->>D: InterruptKind::Finished
+        D-->>A: InterruptKind::Finished
+    else Host Call
+        E-->>D: InterruptKind::Ecalli(n)
+        D-->>A: InterruptKind::Ecalli(n)
+        A->>D: set_reg(...)
+        A->>D: run()
+     else Error Condition
+        E-->>D: InterruptKind::Trap/NotEnoughGas/Segfault
+        D-->>A: InterruptKind::Trap/NotEnoughGas/Segfault
+    end   
+
+```
 
 
 
@@ -104,9 +341,28 @@ The Core VM Engine supports two execution backends:
 
 The Interpreter backend executes instructions one by one, interpreting each instruction as it runs. It's implemented in `InterpretedInstance`:
 
-InterpretedInstance+module: Module+basic\_memory: BasicMemory+dynamic\_memory: DynamicMemory+program\_counter: ProgramCounter+program\_counter\_valid: bool+next\_program\_counter: Option\<ProgramCounter>+next\_program\_counter\_changed: bool+cycle\_counter: u64+gas: i64+regs: \[u64; Reg::ALL.len() : ]+new\_from\_module(module: Module, force\_step\_tracing: bool) : -> Self+run() : -> Result\<InterruptKind, Error>+reg(reg: Reg) : -> RegValue+set\_reg(reg: Reg, value: RegValue)
+```mermaid!
 
+classDiagram
+    class InterpretedInstance{
+     +module: Module
+     +basic_memory: BasicMemory
+     +dynamic_memory: DynamicMemory
+     +program_counter: ProgramCounter
+     +program_counter_valid: bool
+     +next_program_counter: Option ~ProgramCounter~
+     +next_program_counter_changed: bool
+     +cycle_counter: u64
+     +gas: i64
+     +regs: [u64; Reg::ALL.len]
+     
+     +new_from_module(module: Module, force_step_tracing: bool) -> Self
+     +run() -> Result ~InterruptKind, Error~
+     +reg(reg: Reg) -> RegValue
+     +set_reg(reg: Reg, value: RegValue)
+    }
 
+```
 
 Sources: [crates/polkavm/src/interpreter.rs397-752](https://github.com/paritytech/polkavm/blob/910adbda/crates/polkavm/src/interpreter.rs#L397-L752) [crates/polkavm/src/interpreter.rs1-20](https://github.com/paritytech/polkavm/blob/910adbda/crates/polkavm/src/interpreter.rs#L1-L20)
 
@@ -114,8 +370,20 @@ Sources: [crates/polkavm/src/interpreter.rs397-752](https://github.com/paritytec
 
 The Compiler backend translates the VM instructions to native machine code, which is executed directly by the CPU. This provides better performance but is more complex and requires platform-specific optimizations:
 
-Compiler Backend FlowProgramBlobCompiler VisitorGas VisitorArchitecture VisitorGas Metering StubsNative Machine CodeCompiled ModuleSandbox Execution
+```mermaid!
 
+flowchart TD
+
+    A[ProgramBlob] --> B[Compiler Visitor]
+    B --> C[Gas Visitor]
+    B --> D[Architecture Visitor]
+    C --> E[Gas Metering Stubs] 
+    D --> F[Native Machine Code]
+    E --> G[Compiled Module]
+    F --> G
+    G --> H[Sandbox Execution]
+
+```
 
 
 Sources: [crates/polkavm/src/api.rs237-256](https://github.com/paritytech/polkavm/blob/910adbda/crates/polkavm/src/api.rs#L237-L256) [crates/polkavm/src/api.rs496-575](https://github.com/paritytech/polkavm/blob/910adbda/crates/polkavm/src/api.rs#L496-L575)
@@ -124,7 +392,19 @@ Sources: [crates/polkavm/src/api.rs237-256](https://github.com/paritytech/polkav
 
 The VM has a well-defined memory layout to ensure security and proper isolation:
 
-Memory LayoutVM Memory SpaceGuard PagesCode SectionRead-Only Data SectionRead-Write Data SectionStack RegionAuxiliary Data RegionHeap (via sbrk)
+```mermaid!
+
+flowchart LR
+
+        A[VM Memory Space] --> B[Guard Pages]
+        A --> C[Code Section]
+        A --> D[Read-Only Data Section]
+        A --> E[Read-Write Data Section] 
+        A --> F[Stack Region]
+        A --> G[Auxiliary Data Region]
+        A --> H["Heap (via sbrk)"]
+
+```
 
 
 
@@ -192,7 +472,19 @@ Sources: [crates/polkavm/src/config.rs392-583](https://github.com/paritytech/pol
 
 Gas metering limits the computational resources a program can use:
 
-Gas MeteringModule ConfigurationGas Metering KindSynchronousAsynchronousCheck after every instructionPeriodic checkingInterrupt: NotEnoughGas
+```mermaid!
+
+flowchart TD
+
+    A[Module Configuration] --> B[Gas Metering Kind]
+    B --> C[Synchronous]
+    B --> D[Asynchronous]
+    C --> E[Check after every instruction] 
+    D --> F[Periodic checking]
+    E --> G[Interrupt: NotEnoughGas]
+    F --> G
+
+```
 
 
 

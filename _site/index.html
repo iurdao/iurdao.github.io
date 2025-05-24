@@ -999,102 +999,21 @@ function googleTranslateElementInit() {
 
 
 <h2 class="post-title">
-        <a class="post-link" href="/technics/2025/05/22/Sandboxing.html">
-          Sandboxing
+        <a class="post-link" href="/technics/2025/05/24/Unlock-Untrusted-Code.html">
+          Unlock Untrusted Code - PolkaVM's Architecture Deep Dive
         </a>
       </h2>
       <div class="post-meta">
-        <span class="post-date"><i class="fa fa-calendar"></i> May 22, 2025</span>
-        <span class="post-reading-time left-vsplit"><i class="fa fa-clock-o"></i> About 9 mins</span>
+        <span class="post-date"><i class="fa fa-calendar"></i> May 24, 2025</span>
+        <span class="post-reading-time left-vsplit"><i class="fa fa-clock-o"></i> About 5 mins</span>
       </div>
-      <a class="post-excerpt" href="/technics/2025/05/22/Sandboxing.html">
+      <a class="post-excerpt" href="/technics/2025/05/24/Unlock-Untrusted-Code.html">
         <p>
-        Sandboxing
+        Overview
 
-Sandboxing is a critical security feature in PolkaVM that isolates guest program execution from the host system. This isolation is essential for preventing malicious or erroneous code from affecting the host environment or accessing unauthorized resources. This document explains how PolkaVM implements sandboxing, the different sandbo... <span class="read_more">Read More</span>
-        </p>
-      </a>
-      <div class="post-tags">
-<a class="post-tag" href="/tags.html#JAM">#JAM</a><a class="post-tag" href="/tags.html#PolkaVM">#PolkaVM</a><a class="post-tag" href="/tags.html#Sandboxing">#Sandboxing</a>
-</div>
-    </li>
-<li>
-      
+PolkaVM is a high-performance, sandboxed virtual machine designed to securely execute RISC-V programs. It serves as a lightweight and efficient execution environment with a strong focus on security, determinism, and performance. This page provides a high-level introduction to the PolkaVM system, its architecture, and key components.
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-<h2 class="post-title">
-        <a class="post-link" href="/technics/2025/05/22/Demystify-PolkaVM.html">
-          PolkaVM Overview
-        </a>
-      </h2>
-      <div class="post-meta">
-        <span class="post-date"><i class="fa fa-calendar"></i> May 22, 2025</span>
-        <span class="post-reading-time left-vsplit"><i class="fa fa-clock-o"></i> About 6 mins</span>
-      </div>
-      <a class="post-excerpt" href="/technics/2025/05/22/Demystify-PolkaVM.html">
-        <p>
-        PolkaVM Overview
-
-PolkaVM is a high-performance, sandboxed virtual machine designed to securely execute RISC-V programs. It serves as a lightweight and efficient execution environment with a strong focus on security, determinism, and performance. This page provides a high-level introduction to the PolkaVM system, its architecture, and key compon... <span class="read_more">Read More</span>
+F... <span class="read_more">Read More</span>
         </p>
       </a>
       <div class="post-tags">
@@ -1165,19 +1084,98 @@ PolkaVM is a high-performance, sandboxed virtual machine designed to securely ex
 
 
 <h2 class="post-title">
-        <a class="post-link" href="/technics/2025/05/22/CoreVM-Engine.html">
-          CoreVM Engine
+        <a class="post-link" href="/technics/2025/05/24/Sandboxing.html">
+          Isolate or Integrate? PolkaVM's Sandboxing Choices Explained 🤔
         </a>
       </h2>
       <div class="post-meta">
-        <span class="post-date"><i class="fa fa-calendar"></i> May 22, 2025</span>
+        <span class="post-date"><i class="fa fa-calendar"></i> May 24, 2025</span>
         <span class="post-reading-time left-vsplit"><i class="fa fa-clock-o"></i> About 8 mins</span>
       </div>
-      <a class="post-excerpt" href="/technics/2025/05/22/CoreVM-Engine.html">
+      <a class="post-excerpt" href="/technics/2025/05/24/Sandboxing.html">
         <p>
-        CoreVM Engine
+        Sandboxing is a critical security feature in PolkaVM that isolates guest program execution from the host system. This isolation is essential for preventing malicious or erroneous code from affecting the host environment or accessing unauthorized resources. This document explains how PolkaVM implements sandboxing, the different sandbox implementa... <span class="read_more">Read More</span>
+        </p>
+      </a>
+      <div class="post-tags">
+<a class="post-tag" href="/tags.html#JAM">#JAM</a><a class="post-tag" href="/tags.html#PolkaVM">#PolkaVM</a><a class="post-tag" href="/tags.html#Sandboxing">#Sandboxing</a>
+</div>
+    </li>
+<li>
+      
 
-The Core VM Engine is the central execution system of PolkaVM, responsible for loading, compiling, and running guest programs in a secure and efficient manner. It provides the foundation for program execution, memory management, sandboxing, and interaction between host and guest code. For information about program representation, ... <span class="read_more">Read More</span>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<h2 class="post-title">
+        <a class="post-link" href="/technics/2025/05/24/Inside-PolkaVM-Unveiling-the-Core-VM-Engine.html">
+          Inside PolkaVM - Unveiling the Core VM Engine
+        </a>
+      </h2>
+      <div class="post-meta">
+        <span class="post-date"><i class="fa fa-calendar"></i> May 24, 2025</span>
+        <span class="post-reading-time left-vsplit"><i class="fa fa-clock-o"></i> About 6 mins</span>
+      </div>
+      <a class="post-excerpt" href="/technics/2025/05/24/Inside-PolkaVM-Unveiling-the-Core-VM-Engine.html">
+        <p>
+        The Core VM Engine is the central execution system of PolkaVM, responsible for loading, compiling, and running guest programs in a secure and efficient manner. It provides the foundation for program execution, memory management, sandboxing, and interaction between host and guest code. For information about program representation, see Program Rep... <span class="read_more">Read More</span>
         </p>
       </a>
       <div class="post-tags">

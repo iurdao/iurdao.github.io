@@ -1,200 +1,64 @@
-<div align="center">
-  <br>
+# IURDAO: Illuminating the Polkadot Ecosystem 💡
 
-  <a href="https://github.com/jeffreytse/jekyll-theme-yat">
-    <img alt="jekyll-theme-yat →~ jekyll" src="https://user-images.githubusercontent.com/9413601/106478481-346fdf00-64e4-11eb-9385-1ab5329c3234.png" width="600">
-  </a>
+[![GitHub Issues](https://img.shields.io/github/issues/iurdao/iurdao.github.io.svg)](https://github.com/iurdao/iurdao.github.io/issues)
+[![GitHub Pull Requests](https://img.shields.io/github/pulls/iurdao/iurdao.github.io.svg)](https://github.com/iurdao/iurdao.github.io/pulls)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-  <h1>JEKYLL YAT THEME</h1>
+Welcome to the official GitHub repository for the IURDAO blog! IURDAO is an educational media organization dedicated to fostering knowledge creation, code analysis, and popular science within the Polkadot ecosystem. Our mission is to demystify complex concepts, analyze critical code implementations, and make Polkadot accessible to everyone.
 
-</div>
+## About IURDAO
 
-<h4 align="center">
-  <a href="https://jekyllrb.com/" target="_blank"><code>Jekyll</code></a> theme for elegant writers.
-</h4>
+IURDAO (pronounced "your-dao") serves as a knowledge hub and educational platform for all things Polkadot. We focus on:
 
-<p align="center">
-  <a href="https://jeffreytse.github.io/jekyll-theme-yat">
-    <img src="https://github.com/jeffreytse/jekyll-theme-yat/workflows/Github%20Pages/badge.svg"
-      alt="Github Pages" />
-  </a>
+*   **Knowledge Creation**: Producing original content that explains Polkadot's core technologies, governance mechanisms, and ecosystem projects.
+*   **Code Analysis**: Deep-diving into the source code of Polkadot-related projects, providing insights into their functionality and design.
+*   **Popular Science (科普)**: Translating technical jargon into easily understandable language, making Polkadot concepts accessible to a broader audience, including beginners.
 
-  <a href="https://badge.fury.io/rb/jekyll-theme-yat">
-    <img src="https://badge.fury.io/rb/jekyll-theme-yat.svg"
-      alt="Gem Version" />
-  </a>
+Our content targets a diverse audience, including developers, researchers, investors, and anyone interested in learning more about Polkadot.
 
-  <a href="https://opensource.org/licenses/MIT">
-    <img src="https://img.shields.io/badge/License-MIT-brightgreen.svg"
-      alt="License: MIT" />
-  </a>
+## About this Repository
 
-  <a href="https://liberapay.com/jeffreytse">
-    <img src="https://img.shields.io/liberapay/goal/jeffreytse.svg?logo=liberapay"
-      alt="Donate (Liberapay)" />
-  </a>
+This repository houses the source code and content for the official IURDAO blog website.  Here you'll find:
 
-  <a href="https://patreon.com/jeffreytse">
-    <img src="https://img.shields.io/badge/support-patreon-F96854.svg?style=flat-square"
-      alt="Donate (Patreon)" />
-  </a>
-
-  <a href="https://ko-fi.com/jeffreytse">
-  <img height="20" src="https://www.ko-fi.com/img/githubbutton_sm.svg"
-  alt="Donate (Ko-fi)" />
-  </a>
-</p>
-
-<div align="center">
-  <sub>Built with ❤︎ by
-  <a href="https://jeffreytse.net">jeffreytse</a> and
-  <a href="https://github.com/jeffreytse/jekyll-theme-yat/graphs/contributors">contributors </a>
-  </sub>
-</div>
-
-<br>
-
-Hey, nice to meet you, you found this [Jekyll][jekyll] theme. Here the
-_YAT (Yet Another Theme)_ is a modern responsive theme. It's quite
-clear, clean and neat for writers and posts. **If you are an elegant
-writer and focus on content, don't miss it.**
-
-<p align="center">
-Like this elegant theme? You can give it a star or sponsor me!<br>
-I will respect your crucial support and say THANK YOU!
-</p>
-
-<p align="center">
-
-  <img src="https://user-images.githubusercontent.com/9413601/91842897-6a840b00-ec87-11ea-95ca-52abcc1ac063.png" alt="demo-screenshot" width="100%"/>
-
-</p>
-
-<h4 align="center">BANNER</h4>
-
-<p align="center">
-
-  <img src="https://user-images.githubusercontent.com/9413601/123897812-ae729a00-d996-11eb-96b8-b76ba926f555.gif" alt="demo-screenshot" width="100%"/>
-
-</p>
-
-## Features
-
-- Support beautiful **Night Mode**.
-- Modern responsive web design.
-- Full layouts `home`, `post`, `tags`, `archive` and `about`.
-- Uses font awesome 5 for icons.
-- Beautiful page banner with image and video.
-- Beautiful Syntax Highlight using [highlight.js][highlight-js].
-- RSS support using [Jekyll Feed][jekyll-feed] gem.
-- Optimized for search engines using [Jekyll Seo Tag][jekyll-seo-tag] gem.
-- Sitemap support using [Jekyll Sitemap][jekyll-sitemap] gem.
-- Complex and flexible table support using [Jekyll Spaceship][jekyll-spaceship] gem.
-- MathJAX and LaTeX optional support using [Jekyll Spaceship][jekyll-spaceship] gem.
-- Media (Youtube, Spotify, etc.) support using [Jekyll Spaceship][jekyll-spaceship] gem.
-- Diagram (PlantUML, Mermaid) support using [Jekyll Spaceship][jekyll-spaceship] gem.
-- Google Translation support.
-- New post tag support.
-
-Also, visit the [Live Demo][yat-live-demo] site for the theme.
-
-## Installation
-
-There are three ways to install:
-
-- As a [gem-based theme](https://jekyllrb.com/docs/themes/#understanding-gem-based-themes).
-- As a [remote theme](https://blog.github.com/2017-11-29-use-any-theme-with-github-pages/) (GitHub Pages compatible).
-- Forking/directly copying all of the theme files into your project.
-
-### Gem-based Theme Method
-
-Add this line to your Jekyll site's `Gemfile`:
-
-```ruby
-gem "jekyll-theme-yat"
-```
-
-And add this line to your Jekyll site's `_config.yml`:
-
-```yaml
-theme: jekyll-theme-yat
-```
-
-And then execute:
-
-```bash
-$ bundle
-```
-
-Or install it yourself as:
-
-```bash
-$ gem install jekyll-theme-yat
-```
-
-### Remote Theme Method with GitHub Pages
-
-Remote themes are similar to Gem-based themes, but do not require `Gemfile` changes or whitelisting making them ideal for sites hosted with GitHub Pages.
-
-To install:
-
-Add this line to your Jekyll site's `Gemfile`:
-
-```ruby
-gem "github-pages", group: :jekyll_plugins
-```
-
-And add this line to your Jekyll site's `_config.yml`:
-
-```yaml
-# theme: owner/name --> Don't forget to remove/comment the gem-based theme option
-remote_theme: "jeffreytse/jekyll-theme-yat"
-```
-
-And then execute:
-
-```bash
-$ bundle
-```
-
-### GitHub Pages without limitation
-
-GitHub Pages runs in `safe` mode and only allows [a set of whitelisted plugins/themes](https://pages.github.com/versions/). **In other words, the third-party gems will not work normally**.
-
-To use the third-party gem in GitHub Pages without limitation:
-
-Here is a GitHub Action named [jekyll-deploy-action](https://github.com/jeffreytse/jekyll-deploy-action) for Jekyll site deployment conveniently. 👍
-
-## Usage
-
-Add or update your available layouts, includes, sass and/or assets.
-
-## Development
-
-To set up your environment to develop this theme, run `bundle install`.
-
-Your theme is setup just like a normal Jekyll site! To test your theme, run `bundle exec jekyll serve` and open your browser at `http://localhost:4000`. This starts a Jekyll server using your theme. Add pages, documents, data, etc. like normal to test your theme's contents. As you make modifications to your theme and to your content, your site will regenerate and you should see the changes in the browser after a refresh, just like normal.
-
-When your theme is released, only the files in `_data`, `_layouts`, `_includes`, `_sass` and `assets` tracked with Git will be bundled.
-To add a custom directory to your theme-gem, please edit the regexp in `jekyll-theme-yat.gemspec` accordingly.
+*   **`_posts/` directory**:  Contains all the Markdown files for our blog posts.
+*   **Website Theme & Configuration**:  Files related to the website's theme and configuration (likely using a static site generator like Gatsby, Hugo, or similar - *details will be added once the framework is confirmed*).
+*   **Scripts for Deployment & Content Management**: Any scripts used to automate the deployment or content management process.
 
 ## Contributing
 
-Issues and Pull Requests are greatly appreciated. If you've never contributed to an open source project before I'm more than happy to walk you through how to create a pull request.
+We welcome contributions from the community! If you're passionate about Polkadot and have skills in writing, code analysis, or web development, we'd love to hear from you.  Here are a few ways you can contribute:
 
-You can start by [opening an issue](https://github.com/jeffreytse/jekyll-theme-yat/issues/new) describing the problem that you're looking to resolve and we'll go from there.
+*   **Suggest Topics**:  Open an issue to suggest topics you'd like to see covered on the blog.
+*   **Submit Blog Posts**:  Write a blog post and submit it as a pull request. Please follow our writing guidelines (see below).
+*   **Review Existing Content**: Help us improve the quality of our content by reviewing existing blog posts and submitting pull requests with corrections or suggestions.
+*   **Report Bugs**:  If you find any bugs or issues with the website, please report them by opening an issue.
+*   **Contribute Code**: Help us improve the website's functionality and design by contributing code.
+
+### Contribution Guidelines
+
+*   **Writing Guidelines**:
+    *   Use clear and concise language.
+    *   Explain technical concepts in a way that is easy to understand.
+    *   Provide relevant examples and code snippets.
+    *   Cite your sources properly.
+    *   Be respectful and constructive in your writing.
+*   **Code Style**:  Follow the coding style guidelines used throughout the project (details to be added).
+*   **Pull Request Process**:
+    1.  Fork the repository.
+    2.  Create a new branch for your changes.
+    3.  Make your changes and commit them with clear and descriptive commit messages.
+    4.  Submit a pull request to the `main` branch.
+    5.  Be prepared to address any feedback or suggestions from the IURDAO team.
 
 ## License
 
-This theme is licensed under the [MIT license](https://opensource.org/licenses/mit-license.php) © JeffreyTse.
+This project is licensed under the [MIT License](LICENSE).
 
-<!-- External links -->
+## Connect with IURDAO
 
-[jekyll]: https://jekyllrb.com/
-[yat-git-repo]: https://github.com/jeffreytse/jekyll-theme-yat/
-[yat-live-demo]: https://jeffreytse.github.io/jekyll-theme-yat/
-[jekyll-spaceship]: https://github.com/jeffreytse/jekyll-spaceship
-[jekyll-seo-tag]: https://github.com/jekyll/jekyll-seo-tag
-[jekyll-sitemap]: https://github.com/jekyll/jekyll-sitemap
-[jekyll-feed]: https://github.com/jekyll/jekyll-feed
-[highlight-js]: https://github.com/highlightjs/highlight.js
+*   [Website](https://iurdao.github.io)
+*   [Twitter](https://x.com/IURDAO)
+*   [Telegram](iurdao)
+*   [Email](iur.pro@protonmail.com)
+
+We're excited to build a comprehensive educational resource for the Polkadot community together! Let's illuminate the path forward. 🚀
