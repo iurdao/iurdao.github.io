@@ -17,6 +17,7 @@ banner:
   heading_style: "font-size: 4.25em; font-weight: bold; text-decoration: underline"
   subheading_style: "color: gold"
 mermaid: true
+top: 1
 tags: JAM PolkaVM
 ---
 

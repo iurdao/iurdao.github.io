@@ -1,4 +1,383 @@
-<?xml version="1.0" encoding="utf-8"?><feed xmlns="http://www.w3.org/2005/Atom" ><generator uri="https://jekyllrb.com/" version="4.4.1">Jekyll</generator><link href="http://localhost:4000/feed.xml" rel="self" type="application/atom+xml" /><link href="http://localhost:4000/" rel="alternate" type="text/html" /><updated>2025-05-24T21:18:56+08:00</updated><id>http://localhost:4000/feed.xml</id><title type="html">Industry-University-Research Dao</title><subtitle>Industry-University-Research Dao in the Polkadot ecosystem</subtitle><author><name>Joe</name></author><entry><title type="html">Inside PolkaVM - Unveiling the Core VM Engine</title><link href="http://localhost:4000/technics/2025/05/24/Inside-PolkaVM-Unveiling-the-Core-VM-Engine.html" rel="alternate" type="text/html" title="Inside PolkaVM - Unveiling the Core VM Engine" /><published>2025-05-24T00:00:00+08:00</published><updated>2025-05-24T00:00:00+08:00</updated><id>http://localhost:4000/technics/2025/05/24/Inside-PolkaVM-Unveiling-the-Core-VM-Engine</id><content type="html" xml:base="http://localhost:4000/technics/2025/05/24/Inside-PolkaVM-Unveiling-the-Core-VM-Engine.html"><![CDATA[<p>The Core VM Engine is the central execution system of PolkaVM, responsible for loading, compiling, and running guest programs in a secure and efficient manner. It provides the foundation for program execution, memory management, sandboxing, and interaction between host and guest code. For information about program representation, see <a href="">Program Representation</a>, and for the sandboxing system, see <a href="https://iurdao.github.io/technics/2025/05/24/Sandboxing.html">Sandboxing</a>.</p>
+<?xml version="1.0" encoding="utf-8"?><feed xmlns="http://www.w3.org/2005/Atom" ><generator uri="https://jekyllrb.com/" version="4.4.1">Jekyll</generator><link href="http://localhost:4000/feed.xml" rel="self" type="application/atom+xml" /><link href="http://localhost:4000/" rel="alternate" type="text/html" /><updated>2025-05-25T09:17:25+08:00</updated><id>http://localhost:4000/feed.xml</id><title type="html">Industry-University-Research Dao</title><subtitle>Industry-University-Research Dao in the Polkadot ecosystem</subtitle><author><name>Joe</name></author><entry><title type="html">Unveiling PolkaVM’s Secrets:How Programs Really Work ⚙️</title><link href="http://localhost:4000/technics/2025/05/25/Unveiling-PolkaVMs-Secrets-How-Programs-Really-Work.html" rel="alternate" type="text/html" title="Unveiling PolkaVM’s Secrets:How Programs Really Work ⚙️" /><published>2025-05-25T00:00:00+08:00</published><updated>2025-05-25T00:00:00+08:00</updated><id>http://localhost:4000/technics/2025/05/25/Unveiling-PolkaVMs-Secrets-How-Programs-Really-Work</id><content type="html" xml:base="http://localhost:4000/technics/2025/05/25/Unveiling-PolkaVMs-Secrets-How-Programs-Really-Work.html"><![CDATA[<p>This article describes how executable programs are represented in PolkaVM, covering the structure, encoding, and transformation of programs. We focuse on the internal representation of compiled code, not the process of compilation itself here. For information about the compilation pipeline, see <a href="">Compilation Pipeline</a>.</p>
+
+<h2 id="overview">Overview</h2>
+
+<p>PolkaVM represents programs using a custom binary format called <code class="language-plaintext highlighter-rouge">ProgramBlob</code>. This format encapsulates all necessary components for program execution: code, data, jump tables, and symbols. Programs originate from either ELF binaries (compiled from languages like Rust) or from assembly source.</p>
+
+<p><img class="mermaid" src="https://mermaid.ink/svg/eyJjb2RlIjoiJSUtXG5mbG93Y2hhcnQgVERcbnN1YmdyYXBoIFByb2dyYW0gU291cmNlc1xuQVtFTEYgQmluYXJ5XVxuQltBc3NlbWJseSBTb3VyY2VdXG5lbmRcbnN1YmdyYXBoIFRyYW5zZm9ybWF0aW9uXG5DW1BvbGthVk0gTGlua2VyXVxuRFtBc3NlbWJsZXJdXG5lbmRcbnN1YmdyYXBoIFByb2dyYW0gUmVwcmVzZW50YXRpb25cbkVbUHJvZ3JhbUJsb2JdXG5GW0NvZGUgU2VjdGlvbl1cbkdbUmVhZC1vbmx5IERhdGFdXG5IW1JlYWQtd3JpdGUgRGF0YV1cbklbSnVtcCBUYWJsZV1cbkpbSW5zdHJ1Y3Rpb24gQml0bWFza11cbktbSW1wb3J0L0V4cG9ydCBTeW1ib2xzXVxuZW5kXG4lJS1cbkEtLT5DXG5CLS0-RFxuQy0tPkVcbkQtLT5FXG5FLS0-RlxuRS0tPkdcbkUtLT5IXG5FLS0-SVxuRS0tPkpcbkUtLT5LXG4lJS0iLCJtZXJtYWlkIjpudWxsfQ" /></p>
+
+<p>Sources:</p>
+
+<ul>
+  <li><a href="https://github.com/paritytech/polkavm/blob/910adbda/crates/polkavm-linker/src/program_from_elf.rs">crates/polkavm-linker/src/program_from_elf.rs</a></li>
+  <li><a href="https://github.com/paritytech/polkavm/blob/910adbda/crates/polkavm-common/src/program.rs">crates/polkavm-common/src/program.rs</a></li>
+  <li><a href="https://github.com/paritytech/polkavm/blob/910adbda/crates/polkavm-common/src/writer.rs">crates/polkavm-common/src/writer.rs</a></li>
+</ul>
+
+<h2 id="programblob-format">ProgramBlob Format</h2>
+
+<p>The <code class="language-plaintext highlighter-rouge">ProgramBlob</code> is the core representation of a program in PolkaVM. It’s a binary format that contains all the information needed to execute a program.</p>
+
+<h3 id="key-components">Key Components</h3>
+
+<table>
+  <thead>
+    <tr>
+      <th>Component</th>
+      <th>Description</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Magic+Version Header</td>
+      <td>Identifies the blob as a PolkaVM program and its version</td>
+    </tr>
+    <tr>
+      <td>Memory Config</td>
+      <td>Defines memory layout parameters (page size, section sizes)</td>
+    </tr>
+    <tr>
+      <td>Code Section</td>
+      <td>Contains the executable instructions</td>
+    </tr>
+    <tr>
+      <td>Read-only Data</td>
+      <td>Constant data that doesn’t change during execution</td>
+    </tr>
+    <tr>
+      <td>Read-write Data</td>
+      <td>Data that can be modified during program execution</td>
+    </tr>
+    <tr>
+      <td>Jump Table</td>
+      <td>Maps basic block indices to instruction offsets</td>
+    </tr>
+    <tr>
+      <td>Bitmask</td>
+      <td>Bitfield that marks instruction boundaries</td>
+    </tr>
+    <tr>
+      <td>Import/Export Symbols</td>
+      <td>Symbols for interfacing with external code</td>
+    </tr>
+  </tbody>
+</table>
+
+<h3 id="program-header-structure">Program Header Structure</h3>
+
+<p>The blob starts with a header that contains:</p>
+
+<ul>
+  <li>Magic identifier “PVM\0” (4 bytes)</li>
+  <li>Size of the entire blob (variable-length encoding)</li>
+  <li>Memory configuration data</li>
+</ul>
+
+<h3 id="building-programblobs">Building ProgramBlobs</h3>
+
+<p>The <code class="language-plaintext highlighter-rouge">ProgramBlobBuilder</code> class handles the construction of program blobs, managing the serialization of all components into the final binary format.</p>
+
+<p><img class="mermaid" src="https://mermaid.ink/svg/eyJjb2RlIjoiJSUtXG5jbGFzc0RpYWdyYW1cbmNsYXNzIFByb2dyYW1CbG9iQnVpbGRlcntcbi1pc182NDogYm9vbFxuLXJvX2RhdGFfc2l6ZTogdTMyXG4tcndfZGF0YV9zaXplOiB1MzJcbi1zdGFja19zaXplOiB1MzItcm9fZGF0YTogVmVjfnU4flxuLXJ3X2RhdGE6IFZlY351OH5cbi1pbXBvcnRzOiBWZWN-UHJvZ3JhbVN5bWJvbH5cbi1jb2RlOiBWZWN-SW5zdHJ1Y3Rpb25-XG4tanVtcF90YWJsZTogVmVjfnUzMn5cbituZXcoKVxuK25ld182NGJpdCgpXG4rc2V0X3JvX2RhdGFfc2l6ZShzaXplOiB1MzIpXG4rc2V0X3J3X2RhdGFfc2l6ZShzaXplOiB1MzIpXG4rc2V0X3N0YWNrX3NpemUoc2l6ZTogdTMyKVxuK3NldF9jb2RlKGNvZGU6ICZbSW5zdHJ1Y3Rpb25dLCBqdW1wX3RhYmxlOiAmW3UzMl0pXG4rYnVpbGQoKS0-IFByb2dyYW1CbG9iXG59XG5jbGFzcyBQcm9ncmFtQmxvYntcbitjb2RlKCktPiAmW3U4XVxuK3JvX2RhdGEoKS0-ICZbdThdXG4rcndfZGF0YSgpLT4gJlt1OF1cbitiaXRtYXNrKCktPiAmW3U4XVxuK2p1bXBfdGFibGUoKS0-ICZbdThdXG4ranVtcF90YWJsZV9lbnRyeV9jb3VudCgpLT4gdTMyXG4rbWVtb3J5X21hcCgpLT4gJk1lbW9yeU1hcFxufVxuJSUtXG5Qcm9ncmFtQmxvYkJ1aWxkZXIgLi4-UHJvZ3JhbUJsb2I6YnVpbGRzXG4lJS0iLCJtZXJtYWlkIjpudWxsfQ" /></p>
+
+<p>Sources:</p>
+
+<ul>
+  <li><a href="https://github.com/paritytech/polkavm/blob/910adbda/crates/polkavm-common/src/writer.rs#L84-L168">crates/polkavm-common/src/writer.rs84-168</a></li>
+  <li><a href="https://github.com/paritytech/polkavm/blob/910adbda/crates/polkavm-common/src/writer.rs#L157-L340">crates/polkavm-common/src/writer.rs157-340</a></li>
+</ul>
+
+<h2 id="code-representation">Code Representation</h2>
+
+<h3 id="instruction-encoding">Instruction Encoding</h3>
+
+<p>PolkaVM uses a variable-length instruction encoding scheme. Each instruction starts with an opcode byte, followed by variable-length operands. This compact representation balances code density with execution efficiency.</p>
+
+<p>Key characteristics:</p>
+
+<ul>
+  <li>Variable-length instructions (1 to 17 bytes)</li>
+  <li>First byte is always the opcode</li>
+  <li>Operands use variable-length encoding for integers</li>
+  <li>Register operands are encoded efficiently</li>
+  <li>Relative jumps use offset-based encoding</li>
+</ul>
+
+<h3 id="instruction-bitmask">Instruction Bitmask</h3>
+
+<p>To efficiently identify instruction boundaries without full decoding, PolkaVM uses a bitmask:</p>
+
+<ul>
+  <li>A bit is set (1) for the first byte of each instruction</li>
+  <li>Continuation bytes are marked with 0</li>
+  <li>Allows quick jumping to instruction boundaries</li>
+</ul>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>Code:    [Instr1][Instr2  ][Instr3][Instr4    ]
+Bitmask: 1      1         1      1            
+         ^      ^         ^      ^
+         |      |         |      |
+         Start  Start     Start  Start
+
+</code></pre></div></div>
+
+<h3 id="jump-table">Jump Table</h3>
+
+<p>The jump table maps basic block indices to their positions in the code section:</p>
+
+<ul>
+  <li>Enables efficient control flow transfers (jumps, branches)</li>
+  <li>Abstracts away the actual instruction offsets</li>
+  <li>Contains entries of variable size depending on offset magnitude</li>
+</ul>
+
+<p><img class="mermaid" src="https://mermaid.ink/svg/eyJjb2RlIjoiJSUtXG5mbG93Y2hhcnQgTFJcbkFbSnVtcCBUYWJsZV0tLT4gQltFbnRyeSAwOiBPZmZzZXQgdG8gQmxvY2sgMF1cbkIgLi4tPiBDW0Jsb2NrIDAgSW5zdHJ1Y3Rpb25zXVxuQSAtLT4gRFtFbnRyeSAxOiBPZmZzZXQgdG8gQmxvY2sgMV1cbkQgLi4tPiBFW0Jsb2NrIDEgSW5zdHJ1Y3Rpb25zXVxuQSAtLT4gRltFbnRyeSAyOiBPZmZzZXQgdG8gQmxvY2sgMl1cbkYgLi4tPiBHW0Jsb2NrIDIgSW5zdHJ1Y3Rpb25zXVxuSFtDb2RlIFNlY3Rpb25dIC0tPiBDXG5IW0NvZGUgU2VjdGlvbl0gLS0-IEVcbkhbQ29kZSBTZWN0aW9uXSAtLT4gR1xuJSUtIiwibWVybWFpZCI6bnVsbH0" /></p>
+
+<p>Sources:</p>
+
+<ul>
+  <li><a href="https://github.com/paritytech/polkavm/blob/910adbda/crates/polkavm-common/src/program.rs#L187-L349">crates/polkavm-common/src/program.rs187-349</a></li>
+  <li><a href="https://github.com/paritytech/polkavm/blob/910adbda/crates/polkavm-common/src/program.rs#L351-L445">crates/polkavm-common/src/program.rs351-445</a></li>
+  <li><a href="https://github.com/paritytech/polkavm/blob/910adbda/crates/polkavm-common/src/writer.rs#L293-L320">crates/polkavm-common/src/writer.rs293-320</a></li>
+</ul>
+
+<h2 id="register-representation">Register Representation</h2>
+
+<p>PolkaVM uses a fixed set of registers that map to RISC-V registers. These are encoded efficiently in instructions.</p>
+
+<h3 id="register-set">Register Set</h3>
+
+<table>
+  <thead>
+    <tr>
+      <th>PolkaVM Register</th>
+      <th>RISC-V ABI Name</th>
+      <th>Description</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">RA</code></td>
+      <td>ra</td>
+      <td>Return address</td>
+    </tr>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">SP</code></td>
+      <td>sp</td>
+      <td>Stack pointer</td>
+    </tr>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">T0</code>-<code class="language-plaintext highlighter-rouge">T2</code></td>
+      <td>t0-t2</td>
+      <td>Temporary registers</td>
+    </tr>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">S0</code>-<code class="language-plaintext highlighter-rouge">S1</code></td>
+      <td>s0-s1</td>
+      <td>Saved registers</td>
+    </tr>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">A0</code>-<code class="language-plaintext highlighter-rouge">A5</code></td>
+      <td>a0-a5</td>
+      <td>Argument/return registers</td>
+    </tr>
+  </tbody>
+</table>
+
+<p><img class="mermaid" src="https://mermaid.ink/svg/eyJjb2RlIjoiJSUtXG5jbGFzc0RpYWdyYW1cbmNsYXNzIFJhd1JlZ3tcbi12YWx1ZTogdTMyXG4rZ2V0KCkgLT4gUmVnXG4rcmF3X3VucGFyc2VkKCkgLT4gdTMyXG59XG5jbGFzcyBSZWd7XG48PGVudW1lcmF0aW9uPj5cblJBXG5TUFxuVDBcblQxXG5UMlxuUzBcblMxXG5BMFxuQTFcbkEyXG5BM1xuQTRcbkE1XG4rdG9fdXNpemUoKS0-dXNpemVcbit0b191MzIoKS0-dTMyXG4rbmFtZSgpLT5zdHJcbn1cblJhd1JlZyAtLT4gUmVnOnJlcHJlc2VudHNcbiUlLSIsIm1lcm1haWQiOm51bGx9" /></p>
+
+<p>Sources:</p>
+
+<ul>
+  <li><a href="https://github.com/paritytech/polkavm/blob/910adbda/crates/polkavm-common/src/program.rs#L8-L169">crates/polkavm-common/src/program.rs8-169</a></li>
+  <li><a href="https://github.com/paritytech/polkavm/blob/910adbda/crates/polkavm-linker/src/program_from_elf.rs#L22-L152">crates/polkavm-linker/src/program_from_elf.rs22-152</a></li>
+</ul>
+
+<h2 id="memory-layout">Memory Layout</h2>
+
+<p>The memory layout for PolkaVM programs follows a specific structure to ensure proper isolation and efficient access.</p>
+
+<p><img class="mermaid" src="https://mermaid.ink/svg/eyJjb2RlIjoiJSUtXG5mbG93Y2hhcnQgVERcbiUlLVxuQVtcIlZNX0FERFJFU1NfU1BBQ0VfQk9UVE9NICgweDEwMDAwKVwiXSAtLT4gQltSZWFkLW9ubHkgRGF0YSBTZWN0aW9uXVxuQiAtLT4gQ1tSZWFkLXdyaXRlIERhdGEgU2VjdGlvbl1cbkMgLS0-IERbXCJIZWFwIChncm93cyB1cHdhcmQpXCJdXG4lJS1cbkVbXCJBdXhpbGlhcnkgRGF0YVwiXVxuRSAtLT5GW1wiU3RhY2sgKGdyb3dzIGRvd253YXJkKVwiXVxuRi0tPkdbVk1fQUREUkVTU19TUEFDRV9UT1BdXG4lJS0iLCJtZXJtYWlkIjpudWxsfQ" /></p>
+
+<h3 id="memory-sections">Memory Sections</h3>
+
+<table>
+  <thead>
+    <tr>
+      <th>Section</th>
+      <th>Description</th>
+      <th>Access</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Read-only Data</td>
+      <td>Constants, string literals, etc.</td>
+      <td>Read-only</td>
+    </tr>
+    <tr>
+      <td>Read-write Data</td>
+      <td>Global variables, mutable data</td>
+      <td>Read-write</td>
+    </tr>
+    <tr>
+      <td>Stack</td>
+      <td>Local variables, call frames</td>
+      <td>Read-write</td>
+    </tr>
+    <tr>
+      <td>Heap</td>
+      <td>Dynamically allocated memory</td>
+      <td>Read-write</td>
+    </tr>
+    <tr>
+      <td>Auxiliary Data</td>
+      <td>Implementation-specific data</td>
+      <td>Implementation-defined</td>
+    </tr>
+  </tbody>
+</table>
+
+<h3 id="memory-map-builder">Memory Map Builder</h3>
+
+<p>The <code class="language-plaintext highlighter-rouge">MemoryMapBuilder</code> class handles the calculation of memory layout based on program requirements:</p>
+
+<ul>
+  <li>Ensures proper alignment of sections</li>
+  <li>Handles page size requirements</li>
+  <li>Calculates maximum heap size based on available address space</li>
+</ul>
+
+<p><img class="mermaid" src="https://mermaid.ink/svg/eyJjb2RlIjoiJSUtXG5jbGFzc0RpYWdyYW1cbmNsYXNzIE1lbW9yeU1hcEJ1aWxkZXJ7XG4tcGFnZV9zaXplOiB1MzJcbi1yb19kYXRhX3NpemU6IHUzMlxuLXJ3X2RhdGFfc2l6ZTogdTMyXG4tc3RhY2tfc2l6ZTogdTMyXG4tYXV4X2RhdGFfc2l6ZTogdTMyXG4rbmV3KHBhZ2Vfc2l6ZTogdTMyKVxuK3JvX2RhdGFfc2l6ZSh2YWx1ZTogdTMyKVxuK3J3X2RhdGFfc2l6ZSh2YWx1ZTogdTMyKVxuK3N0YWNrX3NpemUodmFsdWU6IHUzMilcbithdXhfZGF0YV9zaXplKHZhbHVlOiB1MzIpXG4rYnVpbGQoKS0-IE1lbW9yeU1hcFxufVxuY2xhc3MgTWVtb3J5TWFwe1xuLXBhZ2Vfc2l6ZTogdTMyXG4tcm9fZGF0YV9zaXplOiB1MzJcbi1yd19kYXRhX2FkZHJlc3M6IHUzMlxuLXJ3X2RhdGFfc2l6ZTogdTMyXG4tc3RhY2tfYWRkcmVzc19oaWdoOiB1MzJcbi1zdGFja19zaXplOiB1MzJcbi1hdXhfZGF0YV9hZGRyZXNzOiB1MzJcbi1hdXhfZGF0YV9zaXplOiB1MzJcbi1oZWFwX2Jhc2U6IHUzMlxuLW1heF9oZWFwX3NpemU6IHUzMlxuK3JvX2RhdGFfYWRkcmVzcygpLT4gdTMyXG4rcm9fZGF0YV9yYW5nZSgpLT4gUmFuZ2Vcbityd19kYXRhX2FkZHJlc3MoKS0-IHUzMlxuK3J3X2RhdGFfcmFuZ2UoKS0-IFJhbmdlXG4rc3RhY2tfYWRkcmVzc19sb3coKS0-IHUzMlxuK3N0YWNrX3JhbmdlKCktPiBSYW5nZVxuK2hlYXBfYmFzZSgpLT4gdTMyXG59XG5NZW1vcnlNYXBCdWlsZGVyIC4uPiBNZW1vcnlNYXA6YnVpbGRzXG4lJS0iLCJtZXJtYWlkIjpudWxsfQ" /></p>
+
+<p>Sources:</p>
+
+<ul>
+  <li><a href="https://github.com/paritytech/polkavm/blob/910adbda/crates/polkavm-common/src/abi.rs#L1-L333">crates/polkavm-common/src/abi.rs1-333</a></li>
+  <li><a href="https://github.com/paritytech/polkavm/blob/910adbda/crates/polkavm-common/src/abi.rs#L41-L172">crates/polkavm-common/src/abi.rs41-172</a></li>
+  <li><a href="https://github.com/paritytech/polkavm/blob/910adbda/crates/polkavm-common/src/abi.rs#L176-L283">crates/polkavm-common/src/abi.rs176-283</a></li>
+</ul>
+
+<h2 id="program-transformation-process">Program Transformation Process</h2>
+
+<p>The process of transforming source programs (ELF binaries or assembly) into the PolkaVM representation involves several steps.</p>
+
+<h3 id="elf-to-programblob-conversion">ELF to ProgramBlob Conversion</h3>
+
+<p><img class="mermaid" src="https://mermaid.ink/svg/eyJjb2RlIjoiJSUtXG5mbG93Y2hhcnQgVERcbkFbRUxGIEJpbmFyeV0gLS0-QltFTEYgUGFyc2VyXVxuQiAtLT4gQ1tTZWN0aW9uIEV4dHJhY3Rvcl1cbkMgLS0-IERbQ29kZSBTZWN0aW9uc11cbkMgLS0-IEVbRGF0YSBTZWN0aW9uc11cbkMgLS0-IEZbRGVidWcgSW5mb3JtYXRpb25dXG5EIC0tPiBHW1JJU0MtViBJbnN0cnVjdGlvbiBEZWNvZGVyXVxuRyAtLT4gSFtJbnRlcm1lZGlhdGUgUmVwcmVzZW50YXRpb25dXG5IIC0tPiBJW1BvbGthVk0gQ29kZSBHZW5lcmF0b3JdXG5FIC0tPiBKW0RhdGEgUHJvY2Vzc29yXVxuSiAtLT4gS1tQcm9ncmFtQmxvYkJ1aWxkZXJdXG5GIC0tPiBMW1N5bWJvbCBQcm9jZXNzb3JdXG5JIC0tPiBLXG5MIC0tPiBLXG5LIC0tPiBNW1Byb2dyYW1CbG9iXVxuJSUtIiwibWVybWFpZCI6bnVsbH0" /></p>
+
+<ol>
+  <li>Parse the ELF file to extract sections and symbols</li>
+  <li>Process code sections by converting RISC-V instructions to PolkaVM instructions</li>
+  <li>Handle relocations and symbol references</li>
+  <li>Place data sections in appropriate locations</li>
+  <li>Generate the jump table and bitmask</li>
+  <li>Construct the final ProgramBlob</li>
+</ol>
+
+<h3 id="assembly-to-programblob-conversion">Assembly to ProgramBlob Conversion</h3>
+
+<p>Assembly is parsed directly into PolkaVM instructions, which are then assembled into a ProgramBlob. This provides a more direct route for creating PolkaVM programs.</p>
+
+<p>Sources:</p>
+
+<ul>
+  <li><a href="https://github.com/paritytech/polkavm/blob/910adbda/crates/polkavm-linker/src/program_from_elf.rs">crates/polkavm-linker/src/program_from_elf.rs</a></li>
+  <li><a href="https://github.com/paritytech/polkavm/blob/910adbda/crates/polkavm-linker/src/elf.rs">crates/polkavm-linker/src/elf.rs</a></li>
+  <li><a href="https://github.com/paritytech/polkavm/blob/910adbda/crates/polkavm-common/src/writer.rs">crates/polkavm-common/src/writer.rs</a></li>
+</ul>
+
+<h2 id="instruction-visitor-pattern">Instruction Visitor Pattern</h2>
+
+<p>PolkaVM uses the Visitor pattern to process instructions. The <code class="language-plaintext highlighter-rouge">OpcodeVisitor</code> trait defines an interface for traversing and operating on instructions:</p>
+
+<p><img class="mermaid" src="https://mermaid.ink/svg/eyJjb2RlIjoiJSUtXG5jbGFzc0RpYWdyYW1cbmNsYXNzIE9wY29kZVZpc2l0b3J7XG48PHRyYWl0Pj5cbitTdGF0ZTogVHlwZVxuK1JldHVyblR5OiBUeXBlXG4rSW5zdHJ1Y3Rpb25TZXQ6IEluc3RydWN0aW9uU2V0XG4raW5zdHJ1Y3Rpb25fc2V0KCktPiBJbnN0cnVjdGlvblNldFxuK2Rpc3BhdGNoKHN0YXRlOiAmbXV0IFN0YXRlLCBvcGNvZGU6IHVzaXplLCBjaHVuazogdTEyOCwgb2Zmc2V0OiB1MzIsIHNraXA6IHUzMiktPiBSZXR1cm5UeVxufVxuY2xhc3MgSW5zdHJ1Y3Rpb25TZXR7XG48PHRyYWl0Pj5cbitvcGNvZGVfZnJvbV91OChieXRlOiB1OCktPiBPcHRpb248T3Bjb2RlPlxufVxuY2xhc3MgT3Bjb2Rle1xuPDxlbnVtZXJhdGlvbj4-XG4rZnJvbV91OF9hbnkoYnl0ZTogdTgpLT4gT3B0aW9uPE9wY29kZT5cbitjYW5fZmFsbHRocm91Z2goKS0-IGJvb2xcbn1cbk9wY29kZVZpc2l0b3IgLS0-IEluc3RydWN0aW9uU2V0OnVzZXNcbkluc3RydWN0aW9uU2V0IC0tPiBPcGNvZGU6Y3JlYXRlc1xuJSUtIiwibWVybWFpZCI6bnVsbH0" /></p>
+
+<p>This pattern enables:</p>
+
+<ul>
+  <li>Efficient instruction traversal</li>
+  <li>Different operations (execution, disassembly, analysis) sharing the same traversal mechanism</li>
+  <li>Separation of instruction decoding from operation</li>
+</ul>
+
+<p>Sources:</p>
+
+<ul>
+  <li><a href="https://github.com/paritytech/polkavm/blob/910adbda/crates/polkavm-common/src/program.rs#L742-L840">crates/polkavm-common/src/program.rs742-840</a></li>
+  <li><a href="https://github.com/paritytech/polkavm/blob/910adbda/crates/polkavm-common/src/program.rs#L326-L349">crates/polkavm-common/src/program.rs326-349</a></li>
+</ul>
+
+<h2 id="symbol-handling">Symbol Handling</h2>
+
+<p>PolkaVM programs can import and export symbols for interaction with host functions and to expose functionality.</p>
+
+<h3 id="import-symbols">Import Symbols</h3>
+
+<p>Imports represent external functions that the program can call:</p>
+
+<ul>
+  <li>Each import has a unique name</li>
+  <li>Host environments provide implementations for these functions</li>
+  <li>Calls to imports are handled via special <code class="language-plaintext highlighter-rouge">ecalli</code> instructions</li>
+</ul>
+
+<h3 id="export-symbols">Export Symbols</h3>
+
+<p>Exports are functions within the program that can be called from outside:</p>
+
+<ul>
+  <li>Each export has a name and a target (basic block index)</li>
+  <li>The main entry point of a program is typically an export</li>
+  <li>External code can invoke exports by name</li>
+</ul>
+
+<p><img class="mermaid" src="https://mermaid.ink/svg/eyJjb2RlIjoiJSUtXG5mbG93Y2hhcnQgTFJcbnN1YmdyYXBoIFBvbGthVk0gUHJvZ3JhbVxuQVtJbXBvcnQgVGFibGVdXG5CW0V4cG9ydCBUYWJsZV1cbkNbQ29kZV1cbiUlLVxuZW5kXG4lJS1cbnN1YmdyYXBoIEhvc3QgRW52aXJvbm1lbnRcbkRbaG9zdF9mdW5jdGlvbl8xXVxuRVtob3N0X2Z1bmN0aW9uXzJdXG4lJS1cbmVuZFxuQS0tPkRcbkEtLT5FXG5FIC4uLT58Y2FsbHN8QlxuQi0tPkNcbiUlLSIsIm1lcm1haWQiOm51bGx9" /></p>
+
+<p>Sources:</p>
+
+<ul>
+  <li><a href="https://github.com/paritytech/polkavm/blob/910adbda/crates/polkavm-common/src/writer.rs#L138-L149">crates/polkavm-common/src/writer.rs138-149</a></li>
+  <li><a href="https://github.com/paritytech/polkavm/blob/910adbda/crates/polkavm-linker/src/program_from_elf.rs">crates/polkavm-linker/src/program_from_elf.rs</a></li>
+</ul>
+
+<h2 id="variable-length-integer-encoding">Variable-Length Integer Encoding</h2>
+
+<p>PolkaVM uses variable-length encoding for integer values to save space in instructions. Two main encoding schemes are used:</p>
+
+<h3 id="varint-encoding">Varint Encoding</h3>
+
+<p>Used for general-purpose variable-length integers:</p>
+
+<ul>
+  <li>Small values use fewer bytes</li>
+  <li>First byte contains size information and part of the value</li>
+  <li>Can encode 32-bit values in 1-5 bytes</li>
+</ul>
+
+<h3 id="simple-varint-encoding">Simple Varint Encoding</h3>
+
+<p>Used for instruction operands:</p>
+
+<ul>
+  <li>Optimized for the common case of small values</li>
+  <li>Number of bytes determined by the instruction’s “skip” value</li>
+  <li>Efficiently handles sign extension</li>
+</ul>
+
+<p><img class="mermaid" src="https://mermaid.ink/svg/eyJjb2RlIjoiJSUtXG5mbG93Y2hhcnQgVERcbkFbMzItYml0IHZhbHVlXSAtLT5CW1ZhcmludCBFbmNvZGVyXVxuQiAtLT4gQ1tcIlZhcmlhYmxlLWxlbmd0aCBlbmNvZGVkIHZhbHVlICgxLTUgYnl0ZXMpXCJdXG5DIC0tPkRbVmFyaW50IERlY29kZXJdXG5EIC0tPkVbT3JpZ2luYWwgMzItYml0IHZhbHVlXVxuJSUtIiwibWVybWFpZCI6bnVsbH0" /></p>
+
+<p>Sources:</p>
+
+<ul>
+  <li><a href="https://github.com/paritytech/polkavm/blob/910adbda/crates/polkavm-common/src/varint.rs#L1-L215">crates/polkavm-common/src/varint.rs1-215</a></li>
+  <li><a href="https://github.com/paritytech/polkavm/blob/910adbda/crates/polkavm-common/src/program.rs#L446-L521">crates/polkavm-common/src/program.rs446-521</a></li>
+</ul>
+
+<h2 id="conclusion">Conclusion</h2>
+
+<p>The program representation in PolkaVM is designed to efficiently store and execute programs. The <code class="language-plaintext highlighter-rouge">ProgramBlob</code> format encapsulates all necessary components (code, data, jump table, etc.) in a compact binary representation. The variable-length instruction encoding and efficient memory layout ensure that programs can be executed with minimal overhead.</p>
+
+<p>This representation is a core part of the PolkaVM system, bridging the gap between source programs (ELF binaries or assembly) and the execution engine. Understanding this representation is essential for working with the PolkaVM ecosystem.</p>]]></content><author><name>Joe</name></author><category term="Technics" /><category term="PolkaVM" /><category term="ProgramRepresentation" /><category term="ProgramBlob" /><summary type="html"><![CDATA[This article describes how executable programs are represented in PolkaVM, covering the structure, encoding, and transformation of programs. We focuse on the internal representation of compiled code, not the process of compilation itself here. For information about the compilation pipeline, see Compilation Pipeline.]]></summary></entry><entry><title type="html">Inside PolkaVM - Unveiling the Core VM Engine</title><link href="http://localhost:4000/technics/2025/05/24/Inside-PolkaVM-Unveiling-the-Core-VM-Engine.html" rel="alternate" type="text/html" title="Inside PolkaVM - Unveiling the Core VM Engine" /><published>2025-05-24T00:00:00+08:00</published><updated>2025-05-24T00:00:00+08:00</updated><id>http://localhost:4000/technics/2025/05/24/Inside-PolkaVM-Unveiling-the-Core-VM-Engine</id><content type="html" xml:base="http://localhost:4000/technics/2025/05/24/Inside-PolkaVM-Unveiling-the-Core-VM-Engine.html"><![CDATA[<p>The Core VM Engine is the central execution system of PolkaVM, responsible for loading, compiling, and running guest programs in a secure and efficient manner. It provides the foundation for program execution, memory management, sandboxing, and interaction between host and guest code. For information about program representation, see <a href="">Program Representation</a>, and for the sandboxing system, see <a href="https://iurdao.github.io/technics/2025/05/24/Sandboxing.html">Sandboxing</a>.</p>
 
 <h2 id="architecture-overview">Architecture Overview</h2>
 
