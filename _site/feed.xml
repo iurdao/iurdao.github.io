@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?><feed xmlns="http://www.w3.org/2005/Atom" ><generator uri="https://jekyllrb.com/" version="4.4.1">Jekyll</generator><link href="http://localhost:4000/feed.xml" rel="self" type="application/atom+xml" /><link href="http://localhost:4000/" rel="alternate" type="text/html" /><updated>2025-05-26T08:21:56+08:00</updated><id>http://localhost:4000/feed.xml</id><title type="html">Industry-University-Research Dao</title><subtitle>Industry-University-Research Dao in the Polkadot ecosystem</subtitle><author><name>Joe</name></author><entry><title type="html">Beyond WASM:The Future is RISC-V with PolkaVM Guest Programs ✨</title><link href="http://localhost:4000/technics/2025/05/26/Guest-Programs.html" rel="alternate" type="text/html" title="Beyond WASM:The Future is RISC-V with PolkaVM Guest Programs ✨" /><published>2025-05-26T00:00:00+08:00</published><updated>2025-05-26T00:00:00+08:00</updated><id>http://localhost:4000/technics/2025/05/26/Guest-Programs</id><content type="html" xml:base="http://localhost:4000/technics/2025/05/26/Guest-Programs.html"><![CDATA[<p>This document explains how to develop programs that run inside the PolkaVM virtual machine. It covers the development environment, build process, and the Application Binary Interface (ABI) that allows guest programs to interact with the host system. For details on how the VM executes these programs, see <a href="https://iurdao.github.io/technics/2025/05/24/Inside-PolkaVM-Unveiling-the-Core-VM-Engine.html">Core VM Engine</a> and for in-depth details on exports and imports, see <a href="">ABI and Exports/Imports</a>.</p>
+<?xml version="1.0" encoding="utf-8"?><feed xmlns="http://www.w3.org/2005/Atom" ><generator uri="https://jekyllrb.com/" version="4.4.1">Jekyll</generator><link href="http://localhost:4000/feed.xml" rel="self" type="application/atom+xml" /><link href="http://localhost:4000/" rel="alternate" type="text/html" /><updated>2025-05-26T11:51:49+08:00</updated><id>http://localhost:4000/feed.xml</id><title type="html">Industry-University-Research Dao</title><subtitle>Industry-University-Research Dao in the Polkadot ecosystem</subtitle><author><name>Joe</name></author><entry><title type="html">Beyond WASM:The Future is RISC-V with PolkaVM Guest Programs ✨</title><link href="http://localhost:4000/technics/2025/05/26/Guest-Programs.html" rel="alternate" type="text/html" title="Beyond WASM:The Future is RISC-V with PolkaVM Guest Programs ✨" /><published>2025-05-26T00:00:00+08:00</published><updated>2025-05-26T00:00:00+08:00</updated><id>http://localhost:4000/technics/2025/05/26/Guest-Programs</id><content type="html" xml:base="http://localhost:4000/technics/2025/05/26/Guest-Programs.html"><![CDATA[<p>This document explains how to develop programs that run inside the PolkaVM virtual machine. It covers the development environment, build process, and the Application Binary Interface (ABI) that allows guest programs to interact with the host system. For details on how the VM executes these programs, see <a href="https://iurdao.github.io/technics/2025/05/24/Inside-PolkaVM-Unveiling-the-Core-VM-Engine.html">Core VM Engine</a> and for in-depth details on exports and imports, see <a href="">ABI and Exports/Imports</a>.</p>
 
 <h2 id="overview-of-guest-programs">Overview of Guest Programs</h2>
 
@@ -246,7 +246,113 @@
 
 <p>Development requires Rust with the RISC-V target configuration, and the build process involves compiling to RISC-V and then using <code class="language-plaintext highlighter-rouge">polkatool</code> to convert to the PolkaVM format. The PolkaVM repository provides various examples and benchmarks that demonstrate how to write effective guest programs.</p>
 
-<p>For more details on specific ABI features and advanced usage patterns, see <a href="">ABI and Exports/Imports</a> and <a href="">Building Guest Programs</a>.</p>]]></content><author><name>Joe</name></author><category term="Technics" /><category term="PolkaVM" /><category term="GuestPrograms" /><summary type="html"><![CDATA[This document explains how to develop programs that run inside the PolkaVM virtual machine. It covers the development environment, build process, and the Application Binary Interface (ABI) that allows guest programs to interact with the host system. For details on how the VM executes these programs, see Core VM Engine and for in-depth details on exports and imports, see ABI and Exports/Imports.]]></summary></entry><entry><title type="html">Unveiling PolkaVM’s Secrets:How Programs Really Work ⚙️</title><link href="http://localhost:4000/technics/2025/05/25/Unveiling-PolkaVMs-Secrets-How-Programs-Really-Work.html" rel="alternate" type="text/html" title="Unveiling PolkaVM’s Secrets:How Programs Really Work ⚙️" /><published>2025-05-25T00:00:00+08:00</published><updated>2025-05-25T00:00:00+08:00</updated><id>http://localhost:4000/technics/2025/05/25/Unveiling-PolkaVMs-Secrets-How-Programs-Really-Work</id><content type="html" xml:base="http://localhost:4000/technics/2025/05/25/Unveiling-PolkaVMs-Secrets-How-Programs-Really-Work.html"><![CDATA[<p>This article describes how executable programs are represented in PolkaVM, covering the structure, encoding, and transformation of programs. We focuse on the internal representation of compiled code, not the process of compilation itself here. For information about the compilation pipeline, see <a href="">Compilation Pipeline</a>.</p>
+<p>For more details on specific ABI features and advanced usage patterns, see <a href="">ABI and Exports/Imports</a> and <a href="">Building Guest Programs</a>.</p>]]></content><author><name>Joe</name></author><category term="Technics" /><category term="PolkaVM" /><category term="GuestPrograms" /><summary type="html"><![CDATA[This document explains how to develop programs that run inside the PolkaVM virtual machine. It covers the development environment, build process, and the Application Binary Interface (ABI) that allows guest programs to interact with the host system. For details on how the VM executes these programs, see Core VM Engine and for in-depth details on exports and imports, see ABI and Exports/Imports.]]></summary></entry><entry><title type="html">Level Up Your Understanding of PolkaVM:The DOOM Edition ⬆️</title><link href="http://localhost:4000/technics/2025/05/26/PolkaVM-DOOM-Analysis.html" rel="alternate" type="text/html" title="Level Up Your Understanding of PolkaVM:The DOOM Edition ⬆️" /><published>2025-05-26T00:00:00+08:00</published><updated>2025-05-26T00:00:00+08:00</updated><id>http://localhost:4000/technics/2025/05/26/PolkaVM-DOOM-Analysis</id><content type="html" xml:base="http://localhost:4000/technics/2025/05/26/PolkaVM-DOOM-Analysis.html"><![CDATA[<h2 id="project-overview">Project Overview</h2>
+
+<p>PolkaVM DOOM is an example project that ports the classic game DOOM to run on the PolkaVM virtual machine. This project showcases PolkaVM’s ability to run complex game programs.</p>
+
+<h2 id="directory-structure">Directory Structure</h2>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>
+/examples/doom/
+├── Cargo.toml          # Project configuration and dependencies
+├── README.md           # Project documentation
+├── roms/               # Game ROM files directory
+│   ├── README.md       # ROM file description
+│   ├── doom-wad-shareware-license.txt  # DOOM WAD file license
+│   ├── doom.polkavm    # PolkaVM binary of the DOOM engine
+│   ├── doom1.wad       # DOOM game data file
+│   └── relink.sh       # Script to relink the DOOM program
+└── src/                # Source code directory
+    ├── keys.rs         # Key mappings and handling
+    ├── main.rs         # Main program entry point
+    └── vm.rs           # Virtual machine implementation
+
+</code></pre></div></div>
+
+<h2 id="core-component-analysis">Core Component Analysis</h2>
+<h3 id="1-project-configuration-cargotoml">1. Project Configuration (Cargo.toml)</h3>
+
+<p>The project depends on:</p>
+
+<ul>
+  <li><code class="language-plaintext highlighter-rouge">polkavm</code>: PolkaVM virtual machine core library</li>
+  <li><code class="language-plaintext highlighter-rouge">sdl2</code>: Used for graphics display and input handling</li>
+  <li><code class="language-plaintext highlighter-rouge">env_logger</code>: For logging</li>
+</ul>
+
+<h3 id="2-rom-files">2. ROM Files</h3>
+
+<ul>
+  <li><code class="language-plaintext highlighter-rouge">doom1.wad</code>: DOOM game’s shareware WAD file, containing game data</li>
+  <li><code class="language-plaintext highlighter-rouge">doom.polkavm</code>: DOOM engine binary compiled for PolkaVM format</li>
+  <li><code class="language-plaintext highlighter-rouge">relink.sh</code>: Script used to relink from ELF file to generate PolkaVM binary</li>
+</ul>
+
+<h3 id="3-source-code-structure">3. Source Code Structure</h3>
+
+<ul>
+  <li><strong>main.rs (Main Program)</strong>
+Main functions:
+    <ul>
+      <li>Initializes SDL2 environment (video, audio, event handling)</li>
+      <li>Loads DOOM program and ROM files</li>
+      <li>Creates the game window and rendering context</li>
+      <li>Handles user input (keyboard and mouse events)</li>
+      <li>Implements the main game loop (rendering frames, handling audio)</li>
+    </ul>
+  </li>
+  <li><strong>vm.rs (Virtual Machine Implementation)</strong>
+Main functions:
+    <ul>
+      <li>Defines the <code class="language-plaintext highlighter-rouge">Vm</code> struct, encapsulating the PolkaVM instance</li>
+      <li>Implements the interaction interface with the DOOM program</li>
+      <li>Provides external functions for the DOOM program to call:
+        <ul>
+          <li><code class="language-plaintext highlighter-rouge">ext_output_video</code>: Handles video output</li>
+          <li><code class="language-plaintext highlighter-rouge">ext_output_audio</code>: Handles audio output</li>
+          <li><code class="language-plaintext highlighter-rouge">ext_rom_size</code> and <code class="language-plaintext highlighter-rouge">ext_rom_read</code>: Provides ROM access</li>
+          <li><code class="language-plaintext highlighter-rouge">ext_stdout</code>: Standard output redirection</li>
+        </ul>
+      </li>
+      <li>Manages game state and resources</li>
+    </ul>
+  </li>
+  <li><strong>keys.rs (Key Handling)</strong>
+Main functions:
+    <ul>
+      <li>Defines the key constants used by DOOM</li>
+      <li>Provides mapping functions from SDL2 keys to DOOM keys</li>
+    </ul>
+  </li>
+</ul>
+
+<h2 id="execution-flow">Execution Flow</h2>
+
+<ol>
+  <li>The program loads the DOOM engine (<code class="language-plaintext highlighter-rouge">doom.polkavm</code>) and game data (<code class="language-plaintext highlighter-rouge">doom1.wad</code>) upon startup.</li>
+  <li>It initializes the SDL2 environment and PolkaVM virtual machine.</li>
+  <li>A game window and audio queue are created.</li>
+  <li>The program enters the main loop:
+    <ul>
+      <li>Processes user input events</li>
+      <li>Runs the virtual machine to execute a frame of game logic</li>
+      <li>Renders the game scene</li>
+      <li>Handles audio output</li>
+    </ul>
+  </li>
+</ol>
+
+<p><img class="mermaid" src="https://mermaid.ink/svg/eyJjb2RlIjoic2VxdWVuY2VEaWFncmFtXG5wYXJ0aWNpcGFudCBVc2VyIGFzIFVzZXJcbnBhcnRpY2lwYW50IE1haW4gYXMgTWFpbiBQcm9ncmFtKG1haW4ucnMpXG5wYXJ0aWNpcGFudCBWTSBhcyBWaXJ0dWFsIE1hY2hpbmUodm0ucnMpXG5wYXJ0aWNpcGFudCBTREwgYXMgU0RMMiBTeXN0ZW1cbnBhcnRpY2lwYW50IERPT00gYXMgRE9PTSBFbmdpbmUoZG9vbS5wb2xrYXZtKVxuJSUtXG5NYWluLT4-TWFpbjogSW5pdGlhbGl6ZSBlbnZpcm9ubWVudCBsb2dnaW5nXG5NYWluLT4-TWFpbjogUGFyc2UgY29tbWFuZCBsaW5lIGFyZ3VtZW50c1xuTWFpbi0-Pk1haW46IExvYWQgRE9PTSBwcm9ncmFtIGFuZCBST00gZmlsZXNcbk1haW4tPj5WTTogQ3JlYXRlIHZpcnR1YWwgbWFjaGluZSBpbnN0YW5jZSAoZnJvbV9ibG9iKVxuVk0tPj5WTTogU2V0IGV4dGVybmFsIGZ1bmN0aW9uIGludGVyZmFjZVxuTWFpbi0-PlZNOiBJbml0aWFsaXplIHZpcnR1YWwgbWFjaGluZSAoaW5pdGlhbGl6ZSlcblZNLT4-RE9PTTogUGFzcyBST00gZGF0YVxuJSUtXG5NYWluLT4-U0RMOiBJbml0aWFsaXplIFNETDIgKHZpZGVvLCBhdWRpbywgZXZlbnRzKVxuU0RMLS0-Pk1haW46IFJldHVybiBTREwgY29udGV4dFxuTWFpbi0-PlNETDogQ3JlYXRlIHdpbmRvdyBhbmQgcmVuZGVyZXJcbk1haW4tPj5TREw6IFNldCBhdWRpbyBxdWV1ZVxuTWFpbi0-PlZNOiBTZXQgYXVkaW8gY2FsbGJhY2sgKHNldF9vbl9hdWRpb19mcmFtZSlcbiUlLVxubG9vcCBHYW1lIE1haW4gTG9vcFxuU0RMLT4-TWFpbjogUGFzcyB1c2VyIGlucHV0IGV2ZW50c1xuYWx0IEtleSBwcmVzcyBldmVudFxuTWFpbi0-PlZNOiBTZW5kIGtleSBzdGF0ZSAob25fa2V5Y2hhbmdlKVxuVk0tPj5ET09NOiBQYXNzIGtleSBzdGF0ZVxuZW5kXG4lJS1cbk1haW4tPj5WTTogUnVuIG9uZSBmcmFtZSAocnVuX2Zvcl9hX2ZyYW1lKVxuVk0tPj5ET09NOiBFeGVjdXRlIGdhbWUgbG9naWNcbkRPT00tPj5WTTogQ2FsbCBleHRfb3V0cHV0X3ZpZGVvIHRvIG91dHB1dCB0aGUgc2NyZWVuXG5ET09NLT4-Vk06IENhbGwgZXh0X291dHB1dF9hdWRpbyB0byBvdXRwdXQgc291bmRcblZNLS0-Pk1haW46IFJldHVybiBmcmFtZSBkYXRhXG4lJS1cbk1haW4tPj5TREw6IFVwZGF0ZSB0ZXh0dXJlXG5NYWluLT4-U0RMOiBSZW5kZXIgc2NlbmVcbk1haW4tPj5TREw6IFByZXNlbnQgc2NlbmVcbmVuZFxuJSUtXG5Vc2VyLT4-TWFpbjogRXhpdCBldmVudFxuTWFpbi0-Pk1haW46IEVuZCBwcm9ncmFtIiwibWVybWFpZCI6bnVsbH0" /></p>
+
+<h2 id="special-notes">Special Notes</h2>
+
+<ol>
+  <li>The project supports different operating systems, but it will use interpreter mode on non-Linux/macOS systems, which is slower.</li>
+  <li>The DOOM engine source code is hosted in a separate repository: <a href="https://github.com/koute/polkadoom">https://github.com/koute/polkadoom</a></li>
+  <li>The PolkaVM binary file can be regenerated from the ELF file via the <code class="language-plaintext highlighter-rouge">relink.sh</code> script.</li>
+</ol>
+
+<p>This project is a good demonstration of PolkaVM’s capabilities, proving that it can run complex game programs while providing good cross-platform compatibility.</p>]]></content><author><name>Joe</name></author><category term="Technics" /><category term="PolkaVM" /><category term="GuestPrograms" /><category term="DOOM" /><summary type="html"><![CDATA[Project Overview]]></summary></entry><entry><title type="html">Unveiling PolkaVM’s Secrets:How Programs Really Work ⚙️</title><link href="http://localhost:4000/technics/2025/05/25/Unveiling-PolkaVMs-Secrets-How-Programs-Really-Work.html" rel="alternate" type="text/html" title="Unveiling PolkaVM’s Secrets:How Programs Really Work ⚙️" /><published>2025-05-25T00:00:00+08:00</published><updated>2025-05-25T00:00:00+08:00</updated><id>http://localhost:4000/technics/2025/05/25/Unveiling-PolkaVMs-Secrets-How-Programs-Really-Work</id><content type="html" xml:base="http://localhost:4000/technics/2025/05/25/Unveiling-PolkaVMs-Secrets-How-Programs-Really-Work.html"><![CDATA[<p>This article describes how executable programs are represented in PolkaVM, covering the structure, encoding, and transformation of programs. We focuse on the internal representation of compiled code, not the process of compilation itself here. For information about the compilation pipeline, see <a href="">Compilation Pipeline</a>.</p>
 
 <h2 id="overview">Overview</h2>
 
