@@ -104,7 +104,7 @@ html {
   margin-right: 50px;
 
   .site-brand-inner {
-    @include relative-font-size(1.618);
+    @include relative-font-size(1.225);
     font-family: Unbounded, serif;
     font-weight: $base-font-weight * 2.0;
     letter-spacing: -1px;
@@ -123,7 +123,7 @@ html {
 }
 
 .site-nav {
-  @include relative-font-size(1.125);
+  @include relative-font-size(1.025);
   line-height: $header-height;
   position: absolute;
   right: 0;

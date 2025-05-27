@@ -309,7 +309,7 @@ html[data-scroll-status=down] .framework .sidebar {
   margin-right: 50px;
 }
 .site-brand .site-brand-inner {
-  font-size: 22.652px;
+  font-size: 17.15px;
   font-family: Unbounded, serif;
   font-weight: 800;
   letter-spacing: -1px;
@@ -325,7 +325,7 @@ html[data-scroll-status=down] .framework .sidebar {
 }
 
 .site-nav {
-  font-size: 15.75px;
+  font-size: 14.35px;
   line-height: 63.84px;
   position: absolute;
   right: 0;
