@@ -1,4 +1,162 @@
-<?xml version="1.0" encoding="utf-8"?><feed xmlns="http://www.w3.org/2005/Atom" ><generator uri="https://jekyllrb.com/" version="4.4.1">Jekyll</generator><link href="http://localhost:4000/feed.xml" rel="self" type="application/atom+xml" /><link href="http://localhost:4000/" rel="alternate" type="text/html" /><updated>2025-05-29T09:04:10+08:00</updated><id>http://localhost:4000/feed.xml</id><title type="html">Industry-University-Research Dao</title><subtitle>Industry-University-Research Dao in the Polkadot ecosystem</subtitle><author><name>Joe</name></author><entry><title type="html">PolkaVM’s Testing Arsenal:🚀 From Zero to Bulletproof in Minutes!</title><link href="http://localhost:4000/technics/2025/05/29/Testing-and-Debugging.html" rel="alternate" type="text/html" title="PolkaVM’s Testing Arsenal:🚀 From Zero to Bulletproof in Minutes!" /><published>2025-05-29T00:00:00+08:00</published><updated>2025-05-29T00:00:00+08:00</updated><id>http://localhost:4000/technics/2025/05/29/Testing-and-Debugging</id><content type="html" xml:base="http://localhost:4000/technics/2025/05/29/Testing-and-Debugging.html"><![CDATA[<p>This article describes the testing and debugging infrastructure for PolkaVM, including automated test case generation, fuzzing capabilities, and tools for debugging VM execution. For information about benchmarking performance, see <a href="https://iurdao.github.io/technics/2025/05/28/Tools-and-Utilities.html">Tools and Utilities</a>.</p>
+<?xml version="1.0" encoding="utf-8"?><feed xmlns="http://www.w3.org/2005/Atom" ><generator uri="https://jekyllrb.com/" version="4.4.1">Jekyll</generator><link href="http://localhost:4000/feed.xml" rel="self" type="application/atom+xml" /><link href="http://localhost:4000/" rel="alternate" type="text/html" /><updated>2025-06-15T07:58:58+08:00</updated><id>http://localhost:4000/feed.xml</id><title type="html">Industry-University-Research Dao</title><subtitle>Industry-University-Research Dao in the Polkadot ecosystem</subtitle><author><name>Joe</name></author><entry><title type="html">PolkaVM Doom Example Program Analysis</title><link href="http://localhost:4000/technics/2025/06/15/PolkaVM-Doom-Example-Program-Analysis.html" rel="alternate" type="text/html" title="PolkaVM Doom Example Program Analysis" /><published>2025-06-15T00:00:00+08:00</published><updated>2025-06-15T00:00:00+08:00</updated><id>http://localhost:4000/technics/2025/06/15/PolkaVM-Doom-Example-Program%20Analysis</id><content type="html" xml:base="http://localhost:4000/technics/2025/06/15/PolkaVM-Doom-Example-Program-Analysis.html"><![CDATA[<h2 id="program-structure">Program Structure</h2>
+
+<p>The Polkavm github repo provides an example program that uses the PolkaVM virtual machine to run the classic game Doom. This program demonstrates how to use PolkaVM to execute complex game code while handling graphics rendering, audio output, and user input. This article aims to gain a glimpse into the mysteries of PolkaVM as the next-generation execution environment on the blockchain by analyzing the structure and runtime logic of this example program.</p>
+
+<h3 id="file-structure">File Structure</h3>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>/examples/doom/
+├── Cargo.toml         # Rust project configuration file
+├── README.md          # Project description document
+├── roms/              # Game ROM file directory
+│   ├── README.md      # ROM file description
+│   ├── doom-wad-shareware-license.txt  # Doom WAD file license
+│   ├── doom.polkavm   # Doom engine binary compiled to PolkaVM format
+│   ├── doom1.wad      # Doom game data file
+│   └── relink.sh      # Relink script
+└── src/               # Source code directory
+    ├── keys.rs        # Key mapping definition
+    ├── main.rs        # Main program entry point
+    └── vm.rs          # PolkaVM virtual machine interface implementation
+</code></pre></div></div>
+
+<h3 id="core-components">Core Components</h3>
+
+<ol>
+  <li><strong>Main Program (main.rs)</strong>
+    <ul>
+      <li>Responsible for initializing the environment, loading game ROMs and the engine.</li>
+      <li>Sets up the SDL2 graphics and audio system.</li>
+      <li>Handles user input.</li>
+      <li>Implements the game main loop.</li>
+    </ul>
+  </li>
+  <li><strong>Virtual Machine Interface (vm.rs)</strong>
+    <ul>
+      <li>Defines the <code class="language-plaintext highlighter-rouge">Vm</code> struct, encapsulating the PolkaVM instance.</li>
+      <li>Implements the interface for interacting with the virtual machine.</li>
+      <li>Defines external functions for the Doom engine to call (video output, audio output, ROM reading, etc.).</li>
+    </ul>
+  </li>
+  <li><strong>Key Mapping (keys.rs)</strong>
+    <ul>
+      <li>Defines key constants used by Doom.</li>
+      <li>Provides a mapping function from SDL2 keys to Doom keys.</li>
+    </ul>
+  </li>
+  <li><strong>ROM Files</strong>
+    <ul>
+      <li><code class="language-plaintext highlighter-rouge">doom.polkavm</code>: Doom engine compiled into PolkaVM format.</li>
+      <li><code class="language-plaintext highlighter-rouge">doom1.wad</code>: Doom game data file (freely distributed shareware version).</li>
+    </ul>
+  </li>
+</ol>
+
+<h2 id="execution-flow">Execution Flow</h2>
+
+<h3 id="initialization-phase">Initialization Phase</h3>
+
+<ol>
+  <li>Initialize the environment logging system.</li>
+  <li>Process command-line arguments, which can optionally override the default program and ROM files.</li>
+  <li>Load the Doom engine binary file (<code class="language-plaintext highlighter-rouge">doom.polkavm</code>).</li>
+  <li>Create a PolkaVM virtual machine instance.</li>
+  <li>Load the Doom game data file (<code class="language-plaintext highlighter-rouge">doom1.wad</code>).</li>
+  <li>Initialize SDL2 graphics, audio, and event systems.</li>
+  <li>Set up the audio callback function.</li>
+</ol>
+
+<h3 id="game-main-loop">Game Main Loop</h3>
+
+<ol>
+  <li><strong>Event Handling</strong>
+    <ul>
+      <li>Handle SDL2 events (keyboard, mouse input).</li>
+      <li>Map SDL2 keys to Doom keys.</li>
+      <li>Pass the key state to the virtual machine via <code class="language-plaintext highlighter-rouge">vm.on_keychange()</code>.</li>
+    </ul>
+  </li>
+  <li><strong>Audio Processing</strong>
+    <ul>
+      <li>Check the audio queue status.</li>
+      <li>If there is insufficient audio data in the queue, continue the game loop.</li>
+      <li>Otherwise, sleep briefly to avoid excessive CPU usage.</li>
+    </ul>
+  </li>
+  <li><strong>Game Frame Update</strong>
+    <ul>
+      <li>Call <code class="language-plaintext highlighter-rouge">vm.run_for_a_frame()</code> to execute one frame of the Doom engine.</li>
+      <li>Get the frame image data generated by the engine.</li>
+    </ul>
+  </li>
+  <li><strong>Rendering</strong>
+    <ul>
+      <li>Clear the canvas.</li>
+      <li>Update the SDL2 texture.</li>
+      <li>Render the texture to the canvas.</li>
+      <li>Present the screen.</li>
+    </ul>
+  </li>
+</ol>
+
+<h3 id="interaction-between-virtual-machine-and-host">Interaction between Virtual Machine and Host</h3>
+
+<p>The Doom engine (client program) interacts with the host machine through the following interfaces:</p>
+
+<ol>
+  <li><strong>Video Output</strong>: <code class="language-plaintext highlighter-rouge">ext_output_video</code>
+    <ul>
+      <li>The engine passes the rendered frame data to the host machine.</li>
+      <li>The host machine stores the data and prepares it for display.</li>
+    </ul>
+  </li>
+  <li><strong>Audio Output</strong>: <code class="language-plaintext highlighter-rouge">ext_output_audio</code>
+    <ul>
+      <li>The engine generates audio samples and passes them to the host machine.</li>
+      <li>The host machine adds the audio data to the SDL2 audio queue.</li>
+    </ul>
+  </li>
+  <li><strong>ROM Access</strong>: <code class="language-plaintext highlighter-rouge">ext_rom_size</code> and <code class="language-plaintext highlighter-rouge">ext_rom_read</code>
+    <ul>
+      <li>The engine queries the ROM size and reads ROM data.</li>
+      <li>The host machine provides access to the WAD file.</li>
+    </ul>
+  </li>
+  <li><strong>Standard Output</strong>: <code class="language-plaintext highlighter-rouge">ext_stdout</code>
+    <ul>
+      <li>The engine can write data to the host machine’s standard output.</li>
+    </ul>
+  </li>
+  <li><strong>Key Input</strong>: <code class="language-plaintext highlighter-rouge">ext_on_keychange</code>
+    <ul>
+      <li>The host machine passes user input events to the engine.</li>
+    </ul>
+  </li>
+</ol>
+
+<h2 id="sequence-diagram">Sequence Diagram</h2>
+
+<p><img class="mermaid" src="https://mermaid.ink/svg/eyJjb2RlIjoic2VxdWVuY2VEaWFncmFtXG5wYXJ0aWNpcGFudCBVc2VyIGFzIFVzZXJcbnBhcnRpY2lwYW50IEhvc3QgYXMgSG9zdCBQcm9ncmFtKG1haW4ucnMpXG5wYXJ0aWNpcGFudCBWTSBhcyBWaXJ0dWFsIE1hY2hpbmUodm0ucnMpXG5wYXJ0aWNpcGFudCBFbmdpbmUgYXMgRG9vbSBFbmdpbmUoZG9vbS5wb2xrYXZtKVxucGFydGljaXBhbnQgU0RMIGFzIFNETDIgU3lzdGVtXG4lJS1cbkhvc3QtPj5Ib3N0OiBJbml0aWFsaXplIGVudmlyb25tZW50IGxvZ2dpbmdcbkhvc3QtPj5Ib3N0OiBQcm9jZXNzIGNvbW1hbmQtbGluZSBhcmd1bWVudHNcbkhvc3QtPj5WTTogTG9hZCBEb29tIGVuZ2luZShQcm9ncmFtQmxvYjo6cGFyc2UpXG5Ib3N0LT4-Vk06IENyZWF0ZSBWTSBpbnN0YW5jZShWbTo6ZnJvbV9ibG9iKVxuVk0tPj5WTTogU2V0IGV4dGVybmFsIGZ1bmN0aW9ucyhsaW5rZXIuZGVmaW5lX3R5cGVkKVxuSG9zdC0-PlZNOiBMb2FkIFdBRCBmaWxlKGluaXRpYWxpemUpXG5WTS0-PkVuZ2luZTogSW5pdGlhbGl6ZSBlbmdpbmUoZXh0X2luaXRpYWxpemUpXG5Ib3N0LT4-U0RMOiBJbml0aWFsaXplIFNETDIodmlkZW8sIGF1ZGlvLCBldmVudHMpXG5Ib3N0LT4-Vk06IFNldCBhdWRpbyBjYWxsYmFjayhzZXRfb25fYXVkaW9fZnJhbWUpXG4lJS1cbmxvb3AgR2FtZSBNYWluIExvb3BcblVzZXItPj5Ib3N0OiBJbnB1dCBldmVudChrZXlib2FyZC9tb3VzZSlcbkhvc3QtPj5TREw6IEdldCBldmVudChldmVudF9wdW1wLnBvbGxfZXZlbnQpXG5Ib3N0LT4-SG9zdDogTWFwIFNETDIga2V5IHRvIERvb20ga2V5XG5Ib3N0LT4-Vk06IFBhc3Mga2V5IHN0YXRlKG9uX2tleWNoYW5nZSlcblZNLT4-RW5naW5lOiBVcGRhdGUga2V5IHN0YXRlKGV4dF9vbl9rZXljaGFuZ2UpXG4lJS1cbkhvc3QtPj5Ib3N0OiBDaGVjayBhdWRpbyBxdWV1ZSBzdGF0dXNcbmFsdCBBdWRpbyBxdWV1ZSBmdWxsXG5Ib3N0LT4-SG9zdDogU2hvcnQgc2xlZXBcbmVuZFxuJSUtXG5Ib3N0LT4-Vk06IEV4ZWN1dGUgb25lIGZyYW1lKHJ1bl9mb3JfYV9mcmFtZSlcblZNLT4-RW5naW5lOiBFeGVjdXRlIGdhbWUgbG9naWMoZXh0X3RpY2spXG5FbmdpbmUtPj5WTTogT3V0cHV0IHZpZGVvIGZyYW1lKGV4dF9vdXRwdXRfdmlkZW8pXG5FbmdpbmUtPj5WTTogT3V0cHV0IGF1ZGlvIGRhdGEoZXh0X291dHB1dF9hdWRpbylcblZNLT4-SG9zdDogUmV0dXJuIGZyYW1lIGRhdGFcblZNLT4-U0RMOiBBZGQgYXVkaW8gZGF0YSB0byBxdWV1ZVxuJSUtXG5Ib3N0LT4-U0RMOiBVcGRhdGUgdGV4dHVyZVxuSG9zdC0-PlNETDogUmVuZGVyIHRvIGNhbnZhc1xuU0RMLT4-VXNlcjogRGlzcGxheSBzY3JlZW5cbmVuZCIsIm1lcm1haWQiOm51bGx9" /></p>
+
+<h2 id="structure-diagram">Structure Diagram</h2>
+
+<p><img class="mermaid" src="https://mermaid.ink/svg/eyJjb2RlIjoiY2xhc3NEaWFncmFtXG5jbGFzcyBNYWluIHtcbittYWluKClcbi1Qcm9jZXNzIGNvbW1hbmQtbGluZSBhcmd1bWVudHNcbi1Jbml0aWFsaXplIFNETDJcbi1HYW1lIG1haW4gbG9vcFxuLUhhbmRsZSBpbnB1dCBldmVudHNcbi1SZW5kZXIgc2NyZWVuXG59XG4lJS1cbmNsYXNzIFZtIHtcbi1zdGF0ZTogU3RhdGVcbi1pbnN0YW5jZTogSW5zdGFuY2Vcbitmcm9tX2Jsb2IoYmxvYikgVm1cbitpbml0aWFsaXplKHJvbSkgUmVzdWx0XG4rcnVuX2Zvcl9hX2ZyYW1lKCkgUmVzdWx0XG4rb25fa2V5Y2hhbmdlKGtleSwgaXNfcHJlc3NlZCkgUmVzdWx0XG4rc2V0X29uX2F1ZGlvX2ZyYW1lKGNhbGxiYWNrKVxufVxuJSUtXG5jbGFzcyBTdGF0ZSB7XG4tcm9tOiBWZWN-dTh-XG4tZnJhbWU6IFZlY351OH5cbi1mcmFtZV93aWR0aDogdTMyXG4tZnJhbWVfaGVpZ2h0OiB1MzJcbi1hdWRpb19idWZmZXI6IFZlY35pMTZ-XG4tb25fYXVkaW9fZnJhbWU6IE9wdGlvbn5Cb3h-ZHluIEZuTXV0fn5cbn1cbiUlLVxuY2xhc3MgS2V5cyB7XG4rQ29uc3RhbnQgZGVmaW5pdGlvbnMoVVBBUlJPVywgRE9XTkFSUk9XLCBldGMuKVxuK2Zyb21fc2RsMihrZXkpIE9wdGlvbn51OH5cbn1cbiUlLVxuY2xhc3MgRG9vbUVuZ2luZSB7XG4rZXh0X2luaXRpYWxpemUoKVxuK2V4dF90aWNrKClcbitleHRfb25fa2V5Y2hhbmdlKGtleSwgaXNfcHJlc3NlZClcbitleHRfb3V0cHV0X3ZpZGVvKGFkZHJlc3MsIHdpZHRoLCBoZWlnaHQpXG4rZXh0X291dHB1dF9hdWRpbyhhZGRyZXNzLCBzYW1wbGVzKVxuK2V4dF9yb21fc2l6ZSgpXG4rZXh0X3JvbV9yZWFkKHBvaW50ZXIsIG9mZnNldCwgbGVuZ3RoKVxuK2V4dF9zdGRvdXQoYnVmZmVyLCBsZW5ndGgpXG59XG4lJS1cbmNsYXNzIFNETDIge1xuK1ZpZGVvIHN5c3RlbVxuK0F1ZGlvIHN5c3RlbVxuK0V2ZW50IHN5c3RlbVxufVxuJSUtXG5NYWluIC0tPiBWbSA6IENyZWF0ZXMgYW5kIHVzZXNcbk1haW4gLS0-IEtleXMgOiBVc2VzXG5NYWluIC0tPiBTREwyIDogVXNlc1xuVm0gKi0tIFN0YXRlIDogQ29udGFpbnNcblZtIC0tPiBEb29tRW5naW5lIDogTG9hZHMgYW5kIGV4ZWN1dGVzXG5Eb29tRW5naW5lIC0tPiBWbSA6IENhbGxzIGV4dGVybmFsIGZ1bmN0aW9ucyIsIm1lcm1haWQiOm51bGx9" /></p>
+
+<h2 id="running-environment">Running Environment</h2>
+
+<p>This example program supports running on different operating systems:</p>
+
+<ol>
+  <li><strong>Linux</strong>: Requires SDL2 to be installed, run using the command <code class="language-plaintext highlighter-rouge">cargo run --release --no-default-features</code>.</li>
+  <li><strong>macOS</strong>: Requires specific environment variable settings, the command is:
+    <div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>LIBRARY_PATH="$LIBRARY_PATH:$(brew --prefix)/lib" POLKAVM_ALLOW_INSECURE=1 POLKAVM_SANDBOX=generic POLKAVM_BACKEND=compiler cargo run --target=x86_64-apple-darwin --release
+</code></pre></div>    </div>
+  </li>
+  <li><strong>Other Operating Systems</strong>: Can run, but will use interpreter mode, which is slower.</li>
+</ol>
+
+<h2 id="summary">Summary</h2>
+
+<p>This Doom example demonstrates the powerful capabilities of PolkaVM, being able to run a complex game engine while handling graphics, audio, and input. The program adopts a clear modular design, encapsulating virtual machine operations in a dedicated module, with the main program responsible for handling SDL2 interaction and the game loop. By defining external function interfaces, efficient communication between the Doom engine within the virtual machine and the host environment is achieved.</p>]]></content><author><name>Joe</name></author><category term="Technics" /><category term="PolkaVM" /><category term="Doom" /><category term="Example" /><summary type="html"><![CDATA[Program Structure]]></summary></entry><entry><title type="html">PolkaVM’s Testing Arsenal:🚀 From Zero to Bulletproof in Minutes!</title><link href="http://localhost:4000/technics/2025/05/29/Testing-and-Debugging.html" rel="alternate" type="text/html" title="PolkaVM’s Testing Arsenal:🚀 From Zero to Bulletproof in Minutes!" /><published>2025-05-29T00:00:00+08:00</published><updated>2025-05-29T00:00:00+08:00</updated><id>http://localhost:4000/technics/2025/05/29/Testing-and-Debugging</id><content type="html" xml:base="http://localhost:4000/technics/2025/05/29/Testing-and-Debugging.html"><![CDATA[<p>This article describes the testing and debugging infrastructure for PolkaVM, including automated test case generation, fuzzing capabilities, and tools for debugging VM execution. For information about benchmarking performance, see <a href="https://iurdao.github.io/technics/2025/05/28/Tools-and-Utilities.html">Tools and Utilities</a>.</p>
 
 <h2 id="test-specification-infrastructure">Test Specification Infrastructure</h2>
 
@@ -1643,7 +1801,443 @@ Bitmask: 1      1         1      1
 
 <p>The program representation in PolkaVM is designed to efficiently store and execute programs. The <code class="language-plaintext highlighter-rouge">ProgramBlob</code> format encapsulates all necessary components (code, data, jump table, etc.) in a compact binary representation. The variable-length instruction encoding and efficient memory layout ensure that programs can be executed with minimal overhead.</p>
 
-<p>This representation is a core part of the PolkaVM system, bridging the gap between source programs (ELF binaries or assembly) and the execution engine. Understanding this representation is essential for working with the PolkaVM ecosystem.</p>]]></content><author><name>Joe</name></author><category term="Technics" /><category term="PolkaVM" /><category term="ProgramRepresentation" /><category term="ProgramBlob" /><summary type="html"><![CDATA[This article describes how executable programs are represented in PolkaVM, covering the structure, encoding, and transformation of programs. We focuse on the internal representation of compiled code, not the process of compilation itself here. For information about the compilation pipeline, see Compilation Pipeline.]]></summary></entry><entry><title type="html">Inside PolkaVM - Unveiling the Core VM Engine</title><link href="http://localhost:4000/technics/2025/05/24/Inside-PolkaVM-Unveiling-the-Core-VM-Engine.html" rel="alternate" type="text/html" title="Inside PolkaVM - Unveiling the Core VM Engine" /><published>2025-05-24T00:00:00+08:00</published><updated>2025-05-24T00:00:00+08:00</updated><id>http://localhost:4000/technics/2025/05/24/Inside-PolkaVM-Unveiling-the-Core-VM-Engine</id><content type="html" xml:base="http://localhost:4000/technics/2025/05/24/Inside-PolkaVM-Unveiling-the-Core-VM-Engine.html"><![CDATA[<p>The Core VM Engine is the central execution system of PolkaVM, responsible for loading, compiling, and running guest programs in a secure and efficient manner. It provides the foundation for program execution, memory management, sandboxing, and interaction between host and guest code. For information about program representation, see <a href="">Program Representation</a>, and for the sandboxing system, see <a href="https://iurdao.github.io/technics/2025/05/24/Sandboxing.html">Sandboxing</a>.</p>
+<p>This representation is a core part of the PolkaVM system, bridging the gap between source programs (ELF binaries or assembly) and the execution engine. Understanding this representation is essential for working with the PolkaVM ecosystem.</p>]]></content><author><name>Joe</name></author><category term="Technics" /><category term="PolkaVM" /><category term="ProgramRepresentation" /><category term="ProgramBlob" /><summary type="html"><![CDATA[This article describes how executable programs are represented in PolkaVM, covering the structure, encoding, and transformation of programs. We focuse on the internal representation of compiled code, not the process of compilation itself here. For information about the compilation pipeline, see Compilation Pipeline.]]></summary></entry><entry><title type="html">Unlock Untrusted Code - PolkaVM’s Architecture Deep Dive</title><link href="http://localhost:4000/technics/2025/05/24/Unlock-Untrusted-Code.html" rel="alternate" type="text/html" title="Unlock Untrusted Code - PolkaVM’s Architecture Deep Dive" /><published>2025-05-24T00:00:00+08:00</published><updated>2025-05-24T00:00:00+08:00</updated><id>http://localhost:4000/technics/2025/05/24/Unlock-Untrusted-Code</id><content type="html" xml:base="http://localhost:4000/technics/2025/05/24/Unlock-Untrusted-Code.html"><![CDATA[<h2 id="overview">Overview</h2>
+
+<p>PolkaVM is a high-performance, sandboxed virtual machine designed to securely execute RISC-V programs. It serves as a lightweight and efficient execution environment with a strong focus on security, determinism, and performance. This page provides a high-level introduction to the PolkaVM system, its architecture, and key components.</p>
+
+<p>For detailed information about the execution engine internals, see <a href="https://iurdao.github.io/technics/2025/05/24/Inside-PolkaVM-Unveiling-the-Core-VM-Engine.html">Core VM Engine</a>. For information about the sandboxing mechanism, see <a href="https://iurdao.github.io/technics/2025/05/24/Sandboxing.html">Sandboxing</a>.</p>
+
+<h2 id="purpose-and-goals">Purpose and Goals</h2>
+
+<p>PolkaVM aims to provide a secure, deterministic, and efficient execution environment for untrusted code. Its primary design goals include:</p>
+
+<ol>
+  <li><strong>Security</strong>: Isolate executing code using sandboxing techniques to prevent unauthorized system access</li>
+  <li><strong>Performance</strong>: Offer high-speed execution through a JIT compiler backend when available</li>
+  <li><strong>Determinism</strong>: Ensure consistent execution results regardless of the host environment</li>
+  <li><strong>Resource Control</strong>: Limit resource consumption through gas metering</li>
+  <li><strong>Portability</strong>: Run on various operating systems with platform-specific optimizations</li>
+</ol>
+
+<p>Sources: <a href="https://github.com/paritytech/polkavm/blob/910adbda/crates/polkavm/src/lib.rs#L1-L171">crates/polkavm/src/lib.rs1-171</a> <a href="https://github.com/paritytech/polkavm/blob/910adbda/Cargo.toml#L1-L202">Cargo.toml1-202</a></p>
+
+<h2 id="system-architecture">System Architecture</h2>
+
+<p>PolkaVM’s architecture consists of several key components that work together to provide a secure and efficient execution environment.</p>
+
+<p>Sources: <a href="https://github.com/paritytech/polkavm/blob/910adbda/crates/polkavm/src/lib.rs#L1-L171">crates/polkavm/src/lib.rs1-171</a> <a href="https://github.com/paritytech/polkavm/blob/910adbda/Cargo.toml#L1-L202">Cargo.toml1-202</a> <a href="https://github.com/paritytech/polkavm/blob/910adbda/crates/polkavm/src/config.rs#L1-L534">crates/polkavm/src/config.rs1-534</a></p>
+
+<h3 id="core-components">Core Components</h3>
+
+<h4 id="engine">Engine</h4>
+
+<p>The <code class="language-plaintext highlighter-rouge">Engine</code> is the central component of PolkaVM that manages the execution environment. It handles the creation of modules and provides configuration options for the VM.</p>
+
+<p>Key features:</p>
+
+<ul>
+  <li>Backend selection (Compiler or Interpreter)</li>
+  <li>Sandbox configuration</li>
+  <li>Worker management</li>
+  <li>Caching behavior</li>
+</ul>
+
+<p><img class="mermaid" src="https://mermaid.ink/svg/eyJjb2RlIjoiZmxvd2NoYXJ0IFREXG5BW0NvbmZpZ10gLS0-IEJbQmFja2VuZEtpbmRdXG5BLS0-Q1tTYW5kYm94S2luZF1cbkEtLT5EW01vZHVsZUNvbmZpZ11cbkIgLS0-IEVbQ29tcGlsZXJdXG5CLS0-RltJbnRlcnByZXRlcl1cbkMtLT5HW0xpbnV4XVxuQy0tPkhbR2VuZXJpY11cbkQtLT5JW0dhc01ldGVyaW5nS2luZF0iLCJtZXJtYWlkIjpudWxsfQ" /></p>
+
+<p>Sources: <a href="https://github.com/paritytech/polkavm/blob/910adbda/crates/polkavm/src/config.rs#L1-L534">crates/polkavm/src/config.rs1-534</a> <a href="https://github.com/paritytech/polkavm/blob/910adbda/crates/polkavm/src/lib.rs#L139-L148">crates/polkavm/src/lib.rs139-148</a></p>
+
+<h4 id="module-and-instance">Module and Instance</h4>
+
+<p>The <code class="language-plaintext highlighter-rouge">Module</code> represents a compiled program ready for execution, while a <code class="language-plaintext highlighter-rouge">RawInstance</code> represents an active execution state.</p>
+
+<ul>
+  <li><strong>Module</strong>: Created from a <code class="language-plaintext highlighter-rouge">ProgramBlob</code>, contains the compiled code and metadata</li>
+  <li><strong>RawInstance</strong>: Created from a <code class="language-plaintext highlighter-rouge">Module</code>, maintains the execution state including registers, memory, and gas counter</li>
+</ul>
+
+<p>The execution flow involves:</p>
+
+<ol>
+  <li>Creating a <code class="language-plaintext highlighter-rouge">Module</code> from a <code class="language-plaintext highlighter-rouge">ProgramBlob</code></li>
+  <li>Instantiating a <code class="language-plaintext highlighter-rouge">RawInstance</code> from the <code class="language-plaintext highlighter-rouge">Module</code></li>
+  <li>Running the instance, which produces an <code class="language-plaintext highlighter-rouge">InterruptKind</code> result</li>
+</ol>
+
+<p>Sources: <a href="https://github.com/paritytech/polkavm/blob/910adbda/crates/polkavm/src/lib.rs#L139-L148">crates/polkavm/src/lib.rs139-148</a> <a href="https://github.com/paritytech/polkavm/blob/910adbda/crates/polkavm/src/utils.rs#L93-L139">crates/polkavm/src/utils.rs93-139</a></p>
+
+<h4 id="execution-backends">Execution Backends</h4>
+
+<p>PolkaVM supports two execution backends:</p>
+
+<ol>
+  <li><strong>Compiler Backend</strong>: JIT-compiles the program to native code for high performance</li>
+  <li><strong>Interpreter Backend</strong>: Interprets the program’s instructions directly, used as a fallback when compilation is not available</li>
+</ol>
+
+<p>The appropriate backend is selected based on platform support and configuration.</p>
+
+<p>Sources: <a href="https://github.com/paritytech/polkavm/blob/910adbda/crates/polkavm/src/config.rs#L7-L49">crates/polkavm/src/config.rs7-49</a></p>
+
+<h4 id="sandboxing">Sandboxing</h4>
+
+<p>The sandbox component provides isolation for executing untrusted code, preventing it from accessing the host system directly:</p>
+
+<ol>
+  <li><strong>Linux Sandbox</strong>: Uses Linux-specific features like zygote processes, seccomp, and namespaces for efficient isolation</li>
+  <li><strong>Generic Sandbox</strong>: A more portable implementation for other platforms</li>
+</ol>
+
+<p><img class="mermaid" src="https://mermaid.ink/svg/eyJjb2RlIjoiJSUtXG5mbG93Y2hhcnQgVERcbkFbU2FuZGJveCBUcmFpdF0gLS0-IEJbTGludXggU2FuZGJveF1cbkEtLT5DW1NhbmRib3hLaW5kXVxuQi0tPkRbWnlnb3RlIFByb2Nlc3NdXG5CIC0tPiBFW0xpbnV4IFNlY3VyaXR5IEZlYXR1cmVzXVxuRS0tPkZbc2VjY29tcF1cbkUtLT5HW05hbWVzcGFjZXNdXG5FLS0-SFt1c2VyZmF1bHRmZF1cbkMtLT5JW1NpZ25hbCBIYW5kbGVyc11cbiUlLSIsIm1lcm1haWQiOm51bGx9" /></p>
+
+<p>Sources: <a href="https://github.com/paritytech/polkavm/blob/910adbda/crates/polkavm/src/config.rs#L51-L98">crates/polkavm/src/config.rs51-98</a> <a href="https://github.com/paritytech/polkavm/blob/910adbda/.github/workflows/rust.yml#L1-L133">.github/workflows/rust.yml1-133</a></p>
+
+<h4 id="program-representation">Program Representation</h4>
+
+<p>Programs in PolkaVM are represented as a <code class="language-plaintext highlighter-rouge">ProgramBlob</code>, which contains:</p>
+
+<ul>
+  <li><strong>Code</strong>: The instructions to be executed</li>
+  <li><strong>Read-Only Data</strong>: Constant data used by the program</li>
+  <li><strong>Read-Write Data</strong>: Mutable data used by the program</li>
+  <li><strong>Jump Table</strong>: Information for optimizing jumps in the code</li>
+</ul>
+
+<p>Sources: <a href="https://github.com/paritytech/polkavm/blob/910adbda/crates/polkavm/src/lib.rs#L117-L137">crates/polkavm/src/lib.rs117-137</a></p>
+
+<h4 id="gas-metering">Gas Metering</h4>
+
+<p>PolkaVM provides resource control through gas metering, allowing limits on how much computation a program can perform:</p>
+
+<ol>
+  <li><strong>Synchronous Gas Metering</strong>: Checks gas consumption after every instruction</li>
+  <li><strong>Asynchronous Gas Metering</strong>: Periodically checks gas consumption for better performance</li>
+</ol>
+
+<p>Sources: <a href="https://github.com/paritytech/polkavm/blob/910adbda/crates/polkavm/src/config.rs#L369-L385">crates/polkavm/src/config.rs369-385</a> <a href="https://github.com/paritytech/polkavm/blob/910adbda/crates/polkavm/src/lib.rs#L139-L146">crates/polkavm/src/lib.rs139-146</a></p>
+
+<h2 id="memory-management">Memory Management</h2>
+
+<p>PolkaVM manages memory for guest programs using a structured memory layout:</p>
+
+<p><img class="mermaid" src="https://mermaid.ink/svg/eyJjb2RlIjoiJSUtXG5mbG93Y2hhcnQgVERcbiUlLVxuQVtWTSBNZW1vcnkgU3BhY2VdIC0tPiBCW0d1YXJkIFBhZ2VzXVxuQSAtLT4gQ1tDb2RlIFNlY3Rpb25dXG5BIC0tPiBEW1JlYWQtT25seSBEYXRhIFNlY3Rpb25dXG5BIC0tPiBFW1JlYWQtV3JpdGUgRGF0YSBTZWN0aW9uXVxuQSAtLT4gRltTdGFjayBSZWdpb25dXG5BIC0tPiBHW0F1eGlsaWFyeSBEYXRhIFJlZ2lvbl1cbkEgLS0-IEhbXCJIZWFwICh2aWEgc2JyaylcIl1cbiUlLSIsIm1lcm1haWQiOm51bGx9" /></p>
+
+<p>The system supports dynamic paging, allowing memory to be mapped on-demand when accessed, which can improve performance for certain workloads.</p>
+
+<p>Sources: <a href="https://github.com/paritytech/polkavm/blob/910adbda/crates/polkavm/src/utils.rs#L24-L44">crates/polkavm/src/utils.rs24-44</a> <a href="https://github.com/paritytech/polkavm/blob/910adbda/crates/polkavm/src/config.rs#L426-L447">crates/polkavm/src/config.rs426-447</a></p>
+
+<h2 id="execution-flow">Execution Flow</h2>
+
+<p>The execution of a program in PolkaVM follows this general flow:</p>
+
+<p><img class="mermaid" src="https://mermaid.ink/svg/eyJjb2RlIjoiJSUtXG5zZXF1ZW5jZURpYWdyYW1cbnBhcnRpY2lwYW50IEEgYXMgSG9zdCBQcm9ncmFtXG5wYXJ0aWNpcGFudCBCIGFzIEVuZ2luZVxucGFydGljaXBhbnQgQyBhcyBNb2R1bGVcbnBhcnRpY2lwYW50IEQgYXMgUmF3SW5zdGFuY2VcbnBhcnRpY2lwYW50IEUgYXMgRXhlY3V0aW9uIEJhY2tlbmRcbkEtPj5COiBjcmVhdGUoY29uZmlnKVxuQS0-PkI6IG5ldyBtb2R1bGUoYmxvYilcbkItPj5DOiBmcm9tX2Jsb2IoZW5naW5lLCBjb25maWcsIGJsb2IpXG5DLS0-PkI6IE1vZHVsZVxuQi0tPj5BOiBNb2R1bGVcbkEtPj5DOiBpbnN0YW50aWF0ZSgpXG5DLT4-RDogbmV3KG1vZHVsZSlcbkMtPj5FOiBpbml0aWFsaXplXG5DLS0-PkE6IGluaXRpYWxpemVcbkEtPj5EOiBzZXRfcmVnKC4uLilcbkEtPj5EOiBydW4oKVxuRC0-PkU6IHJ1bigpXG5hbHQgTm9ybWFsIEV4ZWN1dGlvblxuRS0tPj5EOiBJbnRlcnJ1cHRLaW5kOjpGaW5pc2hlZFxuRC0tPj5BOiBJbnRlcnJ1cHRLaW5kOjpGaW5pc2hlZFxuZWxzZSBIb3N0IENhbGxcbkUtLT4-RDogSW50ZXJydXB0S2luZDo6RWNhbGxpKG4pXG5ELS0-PkE6IEludGVycnVwdEtpbmQ6OkVjYWxsaShuKVxuQS0-PkQ6IHNldF9yZWcoLi4uKVxuQS0-PkQ6IHJ1bigpXG5lbHNlIEVycm9yIENvbmRpdGlvblxuRS0tPj5EOiBJbnRlcnJ1cHRLaW5kOjpUcmFwL05vdEVub3VnaEdhcy9TZWdmYXVsdFxuRC0tPj5BOiBJbnRlcnJ1cHRLaW5kOjpUcmFwL05vdEVub3VnaEdhcy9TZWdmYXVsdFxuZW5kXG4lJS0iLCJtZXJtYWlkIjpudWxsfQ" /></p>
+
+<p>When a program executes, it may be interrupted for various reasons, represented by the <code class="language-plaintext highlighter-rouge">InterruptKind</code> enum:</p>
+
+<ul>
+  <li><strong>Finished</strong>: The program completed execution normally</li>
+  <li><strong>Trap</strong>: The program encountered an error or invalid operation</li>
+  <li><strong>Ecalli</strong>: The program is calling out to a host function</li>
+  <li><strong>Segfault</strong>: The program attempted an invalid memory access</li>
+  <li><strong>NotEnoughGas</strong>: The program ran out of its gas allocation</li>
+  <li><strong>Step</strong>: Returned when step tracing is enabled, after each instruction</li>
+</ul>
+
+<p>Sources: <a href="https://github.com/paritytech/polkavm/blob/910adbda/crates/polkavm/src/utils.rs#L93-L139">crates/polkavm/src/utils.rs93-139</a></p>
+
+<h2 id="tools-and-utilities">Tools and Utilities</h2>
+
+<p>PolkaVM provides several tools for working with programs:</p>
+
+<ol>
+  <li><strong>polkatool</strong>: Command-line utility for linking, assembling, disassembling and analyzing PolkaVM programs</li>
+  <li><strong>benchtool</strong>: Benchmarking tool for comparing PolkaVM with other VMs</li>
+  <li><strong>spectool</strong>: Test case generation and execution tool</li>
+</ol>
+
+<p>Sources: <a href="https://github.com/paritytech/polkavm/blob/910adbda/Cargo.toml#L1-L202">Cargo.toml1-202</a> <a href="https://github.com/paritytech/polkavm/blob/910adbda/tools/benchtool/Cargo.lock#L1-L5358">tools/benchtool/Cargo.lock1-5358</a></p>
+
+<h2 id="configuration-options">Configuration Options</h2>
+
+<p>PolkaVM can be configured through a variety of options in the <code class="language-plaintext highlighter-rouge">Config</code> and <code class="language-plaintext highlighter-rouge">ModuleConfig</code> structs:</p>
+
+<table>
+  <thead>
+    <tr>
+      <th>Configuration</th>
+      <th>Description</th>
+      <th>Default</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Backend</td>
+      <td>Execution backend (Compiler/Interpreter)</td>
+      <td>Auto-detect</td>
+    </tr>
+    <tr>
+      <td>Sandbox</td>
+      <td>Sandboxing mechanism (Linux/Generic)</td>
+      <td>Auto-detect</td>
+    </tr>
+    <tr>
+      <td>Gas Metering</td>
+      <td>Resource control method (Sync/Async/None)</td>
+      <td>None</td>
+    </tr>
+    <tr>
+      <td>Worker Count</td>
+      <td>Number of worker sandboxes to keep alive</td>
+      <td>2</td>
+    </tr>
+    <tr>
+      <td>Dynamic Paging</td>
+      <td>Enable on-demand memory mapping</td>
+      <td>False</td>
+    </tr>
+    <tr>
+      <td>Cache Enabled</td>
+      <td>Enable module caching</td>
+      <td>True with module-cache feature</td>
+    </tr>
+    <tr>
+      <td>Sandboxing Enabled</td>
+      <td>Enable security sandboxing</td>
+      <td>True</td>
+    </tr>
+    <tr>
+      <td>Page Size</td>
+      <td>Size of memory pages</td>
+      <td>4096 (4KB)</td>
+    </tr>
+    <tr>
+      <td>Step Tracing</td>
+      <td>Enable instruction-by-instruction tracing</td>
+      <td>False</td>
+    </tr>
+  </tbody>
+</table>
+
+<p>Sources: <a href="https://github.com/paritytech/polkavm/blob/910adbda/crates/polkavm/src/config.rs#L100-L367">crates/polkavm/src/config.rs100-367</a> <a href="https://github.com/paritytech/polkavm/blob/910adbda/crates/polkavm/src/config.rs#L392-L534">crates/polkavm/src/config.rs392-534</a></p>
+
+<h2 id="platform-support">Platform Support</h2>
+
+<p>PolkaVM primarily targets the following platforms:</p>
+
+<ul>
+  <li><strong>Linux</strong> (x86_64): Full support with the compiler backend and Linux-specific sandboxing</li>
+  <li><strong>macOS</strong> (x86_64): Support with the generic sandbox when the feature is enabled</li>
+  <li><strong>FreeBSD</strong> (x86_64): Support with the generic sandbox when the feature is enabled</li>
+  <li><strong>Windows</strong> (x86_64): Limited support</li>
+</ul>
+
+<p>The compiler backend is only available on x86_64 architecture, while the interpreter backend works across all supported platforms.</p>
+
+<p>Sources: <a href="https://github.com/paritytech/polkavm/blob/910adbda/.github/workflows/rust.yml#L1-L133">.github/workflows/rust.yml1-133</a> <a href="https://github.com/paritytech/polkavm/blob/910adbda/crates/polkavm/src/lib.rs#L9-L51">crates/polkavm/src/lib.rs9-51</a> <a href="https://github.com/paritytech/polkavm/blob/910adbda/ci/jobs/check-freebsd.sh#L1-L11">ci/jobs/check-freebsd.sh1-11</a></p>
+
+<h2 id="system-requirements">System Requirements</h2>
+
+<p>For optimal performance with the Linux sandbox and dynamic paging:</p>
+
+<ul>
+  <li>Linux 6.7+ kernel</li>
+  <li>Unprivileged userfaultfd must be enabled (<code class="language-plaintext highlighter-rouge">/proc/sys/vm/unprivileged_userfaultfd</code> must be set to <code class="language-plaintext highlighter-rouge">1</code>)</li>
+  <li>For some features, unprivileged user namespaces must be allowed</li>
+</ul>
+
+<p>Sources: <a href="https://github.com/paritytech/polkavm/blob/910adbda/crates/polkavm/src/config.rs#L299-L308">crates/polkavm/src/config.rs299-308</a> <a href="https://github.com/paritytech/polkavm/blob/910adbda/.github/workflows/rust.yml#L1-L133">.github/workflows/rust.yml1-133</a></p>]]></content><author><name>Joe</name></author><category term="Technics" /><category term="JAM" /><category term="PolkaVM" /><summary type="html"><![CDATA[Overview]]></summary></entry><entry><title type="html">Isolate or Integrate? PolkaVM’s Sandboxing Choices Explained 🤔</title><link href="http://localhost:4000/technics/2025/05/24/Sandboxing.html" rel="alternate" type="text/html" title="Isolate or Integrate? PolkaVM’s Sandboxing Choices Explained 🤔" /><published>2025-05-24T00:00:00+08:00</published><updated>2025-05-24T00:00:00+08:00</updated><id>http://localhost:4000/technics/2025/05/24/Sandboxing</id><content type="html" xml:base="http://localhost:4000/technics/2025/05/24/Sandboxing.html"><![CDATA[<p>Sandboxing is a critical security feature in PolkaVM that isolates guest program execution from the host system. This isolation is essential for preventing malicious or erroneous code from affecting the host environment or accessing unauthorized resources. This document explains how PolkaVM implements sandboxing, the different sandbox implementations available, and the security mechanisms they employ.</p>
+
+<p>For information about how program code is executed within the sandbox, see <a href="https://iurdao.github.io/technics/2025/05/24/Inside-PolkaVM-Unveiling-the-Core-VM-Engine.html">Core VM Engine</a>.</p>
+
+<h2 id="architecture-overview">Architecture Overview</h2>
+
+<p>PolkaVM implements a trait-based architecture for sandboxing, with specialized implementations for different operating systems. The system is designed to be extensible while providing secure isolation guarantees.</p>
+
+<p><img class="mermaid" src="https://mermaid.ink/svg/eyJjb2RlIjoiJSUtXG5mbG93Y2hhcnQgVERcbnN1YmdyYXBoIFNhbmRib3ggSW50ZXJmYWNlXG5BW1NhbmRib3ggVHJhaXRdXG5CW1NhbmRib3hDb25maWcgVHJhaXRdXG5DW1NhbmRib3hQcm9ncmFtIFRyYWl0XVxuZW5kXG5zdWJncmFwaCBJbXBsZW1lbnRhdGlvbnNcbkEtLT5EW0xpbnV4IFNhbmRib3hdXG5BLS0-RVtHZW5lcmljIFNhbmRib3hdXG5lbmRcbkQtLT5GW1p5Z290ZSBQcm9jZXNzIE1vZGVsXVxuRC0tPkdbTGludXggU2VjdXJpdHkgRmVhdHVyZXNdXG5HLS0-SFtOYW1lc3BhY2VzXVxuRy0tPklbU2VjY29tcCBGaWx0ZXJzXVxuRy0tPktbUmVzb3VyY2UgTGltaXRzXVxuRy0tPkxbXCJVc2VyZmF1bHRmZCAoRHluYW1pYyBQYWdpbmcpXCJdXG5FLS0-TVtTaWduYWwgSGFuZGxlcnNdXG5FLS0-TltNZW1vcnkgSXNvbGF0aW9uXVxuQi0tPk9bTGludXggU2FuZGJveENvbmZpZ11cbkItLT5QW0dlbmVyaWMgU2FuZGJveENvbmZpZ11cbkMtLT5RW0xpbnV4IFNhbmRib3hQcm9ncmFtXVxuQy0tPlJbR2VuZXJpYyBTYW5kYm94UHJvZ3JhbV1cbiUlLSIsIm1lcm1haWQiOm51bGx9" /></p>
+
+<p>Sources: <a href="https://github.com/paritytech/polkavm/blob/910adbda/crates/polkavm/src/sandbox.rs#L88-L138">crates/polkavm/src/sandbox.rs88-138</a> <a href="https://github.com/paritytech/polkavm/blob/910adbda/crates/polkavm/src/sandbox/linux.rs#L37-L192">crates/polkavm/src/sandbox/linux.rs37-192</a> <a href="https://github.com/paritytech/polkavm/blob/910adbda/crates/polkavm/src/sandbox/generic.rs#L92-L139">crates/polkavm/src/sandbox/generic.rs92-139</a></p>
+
+<h2 id="sandbox-interface">Sandbox Interface</h2>
+
+<p>The <code class="language-plaintext highlighter-rouge">Sandbox</code> trait defines a common interface for all sandbox implementations. It specifies methods for:</p>
+
+<ul>
+  <li>Creating and managing sandbox instances</li>
+  <li>Loading compiled modules</li>
+  <li>Executing code within the sandbox</li>
+  <li>Accessing and manipulating memory and registers</li>
+  <li>Handling interrupts and traps</li>
+</ul>
+
+<p>The trait ensures that different sandboxing implementations can be used interchangeably while providing the same level of functionality.</p>
+
+<p>Sources: <a href="https://github.com/paritytech/polkavm/blob/910adbda/crates/polkavm/src/sandbox.rs#L88-L138">crates/polkavm/src/sandbox.rs88-138</a> <a href="https://github.com/paritytech/polkavm/blob/910adbda/crates/polkavm/src/sandbox.rs#L152-L223">crates/polkavm/src/sandbox.rs152-223</a> <a href="https://github.com/paritytech/polkavm/blob/910adbda/crates/polkavm/src/sandbox.rs#L321-L424">crates/polkavm/src/sandbox.rs321-424</a></p>
+
+<h2 id="linux-sandbox-implementation">Linux Sandbox Implementation</h2>
+
+<p>The Linux sandbox implementation leverages the advanced security features available in the Linux kernel to provide strong isolation guarantees.</p>
+
+<h3 id="zygote-process-model">Zygote Process Model</h3>
+
+<p>The Linux sandbox uses a “zygote” process model, where a master process (the zygote) is forked to create child processes that execute guest code. This approach allows for:</p>
+
+<ol>
+  <li>Fast creation of new sandbox instances</li>
+  <li>Strong process-level isolation</li>
+  <li>Efficient resource management</li>
+</ol>
+
+<p><img class="mermaid" src="https://mermaid.ink/svg/eyJjb2RlIjoiJSUtXG5zZXF1ZW5jZURpYWdyYW1cbnBhcnRpY2lwYW50IEEgYXMgSG9zdCBQcm9jZXNzXG5wYXJ0aWNpcGFudCBCIGFzIEdsb2JhbFN0YXRlXG5wYXJ0aWNpcGFudCBDIGFzIFp5Z290ZSBQcm9jZXNzXG5wYXJ0aWNpcGFudCBEIGFzIENoaWxkIFNhbmRib3ggUHJvY2Vzc1xuQS0-PkI6IG5ldyhjb25maWcpXG5CLT4-QzogcHJlcGFyZV96eWdvdGUoKVxuQy0tPj5COiB6eWdvdGVfbWVtZmRcbkEtPj5DOiBjbG9uZShTQU5EQk9YX0ZMQUdTKVxuQS0-PkI6IHNwYXduKClcbkItPj5EOiBmb3JrIGZyb20genlnb3RlXG5CLT4-RDogc2VuZCBzaGFyZWQgbWVtb3J5IGRlc2NyaXB0b3JzXG5CLT4-RDogc2V0IHVwIHNpZ25hbCBoYW5kbGVyc1xuQi0-PkQ6IHNldCB1cCBzZWNjb21wIGZpbHRlcnNcbkEtPj5EOiBsb2FkX21vZHVsZShtb2R1bGUpXG5BLT4-RDogcnVuKClcbkQtLT4-QTogcmV0dXJuIGludGVycnVwdFxubm90ZSBvdmVyIEEsRDogU2FuZGJveCBjYW4gYmUgcmVjeWNsZWQgZm9yIGZ1dHVyZSB1c2VcbiUlLSIsIm1lcm1haWQiOm51bGx9" /></p>
+
+<p>The zygote process is created with a carefully controlled environment, and when a new sandbox is needed, the zygote is forked to create a new process. This new process inherits the initialized state but runs with its own memory space and restricted permissions.</p>
+
+<p>Sources: <a href="https://github.com/paritytech/polkavm/blob/910adbda/crates/polkavm/src/sandbox/linux.rs#L150-L179">crates/polkavm/src/sandbox/linux.rs150-179</a> <a href="https://github.com/paritytech/polkavm/blob/910adbda/crates/polkavm/src/sandbox/linux.rs#L644-L672">crates/polkavm/src/sandbox/linux.rs644-672</a> <a href="https://github.com/paritytech/polkavm/blob/910adbda/crates/polkavm/src/sandbox/linux.rs#L739-L799">crates/polkavm/src/sandbox/linux.rs739-799</a></p>
+
+<h3 id="security-mechanisms">Security Mechanisms</h3>
+
+<p>The Linux sandbox employs multiple security mechanisms to provide isolation:</p>
+
+<ol>
+  <li><strong>Namespaces</strong>: The sandbox uses Linux namespaces (<code class="language-plaintext highlighter-rouge">CLONE_NEWCGROUP</code>, <code class="language-plaintext highlighter-rouge">CLONE_NEWIPC</code>, <code class="language-plaintext highlighter-rouge">CLONE_NEWNET</code>, etc.) to isolate the process from the host system’s resources.</li>
+  <li><strong>Seccomp Filters</strong>: A seccomp filter is applied to restrict the system calls that the sandboxed process can make. This limits the potential attack surface.</li>
+  <li><strong>Resource Limits</strong>: Resource limits are set on the sandboxed process to prevent it from consuming excessive resources.</li>
+  <li><strong>Capability Restrictions</strong>: All capabilities are dropped from the sandboxed process, ensuring it can’t perform privileged operations.</li>
+  <li><strong>Filesystem Isolation</strong>: The filesystem is completely hidden from the sandboxed process using <code class="language-plaintext highlighter-rouge">pivot_root</code> and <code class="language-plaintext highlighter-rouge">umount2</code>.</li>
+</ol>
+
+<p>Sources: <a href="https://github.com/paritytech/polkavm/blob/910adbda/crates/polkavm/src/sandbox/linux.rs#L47-L53">crates/polkavm/src/sandbox/linux.rs47-53</a> <a href="https://github.com/paritytech/polkavm/blob/910adbda/crates/polkavm/src/sandbox/linux.rs#L747-L795">crates/polkavm/src/sandbox/linux.rs747-795</a> <a href="https://github.com/paritytech/polkavm/blob/910adbda/crates/polkavm/src/sandbox/linux.rs#L857-L878">crates/polkavm/src/sandbox/linux.rs857-878</a></p>
+
+<h2 id="memory-protection-and-isolation">Memory Protection and Isolation</h2>
+
+<p>Memory protection is a key aspect of sandboxing in PolkaVM. The system ensures that guest programs can only access memory regions they’re allowed to, preventing unauthorized access to host memory or memory belonging to other guests.</p>
+
+<h3 id="memory-layout">Memory Layout</h3>
+
+<p>PolkaVM uses a carefully designed memory layout with different regions for code, data, and control structures.</p>
+
+<p><img class="mermaid" src="https://mermaid.ink/svg/eyJjb2RlIjoiJSUtXG5mbG93Y2hhcnQgVERcbnN1YmdyYXBoIE1lbW9yeSBQcm90ZWN0aW9uXG5BW01lbW9yeSBQZXJtaXNzaW9uIE1hcHBpbmddXG5CW1NpZ25hbCBIYW5kbGluZyBmb3IgQWNjZXNzIFZpb2xhdGlvbnNdXG5DW01lbW9yeSBNYXBwaW5nIENvbnRyb2xdXG5EW1wiRHluYW1pYyBQYWdpbmcgKHVzZXJmYXVsdGZkKVwiXVxuZW5kXG5zdWJncmFwaCBWaXJ0dWFsIE1lbW9yeSBMYXlvdXRcbnN1YmdyYXBoIFwiR3Vlc3QgTWVtb3J5IFJlZ2lvbnMgKDB4MC0weEZGRkZGRkZGKVwiXG5FW0d1ZXN0IENvZGVdXG5GW0d1ZXN0IFJlYWQtb25seSBEYXRhXVxuR1tHdWVzdCBSZWFkLXdyaXRlIERhdGFdXG5IW0d1ZXN0IFN0YWNrXVxuSVtcIkd1ZXN0IEhlYXAgKER5bmFtaWNhbGx5IEdyb3duKVwiXVxuZW5kXG5zdWJncmFwaCBIb3N0LW9ubHkgUmVnaW9uc1xuSltcIlZNX0FERFJfTkFUSVZFX0NPREUgKDB4MTAwMDAwMDAwKVwiXVxuS1tcIlZNX0FERFJfSlVNUF9UQUJMRSAoMHg4MDAwMDAwMDApXCJdXG5MW1wiVk1fQUREUl9WTUNUWCAoMHg0MDAwMDAwMDApXCJdXG5NW1wiVk1fQUREUl9TSUdTVEFDSyAoMHg1MDAwMDAwMDApXCJdXG5OW1wiVk1fQUREUl9OQVRJVkVfU1RBQ0sgKDB4NjAwMDAwMDAwKVwiXVxuZW5kXG5PW1wiVk1fQUREUl9TSEFSRURfTUVNT1JZICgweDcwMDAwMDAwMClcIl1cbmVuZFxuQS0tPkVcbkEtLT5GXG5BLS0-R1xuSS0tPkRcbkItLT5DXG4lJS0iLCJtZXJtYWlkIjpudWxsfQ" /></p>
+
+<p>Sources: <a href="https://github.com/paritytech/polkavm/blob/910adbda/crates/polkavm-common/src/zygote.rs#L87-L120">crates/polkavm-common/src/zygote.rs87-120</a> <a href="https://github.com/paritytech/polkavm/blob/910adbda/crates/polkavm/src/sandbox/linux.rs#L913-L921">crates/polkavm/src/sandbox/linux.rs913-921</a></p>
+
+<h3 id="dynamic-paging">Dynamic Paging</h3>
+
+<p>On Linux systems with kernel 6.8 or newer, PolkaVM can use <code class="language-plaintext highlighter-rouge">userfaultfd</code> for dynamic paging. This allows memory to be mapped on-demand when accessed, leading to more efficient memory usage. When a page fault occurs, the host can handle it and potentially map the required memory.</p>
+
+<p><img class="mermaid" src="https://mermaid.ink/svg/eyJjb2RlIjoiJSUtXG5zZXF1ZW5jZURpYWdyYW1cbnBhcnRpY2lwYW50IEEgYXMgR3Vlc3QgQ29kZVxucGFydGljaXBhbnQgQiBhcyBWTSBSdW50aW1lXG5wYXJ0aWNpcGFudCBDIGFzIEhvc3QgUHJvY2Vzc1xucGFydGljaXBhbnQgRCBhcyBMaW51eCBLZXJuZWxcbkEtPj5COiBBY2Nlc3MgdW5tYXBwZWQgbWVtb3J5XG5CLT4-RDogUGFnZSBmYXVsdFxuRC0-PkM6IHVzZXJmYXVsdGZkIG5vdGlmaWNhdGlvblxuQy0-PkI6IEhhbmRsZSBwYWdlIGZhdWx0XG5DLT4-RDogTWFwIG1lbW9yeSBwYWdlXG5ELT4-QjogUmVzdW1lIGV4ZWN1dGlvblxuQi0-PkE6IENvbnRpbnVlIHdpdGggbWVtb3J5IGFjY2Vzc1xuJSUtIiwibWVybWFpZCI6bnVsbH0" /></p>
+
+<p>Dynamic paging is particularly useful for efficiently implementing the guest heap, which can grow as needed without pre-allocating large amounts of memory.</p>
+
+<p>Sources: <a href="https://github.com/paritytech/polkavm/blob/910adbda/crates/polkavm/src/sandbox/linux.rs#L98-L149">crates/polkavm/src/sandbox/linux.rs98-149</a> <a href="https://github.com/paritytech/polkavm/blob/910adbda/crates/polkavm/src/sandbox/linux.rs#L594-L610">crates/polkavm/src/sandbox/linux.rs594-610</a></p>
+
+<h3 id="memory-access-control">Memory Access Control</h3>
+
+<p>Memory access control is enforced through multiple mechanisms:</p>
+
+<ol>
+  <li><strong>Memory Mapping</strong>: Memory regions are mapped with specific permissions (read, write, execute).</li>
+  <li><strong>Page Protection</strong>: The <code class="language-plaintext highlighter-rouge">mprotect</code> system call is used to change permissions on memory regions.</li>
+  <li><strong>Signal Handling</strong>: Attempts to access memory with insufficient permissions trigger signals (SIGSEGV, SIGBUS) that are caught and handled.</li>
+  <li><strong>Explicit Permission Checks</strong>: The sandbox API includes methods to check if memory regions are accessible.</li>
+</ol>
+
+<p>When a memory access violation occurs, it’s converted into a clean trap that the host can handle, rather than crashing the entire process.</p>
+
+<p>Sources: <a href="https://github.com/paritytech/polkavm/blob/910adbda/crates/polkavm/src/sandbox/linux.rs#L1066-L1092">crates/polkavm/src/sandbox/linux.rs1066-1092</a> <a href="https://github.com/paritytech/polkavm/blob/910adbda/crates/polkavm/src/sandbox/linux.rs#L2282-L2364">crates/polkavm/src/sandbox/linux.rs2282-2364</a></p>
+
+<h2 id="communication-between-host-and-sandbox">Communication Between Host and Sandbox</h2>
+
+<p>Communication between the host and sandbox processes happens primarily through shared memory, with additional synchronization mechanisms.</p>
+
+<p><img class="mermaid" src="https://mermaid.ink/svg/eyJjb2RlIjoiJSUtXG5mbG93Y2hhcnQgVERcbnN1YmdyYXBoIENvbW11bmljYXRpb24gTWVjaGFuaXNtc1xuQVtTaGFyZWQgTWVtb3J5XVxuQltGdXRleCBTeW5jaHJvbml6YXRpb25dXG5DW1NpZ25hbCBQaXBlXVxuRFtcInVzZXJmYXVsdGZkIChEeW5hbWljIFBhZ2luZylcIl1cbmVuZFxuc3ViZ3JhcGggSG9zdCBQcm9jZXNzXG5FW0VuZ2luZV1cbkZbUmF3SW5zdGFuY2VdXG5HW1wiVm1DdHggKFNoYXJlZCBNZW1vcnkpXCJdXG5lbmRcbnN1YmdyYXBoIFNhbmRib3ggUHJvY2Vzc1xuSFtHdWVzdCBQcm9ncmFtXVxuSVtcIlZtQ3R4IChTaGFyZWQgTWVtb3J5KVwiXVxuSltTaWduYWwgSGFuZGxlcnNdXG5lbmRcbiUlLVxuRS0tPnxVc2VyZmF1bHRGRHxIXG5FLS0-RlxuRi0tPkdcbkc8LS0-fFNoYXJlZE1lbW9yeXxJXG5JPC0tPnxGdXRleHxHXG5HPC0tPklcbkUtLT58U2lnbmFsUGlwZXxKXG5JLS0-SFxuSC0tPkpcbkotLT5JXG4lJS0iLCJtZXJtYWlkIjpudWxsfQ" /></p>
+
+<p>The <code class="language-plaintext highlighter-rouge">VmCtx</code> structure is mapped into shared memory accessible by both the host and sandbox processes. It contains:</p>
+
+<ol>
+  <li><strong>Registers</strong>: The state of the virtual machine’s registers</li>
+  <li><strong>Gas Counter</strong>: For metering resource usage</li>
+  <li><strong>Program Counters</strong>: Tracking execution position</li>
+  <li><strong>Futex</strong>: For synchronization between host and sandbox</li>
+  <li><strong>Heap Information</strong>: Managing the heap state</li>
+  <li><strong>Message Buffer</strong>: For error reporting</li>
+</ol>
+
+<p>The host and sandbox use futex operations to synchronize state transitions, such as when the sandbox is idle, executing, or has encountered an interrupt.</p>
+
+<p>Sources: <a href="https://github.com/paritytech/polkavm/blob/910adbda/crates/polkavm-common/src/zygote.rs#L139-L408">crates/polkavm-common/src/zygote.rs139-408</a> <a href="https://github.com/paritytech/polkavm/blob/910adbda/crates/polkavm/src/sandbox/linux.rs#L1063-L1061">crates/polkavm/src/sandbox/linux.rs1063-1061</a></p>
+
+<h2 id="sandbox-lifecycle-management">Sandbox Lifecycle Management</h2>
+
+<p>Sandbox instances in PolkaVM are managed efficiently to minimize the overhead of creating new sandboxes.</p>
+
+<h3 id="worker-cache">Worker Cache</h3>
+
+<p>The <code class="language-plaintext highlighter-rouge">WorkerCache</code> component allows for efficient reuse of sandbox instances. Instead of destroying a sandbox after use, it can be returned to a pool for later reuse. This significantly reduces the overhead of creating new sandboxes, especially on Linux where fork operations and security setup are expensive.</p>
+
+<p>The worker cache maintains a pool of idle sandbox instances up to a configurable limit. When a new sandbox is needed, an idle one can be reused from the pool if available.</p>
+
+<p>Sources: <a href="https://github.com/paritytech/polkavm/blob/910adbda/crates/polkavm/src/sandbox.rs#L321-L424">crates/polkavm/src/sandbox.rs321-424</a> <a href="https://github.com/paritytech/polkavm/blob/910adbda/crates/polkavm/src/sandbox/linux.rs#L4124-L4187">crates/polkavm/src/sandbox/linux.rs4124-4187</a></p>
+
+<h2 id="error-handling-and-traps">Error Handling and Traps</h2>
+
+<p>PolkaVM handles errors and exceptions that occur during sandbox execution through a trap mechanism.</p>
+
+<h3 id="interrupt-kinds">Interrupt Kinds</h3>
+
+<p>When a sandbox’s execution is interrupted, the reason is represented by an <code class="language-plaintext highlighter-rouge">InterruptKind</code> enum:</p>
+
+<ol>
+  <li><strong>Finished</strong>: The program has completed execution normally</li>
+  <li><strong>Trap</strong>: A trap (e.g., division by zero) has occurred</li>
+  <li><strong>Ecalli</strong>: A host call has been requested</li>
+  <li><strong>NotEnoughGas</strong>: The gas limit has been exceeded</li>
+  <li><strong>Segfault</strong>: A memory access violation has occurred</li>
+</ol>
+
+<h3 id="signal-handling">Signal Handling</h3>
+
+<p>On Linux, signals like SIGSEGV (segmentation fault), SIGBUS (bus error), and SIGILL (illegal instruction) are caught by a signal handler. The handler analyzes the signal, captures the program state, and communicates the issue back to the host through the shared <code class="language-plaintext highlighter-rouge">VmCtx</code>.</p>
+
+<p>For example, when a page fault occurs due to accessing unmapped memory, the signal handler captures the fault address and notifies the host, which can then handle it appropriately (e.g., by mapping the required memory if it’s part of the heap).</p>
+
+<p>Sources: <a href="https://github.com/paritytech/polkavm/blob/910adbda/crates/polkavm/src/sandbox/linux.rs#L293-L421">crates/polkavm/src/sandbox/linux.rs293-421</a> <a href="https://github.com/paritytech/polkavm/blob/910adbda/crates/polkavm-zygote/src/main.rs#L293-L408">crates/polkavm-zygote/src/main.rs293-408</a></p>
+
+<h2 id="generic-sandbox-implementation">Generic Sandbox Implementation</h2>
+
+<p>In addition to the Linux-specific sandbox, PolkaVM provides a generic sandbox implementation that works on other platforms. This implementation uses more portable mechanisms but may offer fewer isolation guarantees.</p>
+
+<p>The generic sandbox uses:</p>
+
+<ol>
+  <li>Signal handlers for catching traps and memory violations</li>
+  <li>Memory mapping with protection for isolation</li>
+  <li>Position-independent execution with controlled entry and exit points</li>
+</ol>
+
+<p>While the generic sandbox doesn’t provide process-level isolation, it still ensures that guest programs can’t access unauthorized memory or execute unauthorized operations.</p>
+
+<p>Sources: <a href="https://github.com/paritytech/polkavm/blob/910adbda/crates/polkavm/src/sandbox/generic.rs#L92-L139">crates/polkavm/src/sandbox/generic.rs92-139</a> <a href="https://github.com/paritytech/polkavm/blob/910adbda/crates/polkavm/src/sandbox/generic.rs#L292-L362">crates/polkavm/src/sandbox/generic.rs292-362</a></p>
+
+<h2 id="security-considerations">Security Considerations</h2>
+
+<p>When using PolkaVM’s sandboxing capabilities, consider the following:</p>
+
+<ol>
+  <li><strong>Isolation Strength</strong>: The Linux sandbox provides stronger isolation guarantees than the generic sandbox.</li>
+  <li><strong>Kernel Requirements</strong>: For full functionality on Linux, a kernel version 6.8 or newer is recommended for dynamic paging support.</li>
+  <li><strong>Resource Limits</strong>: Configure appropriate gas limits to prevent infinite loops or excessive resource consumption.</li>
+  <li><strong>Host Function Exposure</strong>: Be cautious about which host functions you expose to guest programs, as they represent entry points back into the host environment.</li>
+</ol>
+
+<p>The sandboxing system is designed with security as a primary goal, but no sandboxing solution can provide absolute guarantees. Use defense in depth and carefully consider what capabilities you expose to guest programs.</p>
+
+<p>Sources: <a href="https://github.com/paritytech/polkavm/blob/910adbda/crates/polkavm/src/sandbox/linux.rs#L98-L149">crates/polkavm/src/sandbox/linux.rs98-149</a> <a href="https://github.com/paritytech/polkavm/blob/910adbda/crates/polkavm/src/sandbox.rs#L427-L428">crates/polkavm/src/sandbox.rs427-428</a></p>
+
+<h2 id="summary">Summary</h2>
+
+<p>PolkaVM’s sandboxing system provides strong isolation for executing untrusted code. The Linux sandbox implementation offers robust process-level isolation using advanced kernel features, while the generic sandbox provides a more portable option with memory-level isolation.</p>
+
+<p>The system is designed to be efficient, with features like worker caching to minimize overhead, and secure, with multiple layers of protection to prevent unauthorized access and resource abuse.</p>
+
+<p>For developers integrating PolkaVM, understanding the sandboxing mechanisms is crucial for building secure applications that can safely execute untrusted code.</p>]]></content><author><name>Joe</name></author><category term="Technics" /><category term="JAM" /><category term="PolkaVM" /><category term="Sandboxing" /><summary type="html"><![CDATA[Sandboxing is a critical security feature in PolkaVM that isolates guest program execution from the host system. This isolation is essential for preventing malicious or erroneous code from affecting the host environment or accessing unauthorized resources. This document explains how PolkaVM implements sandboxing, the different sandbox implementations available, and the security mechanisms they employ.]]></summary></entry><entry><title type="html">Inside PolkaVM - Unveiling the Core VM Engine</title><link href="http://localhost:4000/technics/2025/05/24/Inside-PolkaVM-Unveiling-the-Core-VM-Engine.html" rel="alternate" type="text/html" title="Inside PolkaVM - Unveiling the Core VM Engine" /><published>2025-05-24T00:00:00+08:00</published><updated>2025-05-24T00:00:00+08:00</updated><id>http://localhost:4000/technics/2025/05/24/Inside-PolkaVM-Unveiling-the-Core-VM-Engine</id><content type="html" xml:base="http://localhost:4000/technics/2025/05/24/Inside-PolkaVM-Unveiling-the-Core-VM-Engine.html"><![CDATA[<p>The Core VM Engine is the central execution system of PolkaVM, responsible for loading, compiling, and running guest programs in a secure and efficient manner. It provides the foundation for program execution, memory management, sandboxing, and interaction between host and guest code. For information about program representation, see <a href="">Program Representation</a>, and for the sandboxing system, see <a href="https://iurdao.github.io/technics/2025/05/24/Sandboxing.html">Sandboxing</a>.</p>
 
 <h2 id="architecture-overview">Architecture Overview</h2>
 
@@ -2010,440 +2604,4 @@ Bitmask: 1      1         1      1
   <li>The <code class="language-plaintext highlighter-rouge">MemoryAccessError</code> handles memory access failures</li>
 </ol>
 
-<p>Sources: <a href="https://github.com/paritytech/polkavm/blob/910adbda/crates/polkavm/src/error.rs#L19-L108">crates/polkavm/src/error.rs19-108</a> <a href="https://github.com/paritytech/polkavm/blob/910adbda/crates/polkavm/src/utils.rs#L103-L139">crates/polkavm/src/utils.rs103-139</a> <a href="https://github.com/paritytech/polkavm/blob/910adbda/crates/polkavm/src/api.rs#L876-L909">crates/polkavm/src/api.rs876-909</a></p>]]></content><author><name>Joe</name></author><category term="Technics" /><category term="CoreVM" /><category term="Engine" /><category term="JAM" /><category term="PolkaVM" /><summary type="html"><![CDATA[The Core VM Engine is the central execution system of PolkaVM, responsible for loading, compiling, and running guest programs in a secure and efficient manner. It provides the foundation for program execution, memory management, sandboxing, and interaction between host and guest code. For information about program representation, see Program Representation, and for the sandboxing system, see Sandboxing.]]></summary></entry><entry><title type="html">Isolate or Integrate? PolkaVM’s Sandboxing Choices Explained 🤔</title><link href="http://localhost:4000/technics/2025/05/24/Sandboxing.html" rel="alternate" type="text/html" title="Isolate or Integrate? PolkaVM’s Sandboxing Choices Explained 🤔" /><published>2025-05-24T00:00:00+08:00</published><updated>2025-05-24T00:00:00+08:00</updated><id>http://localhost:4000/technics/2025/05/24/Sandboxing</id><content type="html" xml:base="http://localhost:4000/technics/2025/05/24/Sandboxing.html"><![CDATA[<p>Sandboxing is a critical security feature in PolkaVM that isolates guest program execution from the host system. This isolation is essential for preventing malicious or erroneous code from affecting the host environment or accessing unauthorized resources. This document explains how PolkaVM implements sandboxing, the different sandbox implementations available, and the security mechanisms they employ.</p>
-
-<p>For information about how program code is executed within the sandbox, see <a href="https://iurdao.github.io/technics/2025/05/24/Inside-PolkaVM-Unveiling-the-Core-VM-Engine.html">Core VM Engine</a>.</p>
-
-<h2 id="architecture-overview">Architecture Overview</h2>
-
-<p>PolkaVM implements a trait-based architecture for sandboxing, with specialized implementations for different operating systems. The system is designed to be extensible while providing secure isolation guarantees.</p>
-
-<p><img class="mermaid" src="https://mermaid.ink/svg/eyJjb2RlIjoiJSUtXG5mbG93Y2hhcnQgVERcbnN1YmdyYXBoIFNhbmRib3ggSW50ZXJmYWNlXG5BW1NhbmRib3ggVHJhaXRdXG5CW1NhbmRib3hDb25maWcgVHJhaXRdXG5DW1NhbmRib3hQcm9ncmFtIFRyYWl0XVxuZW5kXG5zdWJncmFwaCBJbXBsZW1lbnRhdGlvbnNcbkEtLT5EW0xpbnV4IFNhbmRib3hdXG5BLS0-RVtHZW5lcmljIFNhbmRib3hdXG5lbmRcbkQtLT5GW1p5Z290ZSBQcm9jZXNzIE1vZGVsXVxuRC0tPkdbTGludXggU2VjdXJpdHkgRmVhdHVyZXNdXG5HLS0-SFtOYW1lc3BhY2VzXVxuRy0tPklbU2VjY29tcCBGaWx0ZXJzXVxuRy0tPktbUmVzb3VyY2UgTGltaXRzXVxuRy0tPkxbXCJVc2VyZmF1bHRmZCAoRHluYW1pYyBQYWdpbmcpXCJdXG5FLS0-TVtTaWduYWwgSGFuZGxlcnNdXG5FLS0-TltNZW1vcnkgSXNvbGF0aW9uXVxuQi0tPk9bTGludXggU2FuZGJveENvbmZpZ11cbkItLT5QW0dlbmVyaWMgU2FuZGJveENvbmZpZ11cbkMtLT5RW0xpbnV4IFNhbmRib3hQcm9ncmFtXVxuQy0tPlJbR2VuZXJpYyBTYW5kYm94UHJvZ3JhbV1cbiUlLSIsIm1lcm1haWQiOm51bGx9" /></p>
-
-<p>Sources: <a href="https://github.com/paritytech/polkavm/blob/910adbda/crates/polkavm/src/sandbox.rs#L88-L138">crates/polkavm/src/sandbox.rs88-138</a> <a href="https://github.com/paritytech/polkavm/blob/910adbda/crates/polkavm/src/sandbox/linux.rs#L37-L192">crates/polkavm/src/sandbox/linux.rs37-192</a> <a href="https://github.com/paritytech/polkavm/blob/910adbda/crates/polkavm/src/sandbox/generic.rs#L92-L139">crates/polkavm/src/sandbox/generic.rs92-139</a></p>
-
-<h2 id="sandbox-interface">Sandbox Interface</h2>
-
-<p>The <code class="language-plaintext highlighter-rouge">Sandbox</code> trait defines a common interface for all sandbox implementations. It specifies methods for:</p>
-
-<ul>
-  <li>Creating and managing sandbox instances</li>
-  <li>Loading compiled modules</li>
-  <li>Executing code within the sandbox</li>
-  <li>Accessing and manipulating memory and registers</li>
-  <li>Handling interrupts and traps</li>
-</ul>
-
-<p>The trait ensures that different sandboxing implementations can be used interchangeably while providing the same level of functionality.</p>
-
-<p>Sources: <a href="https://github.com/paritytech/polkavm/blob/910adbda/crates/polkavm/src/sandbox.rs#L88-L138">crates/polkavm/src/sandbox.rs88-138</a> <a href="https://github.com/paritytech/polkavm/blob/910adbda/crates/polkavm/src/sandbox.rs#L152-L223">crates/polkavm/src/sandbox.rs152-223</a> <a href="https://github.com/paritytech/polkavm/blob/910adbda/crates/polkavm/src/sandbox.rs#L321-L424">crates/polkavm/src/sandbox.rs321-424</a></p>
-
-<h2 id="linux-sandbox-implementation">Linux Sandbox Implementation</h2>
-
-<p>The Linux sandbox implementation leverages the advanced security features available in the Linux kernel to provide strong isolation guarantees.</p>
-
-<h3 id="zygote-process-model">Zygote Process Model</h3>
-
-<p>The Linux sandbox uses a “zygote” process model, where a master process (the zygote) is forked to create child processes that execute guest code. This approach allows for:</p>
-
-<ol>
-  <li>Fast creation of new sandbox instances</li>
-  <li>Strong process-level isolation</li>
-  <li>Efficient resource management</li>
-</ol>
-
-<p><img class="mermaid" src="https://mermaid.ink/svg/eyJjb2RlIjoiJSUtXG5zZXF1ZW5jZURpYWdyYW1cbnBhcnRpY2lwYW50IEEgYXMgSG9zdCBQcm9jZXNzXG5wYXJ0aWNpcGFudCBCIGFzIEdsb2JhbFN0YXRlXG5wYXJ0aWNpcGFudCBDIGFzIFp5Z290ZSBQcm9jZXNzXG5wYXJ0aWNpcGFudCBEIGFzIENoaWxkIFNhbmRib3ggUHJvY2Vzc1xuQS0-PkI6IG5ldyhjb25maWcpXG5CLT4-QzogcHJlcGFyZV96eWdvdGUoKVxuQy0tPj5COiB6eWdvdGVfbWVtZmRcbkEtPj5DOiBjbG9uZShTQU5EQk9YX0ZMQUdTKVxuQS0-PkI6IHNwYXduKClcbkItPj5EOiBmb3JrIGZyb20genlnb3RlXG5CLT4-RDogc2VuZCBzaGFyZWQgbWVtb3J5IGRlc2NyaXB0b3JzXG5CLT4-RDogc2V0IHVwIHNpZ25hbCBoYW5kbGVyc1xuQi0-PkQ6IHNldCB1cCBzZWNjb21wIGZpbHRlcnNcbkEtPj5EOiBsb2FkX21vZHVsZShtb2R1bGUpXG5BLT4-RDogcnVuKClcbkQtLT4-QTogcmV0dXJuIGludGVycnVwdFxubm90ZSBvdmVyIEEsRDogU2FuZGJveCBjYW4gYmUgcmVjeWNsZWQgZm9yIGZ1dHVyZSB1c2VcbiUlLSIsIm1lcm1haWQiOm51bGx9" /></p>
-
-<p>The zygote process is created with a carefully controlled environment, and when a new sandbox is needed, the zygote is forked to create a new process. This new process inherits the initialized state but runs with its own memory space and restricted permissions.</p>
-
-<p>Sources: <a href="https://github.com/paritytech/polkavm/blob/910adbda/crates/polkavm/src/sandbox/linux.rs#L150-L179">crates/polkavm/src/sandbox/linux.rs150-179</a> <a href="https://github.com/paritytech/polkavm/blob/910adbda/crates/polkavm/src/sandbox/linux.rs#L644-L672">crates/polkavm/src/sandbox/linux.rs644-672</a> <a href="https://github.com/paritytech/polkavm/blob/910adbda/crates/polkavm/src/sandbox/linux.rs#L739-L799">crates/polkavm/src/sandbox/linux.rs739-799</a></p>
-
-<h3 id="security-mechanisms">Security Mechanisms</h3>
-
-<p>The Linux sandbox employs multiple security mechanisms to provide isolation:</p>
-
-<ol>
-  <li><strong>Namespaces</strong>: The sandbox uses Linux namespaces (<code class="language-plaintext highlighter-rouge">CLONE_NEWCGROUP</code>, <code class="language-plaintext highlighter-rouge">CLONE_NEWIPC</code>, <code class="language-plaintext highlighter-rouge">CLONE_NEWNET</code>, etc.) to isolate the process from the host system’s resources.</li>
-  <li><strong>Seccomp Filters</strong>: A seccomp filter is applied to restrict the system calls that the sandboxed process can make. This limits the potential attack surface.</li>
-  <li><strong>Resource Limits</strong>: Resource limits are set on the sandboxed process to prevent it from consuming excessive resources.</li>
-  <li><strong>Capability Restrictions</strong>: All capabilities are dropped from the sandboxed process, ensuring it can’t perform privileged operations.</li>
-  <li><strong>Filesystem Isolation</strong>: The filesystem is completely hidden from the sandboxed process using <code class="language-plaintext highlighter-rouge">pivot_root</code> and <code class="language-plaintext highlighter-rouge">umount2</code>.</li>
-</ol>
-
-<p>Sources: <a href="https://github.com/paritytech/polkavm/blob/910adbda/crates/polkavm/src/sandbox/linux.rs#L47-L53">crates/polkavm/src/sandbox/linux.rs47-53</a> <a href="https://github.com/paritytech/polkavm/blob/910adbda/crates/polkavm/src/sandbox/linux.rs#L747-L795">crates/polkavm/src/sandbox/linux.rs747-795</a> <a href="https://github.com/paritytech/polkavm/blob/910adbda/crates/polkavm/src/sandbox/linux.rs#L857-L878">crates/polkavm/src/sandbox/linux.rs857-878</a></p>
-
-<h2 id="memory-protection-and-isolation">Memory Protection and Isolation</h2>
-
-<p>Memory protection is a key aspect of sandboxing in PolkaVM. The system ensures that guest programs can only access memory regions they’re allowed to, preventing unauthorized access to host memory or memory belonging to other guests.</p>
-
-<h3 id="memory-layout">Memory Layout</h3>
-
-<p>PolkaVM uses a carefully designed memory layout with different regions for code, data, and control structures.</p>
-
-<p><img class="mermaid" src="https://mermaid.ink/svg/eyJjb2RlIjoiJSUtXG5mbG93Y2hhcnQgVERcbnN1YmdyYXBoIE1lbW9yeSBQcm90ZWN0aW9uXG5BW01lbW9yeSBQZXJtaXNzaW9uIE1hcHBpbmddXG5CW1NpZ25hbCBIYW5kbGluZyBmb3IgQWNjZXNzIFZpb2xhdGlvbnNdXG5DW01lbW9yeSBNYXBwaW5nIENvbnRyb2xdXG5EW1wiRHluYW1pYyBQYWdpbmcgKHVzZXJmYXVsdGZkKVwiXVxuZW5kXG5zdWJncmFwaCBWaXJ0dWFsIE1lbW9yeSBMYXlvdXRcbnN1YmdyYXBoIFwiR3Vlc3QgTWVtb3J5IFJlZ2lvbnMgKDB4MC0weEZGRkZGRkZGKVwiXG5FW0d1ZXN0IENvZGVdXG5GW0d1ZXN0IFJlYWQtb25seSBEYXRhXVxuR1tHdWVzdCBSZWFkLXdyaXRlIERhdGFdXG5IW0d1ZXN0IFN0YWNrXVxuSVtcIkd1ZXN0IEhlYXAgKER5bmFtaWNhbGx5IEdyb3duKVwiXVxuZW5kXG5zdWJncmFwaCBIb3N0LW9ubHkgUmVnaW9uc1xuSltcIlZNX0FERFJfTkFUSVZFX0NPREUgKDB4MTAwMDAwMDAwKVwiXVxuS1tcIlZNX0FERFJfSlVNUF9UQUJMRSAoMHg4MDAwMDAwMDApXCJdXG5MW1wiVk1fQUREUl9WTUNUWCAoMHg0MDAwMDAwMDApXCJdXG5NW1wiVk1fQUREUl9TSUdTVEFDSyAoMHg1MDAwMDAwMDApXCJdXG5OW1wiVk1fQUREUl9OQVRJVkVfU1RBQ0sgKDB4NjAwMDAwMDAwKVwiXVxuZW5kXG5PW1wiVk1fQUREUl9TSEFSRURfTUVNT1JZICgweDcwMDAwMDAwMClcIl1cbmVuZFxuQS0tPkVcbkEtLT5GXG5BLS0-R1xuSS0tPkRcbkItLT5DXG4lJS0iLCJtZXJtYWlkIjpudWxsfQ" /></p>
-
-<p>Sources: <a href="https://github.com/paritytech/polkavm/blob/910adbda/crates/polkavm-common/src/zygote.rs#L87-L120">crates/polkavm-common/src/zygote.rs87-120</a> <a href="https://github.com/paritytech/polkavm/blob/910adbda/crates/polkavm/src/sandbox/linux.rs#L913-L921">crates/polkavm/src/sandbox/linux.rs913-921</a></p>
-
-<h3 id="dynamic-paging">Dynamic Paging</h3>
-
-<p>On Linux systems with kernel 6.8 or newer, PolkaVM can use <code class="language-plaintext highlighter-rouge">userfaultfd</code> for dynamic paging. This allows memory to be mapped on-demand when accessed, leading to more efficient memory usage. When a page fault occurs, the host can handle it and potentially map the required memory.</p>
-
-<p><img class="mermaid" src="https://mermaid.ink/svg/eyJjb2RlIjoiJSUtXG5zZXF1ZW5jZURpYWdyYW1cbnBhcnRpY2lwYW50IEEgYXMgR3Vlc3QgQ29kZVxucGFydGljaXBhbnQgQiBhcyBWTSBSdW50aW1lXG5wYXJ0aWNpcGFudCBDIGFzIEhvc3QgUHJvY2Vzc1xucGFydGljaXBhbnQgRCBhcyBMaW51eCBLZXJuZWxcbkEtPj5COiBBY2Nlc3MgdW5tYXBwZWQgbWVtb3J5XG5CLT4-RDogUGFnZSBmYXVsdFxuRC0-PkM6IHVzZXJmYXVsdGZkIG5vdGlmaWNhdGlvblxuQy0-PkI6IEhhbmRsZSBwYWdlIGZhdWx0XG5DLT4-RDogTWFwIG1lbW9yeSBwYWdlXG5ELT4-QjogUmVzdW1lIGV4ZWN1dGlvblxuQi0-PkE6IENvbnRpbnVlIHdpdGggbWVtb3J5IGFjY2Vzc1xuJSUtIiwibWVybWFpZCI6bnVsbH0" /></p>
-
-<p>Dynamic paging is particularly useful for efficiently implementing the guest heap, which can grow as needed without pre-allocating large amounts of memory.</p>
-
-<p>Sources: <a href="https://github.com/paritytech/polkavm/blob/910adbda/crates/polkavm/src/sandbox/linux.rs#L98-L149">crates/polkavm/src/sandbox/linux.rs98-149</a> <a href="https://github.com/paritytech/polkavm/blob/910adbda/crates/polkavm/src/sandbox/linux.rs#L594-L610">crates/polkavm/src/sandbox/linux.rs594-610</a></p>
-
-<h3 id="memory-access-control">Memory Access Control</h3>
-
-<p>Memory access control is enforced through multiple mechanisms:</p>
-
-<ol>
-  <li><strong>Memory Mapping</strong>: Memory regions are mapped with specific permissions (read, write, execute).</li>
-  <li><strong>Page Protection</strong>: The <code class="language-plaintext highlighter-rouge">mprotect</code> system call is used to change permissions on memory regions.</li>
-  <li><strong>Signal Handling</strong>: Attempts to access memory with insufficient permissions trigger signals (SIGSEGV, SIGBUS) that are caught and handled.</li>
-  <li><strong>Explicit Permission Checks</strong>: The sandbox API includes methods to check if memory regions are accessible.</li>
-</ol>
-
-<p>When a memory access violation occurs, it’s converted into a clean trap that the host can handle, rather than crashing the entire process.</p>
-
-<p>Sources: <a href="https://github.com/paritytech/polkavm/blob/910adbda/crates/polkavm/src/sandbox/linux.rs#L1066-L1092">crates/polkavm/src/sandbox/linux.rs1066-1092</a> <a href="https://github.com/paritytech/polkavm/blob/910adbda/crates/polkavm/src/sandbox/linux.rs#L2282-L2364">crates/polkavm/src/sandbox/linux.rs2282-2364</a></p>
-
-<h2 id="communication-between-host-and-sandbox">Communication Between Host and Sandbox</h2>
-
-<p>Communication between the host and sandbox processes happens primarily through shared memory, with additional synchronization mechanisms.</p>
-
-<p><img class="mermaid" src="https://mermaid.ink/svg/eyJjb2RlIjoiJSUtXG5mbG93Y2hhcnQgVERcbnN1YmdyYXBoIENvbW11bmljYXRpb24gTWVjaGFuaXNtc1xuQVtTaGFyZWQgTWVtb3J5XVxuQltGdXRleCBTeW5jaHJvbml6YXRpb25dXG5DW1NpZ25hbCBQaXBlXVxuRFtcInVzZXJmYXVsdGZkIChEeW5hbWljIFBhZ2luZylcIl1cbmVuZFxuc3ViZ3JhcGggSG9zdCBQcm9jZXNzXG5FW0VuZ2luZV1cbkZbUmF3SW5zdGFuY2VdXG5HW1wiVm1DdHggKFNoYXJlZCBNZW1vcnkpXCJdXG5lbmRcbnN1YmdyYXBoIFNhbmRib3ggUHJvY2Vzc1xuSFtHdWVzdCBQcm9ncmFtXVxuSVtcIlZtQ3R4IChTaGFyZWQgTWVtb3J5KVwiXVxuSltTaWduYWwgSGFuZGxlcnNdXG5lbmRcbiUlLVxuRS0tPnxVc2VyZmF1bHRGRHxIXG5FLS0-RlxuRi0tPkdcbkc8LS0-fFNoYXJlZE1lbW9yeXxJXG5JPC0tPnxGdXRleHxHXG5HPC0tPklcbkUtLT58U2lnbmFsUGlwZXxKXG5JLS0-SFxuSC0tPkpcbkotLT5JXG4lJS0iLCJtZXJtYWlkIjpudWxsfQ" /></p>
-
-<p>The <code class="language-plaintext highlighter-rouge">VmCtx</code> structure is mapped into shared memory accessible by both the host and sandbox processes. It contains:</p>
-
-<ol>
-  <li><strong>Registers</strong>: The state of the virtual machine’s registers</li>
-  <li><strong>Gas Counter</strong>: For metering resource usage</li>
-  <li><strong>Program Counters</strong>: Tracking execution position</li>
-  <li><strong>Futex</strong>: For synchronization between host and sandbox</li>
-  <li><strong>Heap Information</strong>: Managing the heap state</li>
-  <li><strong>Message Buffer</strong>: For error reporting</li>
-</ol>
-
-<p>The host and sandbox use futex operations to synchronize state transitions, such as when the sandbox is idle, executing, or has encountered an interrupt.</p>
-
-<p>Sources: <a href="https://github.com/paritytech/polkavm/blob/910adbda/crates/polkavm-common/src/zygote.rs#L139-L408">crates/polkavm-common/src/zygote.rs139-408</a> <a href="https://github.com/paritytech/polkavm/blob/910adbda/crates/polkavm/src/sandbox/linux.rs#L1063-L1061">crates/polkavm/src/sandbox/linux.rs1063-1061</a></p>
-
-<h2 id="sandbox-lifecycle-management">Sandbox Lifecycle Management</h2>
-
-<p>Sandbox instances in PolkaVM are managed efficiently to minimize the overhead of creating new sandboxes.</p>
-
-<h3 id="worker-cache">Worker Cache</h3>
-
-<p>The <code class="language-plaintext highlighter-rouge">WorkerCache</code> component allows for efficient reuse of sandbox instances. Instead of destroying a sandbox after use, it can be returned to a pool for later reuse. This significantly reduces the overhead of creating new sandboxes, especially on Linux where fork operations and security setup are expensive.</p>
-
-<p>The worker cache maintains a pool of idle sandbox instances up to a configurable limit. When a new sandbox is needed, an idle one can be reused from the pool if available.</p>
-
-<p>Sources: <a href="https://github.com/paritytech/polkavm/blob/910adbda/crates/polkavm/src/sandbox.rs#L321-L424">crates/polkavm/src/sandbox.rs321-424</a> <a href="https://github.com/paritytech/polkavm/blob/910adbda/crates/polkavm/src/sandbox/linux.rs#L4124-L4187">crates/polkavm/src/sandbox/linux.rs4124-4187</a></p>
-
-<h2 id="error-handling-and-traps">Error Handling and Traps</h2>
-
-<p>PolkaVM handles errors and exceptions that occur during sandbox execution through a trap mechanism.</p>
-
-<h3 id="interrupt-kinds">Interrupt Kinds</h3>
-
-<p>When a sandbox’s execution is interrupted, the reason is represented by an <code class="language-plaintext highlighter-rouge">InterruptKind</code> enum:</p>
-
-<ol>
-  <li><strong>Finished</strong>: The program has completed execution normally</li>
-  <li><strong>Trap</strong>: A trap (e.g., division by zero) has occurred</li>
-  <li><strong>Ecalli</strong>: A host call has been requested</li>
-  <li><strong>NotEnoughGas</strong>: The gas limit has been exceeded</li>
-  <li><strong>Segfault</strong>: A memory access violation has occurred</li>
-</ol>
-
-<h3 id="signal-handling">Signal Handling</h3>
-
-<p>On Linux, signals like SIGSEGV (segmentation fault), SIGBUS (bus error), and SIGILL (illegal instruction) are caught by a signal handler. The handler analyzes the signal, captures the program state, and communicates the issue back to the host through the shared <code class="language-plaintext highlighter-rouge">VmCtx</code>.</p>
-
-<p>For example, when a page fault occurs due to accessing unmapped memory, the signal handler captures the fault address and notifies the host, which can then handle it appropriately (e.g., by mapping the required memory if it’s part of the heap).</p>
-
-<p>Sources: <a href="https://github.com/paritytech/polkavm/blob/910adbda/crates/polkavm/src/sandbox/linux.rs#L293-L421">crates/polkavm/src/sandbox/linux.rs293-421</a> <a href="https://github.com/paritytech/polkavm/blob/910adbda/crates/polkavm-zygote/src/main.rs#L293-L408">crates/polkavm-zygote/src/main.rs293-408</a></p>
-
-<h2 id="generic-sandbox-implementation">Generic Sandbox Implementation</h2>
-
-<p>In addition to the Linux-specific sandbox, PolkaVM provides a generic sandbox implementation that works on other platforms. This implementation uses more portable mechanisms but may offer fewer isolation guarantees.</p>
-
-<p>The generic sandbox uses:</p>
-
-<ol>
-  <li>Signal handlers for catching traps and memory violations</li>
-  <li>Memory mapping with protection for isolation</li>
-  <li>Position-independent execution with controlled entry and exit points</li>
-</ol>
-
-<p>While the generic sandbox doesn’t provide process-level isolation, it still ensures that guest programs can’t access unauthorized memory or execute unauthorized operations.</p>
-
-<p>Sources: <a href="https://github.com/paritytech/polkavm/blob/910adbda/crates/polkavm/src/sandbox/generic.rs#L92-L139">crates/polkavm/src/sandbox/generic.rs92-139</a> <a href="https://github.com/paritytech/polkavm/blob/910adbda/crates/polkavm/src/sandbox/generic.rs#L292-L362">crates/polkavm/src/sandbox/generic.rs292-362</a></p>
-
-<h2 id="security-considerations">Security Considerations</h2>
-
-<p>When using PolkaVM’s sandboxing capabilities, consider the following:</p>
-
-<ol>
-  <li><strong>Isolation Strength</strong>: The Linux sandbox provides stronger isolation guarantees than the generic sandbox.</li>
-  <li><strong>Kernel Requirements</strong>: For full functionality on Linux, a kernel version 6.8 or newer is recommended for dynamic paging support.</li>
-  <li><strong>Resource Limits</strong>: Configure appropriate gas limits to prevent infinite loops or excessive resource consumption.</li>
-  <li><strong>Host Function Exposure</strong>: Be cautious about which host functions you expose to guest programs, as they represent entry points back into the host environment.</li>
-</ol>
-
-<p>The sandboxing system is designed with security as a primary goal, but no sandboxing solution can provide absolute guarantees. Use defense in depth and carefully consider what capabilities you expose to guest programs.</p>
-
-<p>Sources: <a href="https://github.com/paritytech/polkavm/blob/910adbda/crates/polkavm/src/sandbox/linux.rs#L98-L149">crates/polkavm/src/sandbox/linux.rs98-149</a> <a href="https://github.com/paritytech/polkavm/blob/910adbda/crates/polkavm/src/sandbox.rs#L427-L428">crates/polkavm/src/sandbox.rs427-428</a></p>
-
-<h2 id="summary">Summary</h2>
-
-<p>PolkaVM’s sandboxing system provides strong isolation for executing untrusted code. The Linux sandbox implementation offers robust process-level isolation using advanced kernel features, while the generic sandbox provides a more portable option with memory-level isolation.</p>
-
-<p>The system is designed to be efficient, with features like worker caching to minimize overhead, and secure, with multiple layers of protection to prevent unauthorized access and resource abuse.</p>
-
-<p>For developers integrating PolkaVM, understanding the sandboxing mechanisms is crucial for building secure applications that can safely execute untrusted code.</p>]]></content><author><name>Joe</name></author><category term="Technics" /><category term="JAM" /><category term="PolkaVM" /><category term="Sandboxing" /><summary type="html"><![CDATA[Sandboxing is a critical security feature in PolkaVM that isolates guest program execution from the host system. This isolation is essential for preventing malicious or erroneous code from affecting the host environment or accessing unauthorized resources. This document explains how PolkaVM implements sandboxing, the different sandbox implementations available, and the security mechanisms they employ.]]></summary></entry><entry><title type="html">Unlock Untrusted Code - PolkaVM’s Architecture Deep Dive</title><link href="http://localhost:4000/technics/2025/05/24/Unlock-Untrusted-Code.html" rel="alternate" type="text/html" title="Unlock Untrusted Code - PolkaVM’s Architecture Deep Dive" /><published>2025-05-24T00:00:00+08:00</published><updated>2025-05-24T00:00:00+08:00</updated><id>http://localhost:4000/technics/2025/05/24/Unlock-Untrusted-Code</id><content type="html" xml:base="http://localhost:4000/technics/2025/05/24/Unlock-Untrusted-Code.html"><![CDATA[<h2 id="overview">Overview</h2>
-
-<p>PolkaVM is a high-performance, sandboxed virtual machine designed to securely execute RISC-V programs. It serves as a lightweight and efficient execution environment with a strong focus on security, determinism, and performance. This page provides a high-level introduction to the PolkaVM system, its architecture, and key components.</p>
-
-<p>For detailed information about the execution engine internals, see <a href="https://iurdao.github.io/technics/2025/05/24/Inside-PolkaVM-Unveiling-the-Core-VM-Engine.html">Core VM Engine</a>. For information about the sandboxing mechanism, see <a href="https://iurdao.github.io/technics/2025/05/24/Sandboxing.html">Sandboxing</a>.</p>
-
-<h2 id="purpose-and-goals">Purpose and Goals</h2>
-
-<p>PolkaVM aims to provide a secure, deterministic, and efficient execution environment for untrusted code. Its primary design goals include:</p>
-
-<ol>
-  <li><strong>Security</strong>: Isolate executing code using sandboxing techniques to prevent unauthorized system access</li>
-  <li><strong>Performance</strong>: Offer high-speed execution through a JIT compiler backend when available</li>
-  <li><strong>Determinism</strong>: Ensure consistent execution results regardless of the host environment</li>
-  <li><strong>Resource Control</strong>: Limit resource consumption through gas metering</li>
-  <li><strong>Portability</strong>: Run on various operating systems with platform-specific optimizations</li>
-</ol>
-
-<p>Sources: <a href="https://github.com/paritytech/polkavm/blob/910adbda/crates/polkavm/src/lib.rs#L1-L171">crates/polkavm/src/lib.rs1-171</a> <a href="https://github.com/paritytech/polkavm/blob/910adbda/Cargo.toml#L1-L202">Cargo.toml1-202</a></p>
-
-<h2 id="system-architecture">System Architecture</h2>
-
-<p>PolkaVM’s architecture consists of several key components that work together to provide a secure and efficient execution environment.</p>
-
-<p>Sources: <a href="https://github.com/paritytech/polkavm/blob/910adbda/crates/polkavm/src/lib.rs#L1-L171">crates/polkavm/src/lib.rs1-171</a> <a href="https://github.com/paritytech/polkavm/blob/910adbda/Cargo.toml#L1-L202">Cargo.toml1-202</a> <a href="https://github.com/paritytech/polkavm/blob/910adbda/crates/polkavm/src/config.rs#L1-L534">crates/polkavm/src/config.rs1-534</a></p>
-
-<h3 id="core-components">Core Components</h3>
-
-<h4 id="engine">Engine</h4>
-
-<p>The <code class="language-plaintext highlighter-rouge">Engine</code> is the central component of PolkaVM that manages the execution environment. It handles the creation of modules and provides configuration options for the VM.</p>
-
-<p>Key features:</p>
-
-<ul>
-  <li>Backend selection (Compiler or Interpreter)</li>
-  <li>Sandbox configuration</li>
-  <li>Worker management</li>
-  <li>Caching behavior</li>
-</ul>
-
-<p><img class="mermaid" src="https://mermaid.ink/svg/eyJjb2RlIjoiZmxvd2NoYXJ0IFREXG5BW0NvbmZpZ10gLS0-IEJbQmFja2VuZEtpbmRdXG5BLS0-Q1tTYW5kYm94S2luZF1cbkEtLT5EW01vZHVsZUNvbmZpZ11cbkIgLS0-IEVbQ29tcGlsZXJdXG5CLS0-RltJbnRlcnByZXRlcl1cbkMtLT5HW0xpbnV4XVxuQy0tPkhbR2VuZXJpY11cbkQtLT5JW0dhc01ldGVyaW5nS2luZF0iLCJtZXJtYWlkIjpudWxsfQ" /></p>
-
-<p>Sources: <a href="https://github.com/paritytech/polkavm/blob/910adbda/crates/polkavm/src/config.rs#L1-L534">crates/polkavm/src/config.rs1-534</a> <a href="https://github.com/paritytech/polkavm/blob/910adbda/crates/polkavm/src/lib.rs#L139-L148">crates/polkavm/src/lib.rs139-148</a></p>
-
-<h4 id="module-and-instance">Module and Instance</h4>
-
-<p>The <code class="language-plaintext highlighter-rouge">Module</code> represents a compiled program ready for execution, while a <code class="language-plaintext highlighter-rouge">RawInstance</code> represents an active execution state.</p>
-
-<ul>
-  <li><strong>Module</strong>: Created from a <code class="language-plaintext highlighter-rouge">ProgramBlob</code>, contains the compiled code and metadata</li>
-  <li><strong>RawInstance</strong>: Created from a <code class="language-plaintext highlighter-rouge">Module</code>, maintains the execution state including registers, memory, and gas counter</li>
-</ul>
-
-<p>The execution flow involves:</p>
-
-<ol>
-  <li>Creating a <code class="language-plaintext highlighter-rouge">Module</code> from a <code class="language-plaintext highlighter-rouge">ProgramBlob</code></li>
-  <li>Instantiating a <code class="language-plaintext highlighter-rouge">RawInstance</code> from the <code class="language-plaintext highlighter-rouge">Module</code></li>
-  <li>Running the instance, which produces an <code class="language-plaintext highlighter-rouge">InterruptKind</code> result</li>
-</ol>
-
-<p>Sources: <a href="https://github.com/paritytech/polkavm/blob/910adbda/crates/polkavm/src/lib.rs#L139-L148">crates/polkavm/src/lib.rs139-148</a> <a href="https://github.com/paritytech/polkavm/blob/910adbda/crates/polkavm/src/utils.rs#L93-L139">crates/polkavm/src/utils.rs93-139</a></p>
-
-<h4 id="execution-backends">Execution Backends</h4>
-
-<p>PolkaVM supports two execution backends:</p>
-
-<ol>
-  <li><strong>Compiler Backend</strong>: JIT-compiles the program to native code for high performance</li>
-  <li><strong>Interpreter Backend</strong>: Interprets the program’s instructions directly, used as a fallback when compilation is not available</li>
-</ol>
-
-<p>The appropriate backend is selected based on platform support and configuration.</p>
-
-<p>Sources: <a href="https://github.com/paritytech/polkavm/blob/910adbda/crates/polkavm/src/config.rs#L7-L49">crates/polkavm/src/config.rs7-49</a></p>
-
-<h4 id="sandboxing">Sandboxing</h4>
-
-<p>The sandbox component provides isolation for executing untrusted code, preventing it from accessing the host system directly:</p>
-
-<ol>
-  <li><strong>Linux Sandbox</strong>: Uses Linux-specific features like zygote processes, seccomp, and namespaces for efficient isolation</li>
-  <li><strong>Generic Sandbox</strong>: A more portable implementation for other platforms</li>
-</ol>
-
-<p><img class="mermaid" src="https://mermaid.ink/svg/eyJjb2RlIjoiJSUtXG5mbG93Y2hhcnQgVERcbkFbU2FuZGJveCBUcmFpdF0gLS0-IEJbTGludXggU2FuZGJveF1cbkEtLT5DW1NhbmRib3hLaW5kXVxuQi0tPkRbWnlnb3RlIFByb2Nlc3NdXG5CIC0tPiBFW0xpbnV4IFNlY3VyaXR5IEZlYXR1cmVzXVxuRS0tPkZbc2VjY29tcF1cbkUtLT5HW05hbWVzcGFjZXNdXG5FLS0-SFt1c2VyZmF1bHRmZF1cbkMtLT5JW1NpZ25hbCBIYW5kbGVyc11cbiUlLSIsIm1lcm1haWQiOm51bGx9" /></p>
-
-<p>Sources: <a href="https://github.com/paritytech/polkavm/blob/910adbda/crates/polkavm/src/config.rs#L51-L98">crates/polkavm/src/config.rs51-98</a> <a href="https://github.com/paritytech/polkavm/blob/910adbda/.github/workflows/rust.yml#L1-L133">.github/workflows/rust.yml1-133</a></p>
-
-<h4 id="program-representation">Program Representation</h4>
-
-<p>Programs in PolkaVM are represented as a <code class="language-plaintext highlighter-rouge">ProgramBlob</code>, which contains:</p>
-
-<ul>
-  <li><strong>Code</strong>: The instructions to be executed</li>
-  <li><strong>Read-Only Data</strong>: Constant data used by the program</li>
-  <li><strong>Read-Write Data</strong>: Mutable data used by the program</li>
-  <li><strong>Jump Table</strong>: Information for optimizing jumps in the code</li>
-</ul>
-
-<p>Sources: <a href="https://github.com/paritytech/polkavm/blob/910adbda/crates/polkavm/src/lib.rs#L117-L137">crates/polkavm/src/lib.rs117-137</a></p>
-
-<h4 id="gas-metering">Gas Metering</h4>
-
-<p>PolkaVM provides resource control through gas metering, allowing limits on how much computation a program can perform:</p>
-
-<ol>
-  <li><strong>Synchronous Gas Metering</strong>: Checks gas consumption after every instruction</li>
-  <li><strong>Asynchronous Gas Metering</strong>: Periodically checks gas consumption for better performance</li>
-</ol>
-
-<p>Sources: <a href="https://github.com/paritytech/polkavm/blob/910adbda/crates/polkavm/src/config.rs#L369-L385">crates/polkavm/src/config.rs369-385</a> <a href="https://github.com/paritytech/polkavm/blob/910adbda/crates/polkavm/src/lib.rs#L139-L146">crates/polkavm/src/lib.rs139-146</a></p>
-
-<h2 id="memory-management">Memory Management</h2>
-
-<p>PolkaVM manages memory for guest programs using a structured memory layout:</p>
-
-<p><img class="mermaid" src="https://mermaid.ink/svg/eyJjb2RlIjoiJSUtXG5mbG93Y2hhcnQgVERcbiUlLVxuQVtWTSBNZW1vcnkgU3BhY2VdIC0tPiBCW0d1YXJkIFBhZ2VzXVxuQSAtLT4gQ1tDb2RlIFNlY3Rpb25dXG5BIC0tPiBEW1JlYWQtT25seSBEYXRhIFNlY3Rpb25dXG5BIC0tPiBFW1JlYWQtV3JpdGUgRGF0YSBTZWN0aW9uXVxuQSAtLT4gRltTdGFjayBSZWdpb25dXG5BIC0tPiBHW0F1eGlsaWFyeSBEYXRhIFJlZ2lvbl1cbkEgLS0-IEhbXCJIZWFwICh2aWEgc2JyaylcIl1cbiUlLSIsIm1lcm1haWQiOm51bGx9" /></p>
-
-<p>The system supports dynamic paging, allowing memory to be mapped on-demand when accessed, which can improve performance for certain workloads.</p>
-
-<p>Sources: <a href="https://github.com/paritytech/polkavm/blob/910adbda/crates/polkavm/src/utils.rs#L24-L44">crates/polkavm/src/utils.rs24-44</a> <a href="https://github.com/paritytech/polkavm/blob/910adbda/crates/polkavm/src/config.rs#L426-L447">crates/polkavm/src/config.rs426-447</a></p>
-
-<h2 id="execution-flow">Execution Flow</h2>
-
-<p>The execution of a program in PolkaVM follows this general flow:</p>
-
-<p><img class="mermaid" src="https://mermaid.ink/svg/eyJjb2RlIjoiJSUtXG5zZXF1ZW5jZURpYWdyYW1cbnBhcnRpY2lwYW50IEEgYXMgSG9zdCBQcm9ncmFtXG5wYXJ0aWNpcGFudCBCIGFzIEVuZ2luZVxucGFydGljaXBhbnQgQyBhcyBNb2R1bGVcbnBhcnRpY2lwYW50IEQgYXMgUmF3SW5zdGFuY2VcbnBhcnRpY2lwYW50IEUgYXMgRXhlY3V0aW9uIEJhY2tlbmRcbkEtPj5COiBjcmVhdGUoY29uZmlnKVxuQS0-PkI6IG5ldyBtb2R1bGUoYmxvYilcbkItPj5DOiBmcm9tX2Jsb2IoZW5naW5lLCBjb25maWcsIGJsb2IpXG5DLS0-PkI6IE1vZHVsZVxuQi0tPj5BOiBNb2R1bGVcbkEtPj5DOiBpbnN0YW50aWF0ZSgpXG5DLT4-RDogbmV3KG1vZHVsZSlcbkMtPj5FOiBpbml0aWFsaXplXG5DLS0-PkE6IGluaXRpYWxpemVcbkEtPj5EOiBzZXRfcmVnKC4uLilcbkEtPj5EOiBydW4oKVxuRC0-PkU6IHJ1bigpXG5hbHQgTm9ybWFsIEV4ZWN1dGlvblxuRS0tPj5EOiBJbnRlcnJ1cHRLaW5kOjpGaW5pc2hlZFxuRC0tPj5BOiBJbnRlcnJ1cHRLaW5kOjpGaW5pc2hlZFxuZWxzZSBIb3N0IENhbGxcbkUtLT4-RDogSW50ZXJydXB0S2luZDo6RWNhbGxpKG4pXG5ELS0-PkE6IEludGVycnVwdEtpbmQ6OkVjYWxsaShuKVxuQS0-PkQ6IHNldF9yZWcoLi4uKVxuQS0-PkQ6IHJ1bigpXG5lbHNlIEVycm9yIENvbmRpdGlvblxuRS0tPj5EOiBJbnRlcnJ1cHRLaW5kOjpUcmFwL05vdEVub3VnaEdhcy9TZWdmYXVsdFxuRC0tPj5BOiBJbnRlcnJ1cHRLaW5kOjpUcmFwL05vdEVub3VnaEdhcy9TZWdmYXVsdFxuZW5kXG4lJS0iLCJtZXJtYWlkIjpudWxsfQ" /></p>
-
-<p>When a program executes, it may be interrupted for various reasons, represented by the <code class="language-plaintext highlighter-rouge">InterruptKind</code> enum:</p>
-
-<ul>
-  <li><strong>Finished</strong>: The program completed execution normally</li>
-  <li><strong>Trap</strong>: The program encountered an error or invalid operation</li>
-  <li><strong>Ecalli</strong>: The program is calling out to a host function</li>
-  <li><strong>Segfault</strong>: The program attempted an invalid memory access</li>
-  <li><strong>NotEnoughGas</strong>: The program ran out of its gas allocation</li>
-  <li><strong>Step</strong>: Returned when step tracing is enabled, after each instruction</li>
-</ul>
-
-<p>Sources: <a href="https://github.com/paritytech/polkavm/blob/910adbda/crates/polkavm/src/utils.rs#L93-L139">crates/polkavm/src/utils.rs93-139</a></p>
-
-<h2 id="tools-and-utilities">Tools and Utilities</h2>
-
-<p>PolkaVM provides several tools for working with programs:</p>
-
-<ol>
-  <li><strong>polkatool</strong>: Command-line utility for linking, assembling, disassembling and analyzing PolkaVM programs</li>
-  <li><strong>benchtool</strong>: Benchmarking tool for comparing PolkaVM with other VMs</li>
-  <li><strong>spectool</strong>: Test case generation and execution tool</li>
-</ol>
-
-<p>Sources: <a href="https://github.com/paritytech/polkavm/blob/910adbda/Cargo.toml#L1-L202">Cargo.toml1-202</a> <a href="https://github.com/paritytech/polkavm/blob/910adbda/tools/benchtool/Cargo.lock#L1-L5358">tools/benchtool/Cargo.lock1-5358</a></p>
-
-<h2 id="configuration-options">Configuration Options</h2>
-
-<p>PolkaVM can be configured through a variety of options in the <code class="language-plaintext highlighter-rouge">Config</code> and <code class="language-plaintext highlighter-rouge">ModuleConfig</code> structs:</p>
-
-<table>
-  <thead>
-    <tr>
-      <th>Configuration</th>
-      <th>Description</th>
-      <th>Default</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <td>Backend</td>
-      <td>Execution backend (Compiler/Interpreter)</td>
-      <td>Auto-detect</td>
-    </tr>
-    <tr>
-      <td>Sandbox</td>
-      <td>Sandboxing mechanism (Linux/Generic)</td>
-      <td>Auto-detect</td>
-    </tr>
-    <tr>
-      <td>Gas Metering</td>
-      <td>Resource control method (Sync/Async/None)</td>
-      <td>None</td>
-    </tr>
-    <tr>
-      <td>Worker Count</td>
-      <td>Number of worker sandboxes to keep alive</td>
-      <td>2</td>
-    </tr>
-    <tr>
-      <td>Dynamic Paging</td>
-      <td>Enable on-demand memory mapping</td>
-      <td>False</td>
-    </tr>
-    <tr>
-      <td>Cache Enabled</td>
-      <td>Enable module caching</td>
-      <td>True with module-cache feature</td>
-    </tr>
-    <tr>
-      <td>Sandboxing Enabled</td>
-      <td>Enable security sandboxing</td>
-      <td>True</td>
-    </tr>
-    <tr>
-      <td>Page Size</td>
-      <td>Size of memory pages</td>
-      <td>4096 (4KB)</td>
-    </tr>
-    <tr>
-      <td>Step Tracing</td>
-      <td>Enable instruction-by-instruction tracing</td>
-      <td>False</td>
-    </tr>
-  </tbody>
-</table>
-
-<p>Sources: <a href="https://github.com/paritytech/polkavm/blob/910adbda/crates/polkavm/src/config.rs#L100-L367">crates/polkavm/src/config.rs100-367</a> <a href="https://github.com/paritytech/polkavm/blob/910adbda/crates/polkavm/src/config.rs#L392-L534">crates/polkavm/src/config.rs392-534</a></p>
-
-<h2 id="platform-support">Platform Support</h2>
-
-<p>PolkaVM primarily targets the following platforms:</p>
-
-<ul>
-  <li><strong>Linux</strong> (x86_64): Full support with the compiler backend and Linux-specific sandboxing</li>
-  <li><strong>macOS</strong> (x86_64): Support with the generic sandbox when the feature is enabled</li>
-  <li><strong>FreeBSD</strong> (x86_64): Support with the generic sandbox when the feature is enabled</li>
-  <li><strong>Windows</strong> (x86_64): Limited support</li>
-</ul>
-
-<p>The compiler backend is only available on x86_64 architecture, while the interpreter backend works across all supported platforms.</p>
-
-<p>Sources: <a href="https://github.com/paritytech/polkavm/blob/910adbda/.github/workflows/rust.yml#L1-L133">.github/workflows/rust.yml1-133</a> <a href="https://github.com/paritytech/polkavm/blob/910adbda/crates/polkavm/src/lib.rs#L9-L51">crates/polkavm/src/lib.rs9-51</a> <a href="https://github.com/paritytech/polkavm/blob/910adbda/ci/jobs/check-freebsd.sh#L1-L11">ci/jobs/check-freebsd.sh1-11</a></p>
-
-<h2 id="system-requirements">System Requirements</h2>
-
-<p>For optimal performance with the Linux sandbox and dynamic paging:</p>
-
-<ul>
-  <li>Linux 6.7+ kernel</li>
-  <li>Unprivileged userfaultfd must be enabled (<code class="language-plaintext highlighter-rouge">/proc/sys/vm/unprivileged_userfaultfd</code> must be set to <code class="language-plaintext highlighter-rouge">1</code>)</li>
-  <li>For some features, unprivileged user namespaces must be allowed</li>
-</ul>
-
-<p>Sources: <a href="https://github.com/paritytech/polkavm/blob/910adbda/crates/polkavm/src/config.rs#L299-L308">crates/polkavm/src/config.rs299-308</a> <a href="https://github.com/paritytech/polkavm/blob/910adbda/.github/workflows/rust.yml#L1-L133">.github/workflows/rust.yml1-133</a></p>]]></content><author><name>Joe</name></author><category term="Technics" /><category term="JAM" /><category term="PolkaVM" /><summary type="html"><![CDATA[Overview]]></summary></entry></feed>
+<p>Sources: <a href="https://github.com/paritytech/polkavm/blob/910adbda/crates/polkavm/src/error.rs#L19-L108">crates/polkavm/src/error.rs19-108</a> <a href="https://github.com/paritytech/polkavm/blob/910adbda/crates/polkavm/src/utils.rs#L103-L139">crates/polkavm/src/utils.rs103-139</a> <a href="https://github.com/paritytech/polkavm/blob/910adbda/crates/polkavm/src/api.rs#L876-L909">crates/polkavm/src/api.rs876-909</a></p>]]></content><author><name>Joe</name></author><category term="Technics" /><category term="CoreVM" /><category term="Engine" /><category term="JAM" /><category term="PolkaVM" /><summary type="html"><![CDATA[The Core VM Engine is the central execution system of PolkaVM, responsible for loading, compiling, and running guest programs in a secure and efficient manner. It provides the foundation for program execution, memory management, sandboxing, and interaction between host and guest code. For information about program representation, see Program Representation, and for the sandboxing system, see Sandboxing.]]></summary></entry></feed>
