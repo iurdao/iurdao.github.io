@@ -1,0 +1,1522 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="google-translate-customization" content="108d9124921d80c3-80e20d618ff053c8-g4f02ec6f3dba68b7-c">
+<!-- Begin Jekyll SEO tag v2.8.0 -->
+<title>Level Up Your PolkaVM Game! 🛠️ The Essential Command-Line Tools You NEED to Know. | Industry-University-Research Dao</title>
+<meta name="generator" content="Jekyll v4.4.1">
+<meta property="og:title" content="Level Up Your PolkaVM Game! 🛠️ The Essential Command-Line Tools You NEED to Know.">
+<meta name="author" content="Joe">
+<meta property="og:locale" content="en_US">
+<meta name="description" content="This article documents the command-line tools and utilities provided by the PolkaVM project to help developers work with PolkaVM programs. These tools facilitate the compilation, disassembly, analysis, benchmarking, and testing of PolkaVM applications.">
+<meta property="og:description" content="This article documents the command-line tools and utilities provided by the PolkaVM project to help developers work with PolkaVM programs. These tools facilitate the compilation, disassembly, analysis, benchmarking, and testing of PolkaVM applications.">
+<link rel="canonical" href="/technics/2025/05/28/Tools-and-Utilities.html">
+<meta property="og:url" content="/technics/2025/05/28/Tools-and-Utilities.html">
+<meta property="og:site_name" content="Industry-University-Research Dao">
+<meta property="og:type" content="article">
+<meta property="article:published_time" content="2025-05-28T00:00:00+00:00">
+<meta name="twitter:card" content="summary">
+<meta property="twitter:title" content="Level Up Your PolkaVM Game! 🛠️ The Essential Command-Line Tools You NEED to Know.">
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"BlogPosting","author":{"@type":"Person","name":"Joe"},"dateModified":"2025-05-28T00:00:00+00:00","datePublished":"2025-05-28T00:00:00+00:00","description":"This article documents the command-line tools and utilities provided by the PolkaVM project to help developers work with PolkaVM programs. These tools facilitate the compilation, disassembly, analysis, benchmarking, and testing of PolkaVM applications.","headline":"Level Up Your PolkaVM Game! 🛠️ The Essential Command-Line Tools You NEED to Know.","mainEntityOfPage":{"@type":"WebPage","@id":"/technics/2025/05/28/Tools-and-Utilities.html"},"url":"/technics/2025/05/28/Tools-and-Utilities.html"}</script>
+<!-- End Jekyll SEO tag -->
+<link rel="icon" href="">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/typeface-noto-sans@0.0.72/index.min.css">
+  <link rel="stylesheet" href="/assets/css/main.css">
+  <script src="/assets/js/main.js"></script><link type="application/atom+xml" rel="alternate" href="/feed.xml" title="Industry-University-Research Dao">
+<link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/styles/default.min.css">
+<script src="//cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/highlight.min.js"></script>
+<!-- and it's easy to individually load additional languages -->
+<script charset="UTF-8" src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/languages/go.min.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<script>
+// Init highlight js
+document.addEventListener('DOMContentLoaded', function(event) {
+  var els = document.querySelectorAll('pre code')
+
+  function addLangData(block) {
+    var outer = block.parentElement.parentElement.parentElement;
+    var lang = block.getAttribute('data-lang');
+    for (var i = 0; i < outer.classList.length; i++) {
+      var cls = outer.classList[i];
+      if (cls.startsWith('language-')) {
+        lang = cls;
+        break;
+      }
+    }
+    if (!lang) {
+      cls = block.getAttribute('class');
+      lang = cls ? cls.replace('hljs ', '') : '';
+    }
+    if (lang.startsWith('language-')) {
+      lang = lang.substr(9);
+    }
+    block.setAttribute('class', 'hljs ' + lang);
+    block.parentNode.setAttribute('data-lang', lang);
+  }
+
+  function addBadge(block) {
+    var enabled = ('true' || 'true').toLowerCase();
+    if (enabled == 'true') {
+      var pre = block.parentElement;
+      pre.classList.add('badge');
+    }
+  }
+
+  function handle(block) {
+    addLangData(block);
+    addBadge(block)
+    hljs.highlightBlock(block);
+  }
+
+  for (var i = 0; i < els.length; i++) {
+    var el = els[i];
+    handle(el);
+  }
+});
+</script>
+
+<style>
+  /* code language badge */
+  pre.badge::before {
+    content: attr(data-lang);
+    color: #fff;
+    background-color: #ff4e00;
+    padding: 0 .5em;
+    border-radius: 0 2px;
+    text-transform: uppercase;
+    text-align: center;
+    min-width: 32px;
+    display: inline-block;
+    position: absolute;
+    right: 0;
+  }
+
+  /* fix wrong badge display for firefox browser */
+  code > table pre::before {
+    display: none;
+  }
+</style>
+<script src="//cdnjs.cloudflare.com/ajax/libs/photoswipe/4.1.3/photoswipe.min.js"></script>
+<script src="//cdnjs.cloudflare.com/ajax/libs/photoswipe/4.1.3/photoswipe-ui-default.min.js"></script>
+<link href="https://cdnjs.cloudflare.com/ajax/libs/photoswipe/4.1.3/photoswipe.css" rel="stylesheet">
+<link href="https://cdnjs.cloudflare.com/ajax/libs/photoswipe/4.1.3/default-skin/default-skin.css" rel="stylesheet">
+<style>
+  .pswp .pswp__container .pswp__img {
+    background-color: white;
+  }
+</style>
+
+<script>
+  function initPhotoSwipe() {
+    var mainEl = document.querySelector("section.main");
+
+    var imgEls = mainEl.querySelectorAll("img:not(.emoji)");
+    imgEls.forEach((imgEl) => {
+      imgEl.outerHTML = `
+    <a class="photo-swipe"
+      href="${imgEl.src}"
+      data-width="${imgEl.getAttribute("width") || imgEl.width * 2}"
+      data-height="${imgEl.getAttribute("height") || imgEl.height * 2}"
+      data-caption="${imgEl.getAttribute("caption") || imgEl.alt}"
+      target="_blank">
+      ${imgEl.outerHTML}
+    </a>`;
+    });
+
+    // Init empty gallery array
+    var container = [];
+
+    // Loop over gallery items and push it to the array
+    var linkEls = mainEl.querySelectorAll("a.photo-swipe");
+    linkEls.forEach((link) => {
+      var item = {
+        src: link.getAttribute("href"),
+        w: link.dataset.width,
+        h: link.dataset.height,
+        title: link.dataset.caption || "",
+      };
+      container.push(item);
+    });
+
+    // Define click event on gallery item
+    linkEls.forEach((link, index) => {
+      link.addEventListener("click", (event) => {
+        // Prevent location change
+        event.preventDefault();
+
+        // Define object and gallery options
+        var pswp = document.querySelector(".pswp");
+
+        var zoomLevel = 1;
+
+        // Define object and gallery options
+        var options = {
+          index: index,
+          bgOpacity: 0.85,
+          showHideOpacity: true,
+          closeOnScroll: true,
+          maxSpreadZoom: 1,
+          getDoubleTapZoom: (isMouseClick, item) => {
+            if (item.detail) {
+              zoomLevel += item.detail.origEvent.shiftKey ? -1 : 1;
+              item.detail = undefined;
+            } else {
+              zoomLevel = zoomLevel === 1 ? 2 : 1;
+            }
+            if (zoomLevel <= 1) {
+              zoomLevel = 1;
+              setTimeout(() => pswp.classList.remove("pswp--zoomed-in"), 0);
+            }
+            return item.initialZoomLevel * zoomLevel;
+          },
+        };
+
+        // Initialize PhotoSwipe
+        var gallery = new PhotoSwipe(
+          pswp,
+          PhotoSwipeUI_Default,
+          container,
+          options
+        );
+
+        gallery.init();
+
+        // Custom zoom event
+        gallery.container.addEventListener("pswpTap", (e) => {
+          gallery.currItem.detail = e.detail;
+        });
+      });
+    });
+  }
+
+  window.addEventListener("load", initPhotoSwipe);
+</script>
+
+<!-- Root element of PhotoSwipe. Must have class pswp. -->
+</head>
+<body>
+<div class="pswp" tabindex="-1" role="dialog" aria-hidden="true">
+  <!-- Background of PhotoSwipe.
+           It's a separate element as animating opacity is faster than rgba(). -->
+  <div class="pswp__bg"></div>
+  <!-- Slides wrapper with overflow:hidden. -->
+  <div class="pswp__scroll-wrap">
+    <!-- Container that holds slides.
+              PhotoSwipe keeps only 3 of them in the DOM to save memory.
+              Don't modify these 3 pswp__item elements, data is added later on. -->
+    <div class="pswp__container">
+      <div class="pswp__item"></div>
+      <div class="pswp__item"></div>
+      <div class="pswp__item"></div>
+    </div>
+    <!-- Default (PhotoSwipeUI_Default) interface on top of sliding area. Can be changed. -->
+    <div class="pswp__ui pswp__ui--hidden">
+      <div class="pswp__top-bar">
+        <!--  Controls are self-explanatory. Order can be changed. -->
+        <div class="pswp__counter"></div>
+        <button class="pswp__button pswp__button--close" title="Close (Esc)"></button>
+        <button class="pswp__button pswp__button--share" title="Share"></button>
+        <button class="pswp__button pswp__button--fs" title="Toggle fullscreen"></button>
+        <button class="pswp__button pswp__button--zoom" title="Zoom in/out"></button>
+        <!-- element will get class pswp__preloader--active when preloader is running -->
+        <div class="pswp__preloader">
+          <div class="pswp__preloader__icn">
+            <div class="pswp__preloader__cut">
+              <div class="pswp__preloader__donut"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="pswp__share-modal pswp__share-modal--hidden pswp__single-tap">
+        <div class="pswp__share-tooltip"></div>
+      </div>
+      <button class="pswp__button pswp__button--arrow--left" title="Previous (arrow left)"></button>
+      <button class="pswp__button pswp__button--arrow--right" title="Next (arrow right)"></button>
+      <div class="pswp__caption">
+        <div class="pswp__caption__center"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<header class="site-header " role="banner">
+
+  <div class="wrapper">
+    <div class="site-header-inner">
+<span class="site-brand"><a class="site-brand-inner" rel="author" href="/">
+  <img class="site-favicon" title="Industry-University-Research Dao" src="" onerror="this.style.display='none'">
+  Industry-University-Research Dao
+</a>
+</span><nav class="site-nav">
+          <input type="checkbox" id="nav-trigger" class="nav-trigger">
+          <label for="nav-trigger">
+            <span class="menu-icon">
+              <svg viewbox="0 0 18 15" width="18px" height="15px">
+                <path d="M18,1.484c0,0.82-0.665,1.484-1.484,1.484H1.484C0.665,2.969,0,2.304,0,1.484l0,0C0,0.665,0.665,0,1.484,0 h15.032C17.335,0,18,0.665,18,1.484L18,1.484z M18,7.516C18,8.335,17.335,9,16.516,9H1.484C0.665,9,0,8.335,0,7.516l0,0 c0-0.82,0.665-1.484,1.484-1.484h15.032C17.335,6.031,18,6.696,18,7.516L18,7.516z M18,13.516C18,14.335,17.335,15,16.516,15H1.484 C0.665,15,0,14.335,0,13.516l0,0c0-0.82,0.665-1.483,1.484-1.483h15.032C17.335,12.031,18,12.695,18,13.516L18,13.516z"></path>
+              </svg>
+            </span>
+          </label>
+
+          <div class="trigger">
+<a class="page-link" href="/about.html">ABOUT</a><a class="page-link" href="/archives.html">ARCHIVES</a><a class="page-link" href="/categories.html">CATEGORIES</a><a class="page-link" href="/">HOME</a><a class="page-link" href="/tags.html">TAGS</a>
+
+
+
+
+
+
+
+
+
+<span class="page-link">
+
+
+
+<div id="google_translate_element" style="display: none;">
+</div>
+
+<span class="ct-language">
+  <ul class="list-unstyled ct-language-dropdown">
+    
+      <li>
+        <a href="#" class="lang-select" data-lang="en">
+          
+          <img src="https://cdn.countryflags.com/thumbs/united-states-of-america/flag-400.png" title="English">
+          
+        </a>
+      </li>
+    
+      <li>
+        <a href="#" class="lang-select" data-lang="fr">
+          
+          <img src="https://cdn.countryflags.com/thumbs/france/flag-400.png" title="French">
+          
+        </a>
+      </li>
+    
+      <li>
+        <a href="#" class="lang-select" data-lang="zh-CN">
+          
+          <img src="https://cdn.countryflags.com/thumbs/china/flag-400.png" title="Chinese(Simple)">
+          
+        </a>
+      </li>
+    
+      <li>
+        <a href="#" class="lang-select" data-lang="ja">
+          
+          <img src="https://cdn.countryflags.com/thumbs/japan/flag-400.png" title="Japanese">
+          
+        </a>
+      </li>
+    
+      <li>
+        <a href="#" class="lang-select" data-lang="ko">
+          
+          <img src="https://cdn.countryflags.com/thumbs/south-korea/flag-400.png" title="Korean">
+          
+        </a>
+      </li>
+    
+      <li>
+        <a href="#" class="lang-select" data-lang="ru">
+          
+          <img src="https://cdn.countryflags.com/thumbs/russia/flag-400.png" title="Russian">
+          
+        </a>
+      </li>
+    
+  </ul>
+</span>
+
+<script type="text/javascript">
+function googleTranslateElementInit() {
+  new google.translate.TranslateElement({
+    pageLanguage: 'en',
+    autoDisplay: false,
+    layout: google.translate.TranslateElement.InlineLayout.VERTICAL
+  }, 'google_translate_element');
+
+  // Links to cross-origin destinations are unsafe
+  var gll = document.getElementsByClassName('goog-logo-link')[0];
+  if (gll) {
+    gll.setAttribute('rel', 'noopener');
+  }
+
+  function restoreLang() {
+    var iframe = document.getElementsByClassName('goog-te-banner-frame')[0];
+    if (!iframe) return;
+
+    var innerDoc = iframe.contentDocument || iframe.contentWindow.document;
+    var restore_el = innerDoc.getElementsByTagName("button");
+
+    for (var i = 0; i < restore_el.length; i++) {
+      if (restore_el[i].id.indexOf("restore") >= 0) {
+        restore_el[i].click();
+        var close_el = innerDoc.getElementsByClassName("goog-close-link");
+        close_el[0].click();
+        return;
+      }
+    }
+  }
+
+  function triggerHtmlEvent(element, eventName) {
+    var event;
+    if (document.createEvent) {
+      event = document.createEvent('HTMLEvents');
+      event.initEvent(eventName, true, true);
+      element.dispatchEvent(event);
+    } else {
+      event = document.createEventObject();
+      event.eventType = eventName;
+      element.fireEvent('on' + event.eventType, event);
+    }
+  }
+
+  var googleCombo = document.querySelector("select.goog-te-combo");
+  var langSelect = document.querySelector('.ct-language');
+  langSelect.addEventListener('click', function(event) {
+    if (!event.target) {
+      return;
+    }
+
+    var selected = document.querySelector('.ct-language .ct-language-selected');
+    if (selected) {
+      selected.classList.remove('ct-language-selected');
+    }
+
+    var target = event.target;
+    while (target && target !== langSelect ) {
+      if (target.matches('.lang-select')) {
+        break;
+      }
+      target = target.parentElement;
+    }
+
+    if (target && target.matches('.lang-select')) {
+      var lang = target.getAttribute('data-lang');
+      if (googleCombo.value == lang) {
+        restoreLang();
+      } else {
+        target.parentElement.classList.add('ct-language-selected');
+        googleCombo.value = lang;
+        triggerHtmlEvent(googleCombo, 'change');
+      }
+    }
+
+    event.preventDefault();
+  });
+}
+</script>
+
+<script type="text/javascript" src="//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"></script>
+</span>
+</div>
+        </nav>
+</div>
+  </div>
+</header>
+
+<script>
+  function initHeader() {
+    var lastScrollY = getScrollPos().y;
+    var documentElement = document.documentElement;
+
+    function storeScrollData() {
+      var y = getScrollPos().y;var scrollStatus = "";
+
+      if (y <= 0) {
+        scrollStatus = "top";
+      } else if ((window.innerHeight + y) >= document.body.offsetHeight) {
+        scrollStatus = "bottom";
+      } else {
+        var isScrollDown = (y - lastScrollY > 0) ? true : false;
+        scrollStatus = isScrollDown ? "down" : "up";
+      }
+
+      lastScrollY = y;
+      documentElement.setAttribute("data-scroll-status", scrollStatus);
+    }
+
+    window.addEventListener('scroll', function(e) {
+      storeScrollData();
+    });
+
+    storeScrollData();
+  }
+  document.addEventListener('DOMContentLoaded', initHeader);
+</script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<script>
+  function hashLocate(hashValue) {
+    hashValue = hashValue.replace(/^.*#h-/, '');
+    hashValue = decodeURIComponent(hashValue);
+    var element = document.getElementById(hashValue);
+
+    if (!element) {
+      return;
+    }
+
+    var header = document.querySelector('header.site-header');
+    var headerRect = header.getBoundingClientRect();
+    var headerTop = Math.floor(headerRect.top);
+    var headerHeight = Math.floor(headerRect.height);
+    var scrollPos = getScrollPos();
+    var offsetY = element.offsetTop - (headerTop + headerHeight + 20);
+
+    if (offsetY == scrollPos.y) {
+      return;
+    }
+
+    if (headerTop == 0  && offsetY > scrollPos.y) {
+      offsetY += headerHeight + 2;
+    } else if (headerTop < 0  && offsetY < scrollPos.y) {
+      offsetY -= headerHeight - 2;
+    }
+
+    smoothScrollTo(offsetY);
+  }
+
+  // The first event occurred
+  window.addEventListener('load', function(event) {
+    if (window.location.hash) {
+      hashLocate(window.location.hash);
+    }
+  });
+
+  // The first event occurred
+  window.addEventListener('click', function(event) {
+    if (event.target.tagName.toLowerCase() == 'a') {
+      hashLocate(event.target.getAttribute('href'));
+    }
+  });
+</script>
+<div class="theme-toggle">
+  <input type="checkbox" id="theme-switch">
+  <label for="theme-switch">
+    <div class="toggle"></div>
+    <div class="names">
+      <p class="light">Light</p>
+      <p class="dark">Dark</p>
+    </div>
+  </label>
+</div>
+
+
+
+
+<script>
+  (function() {
+    var sw = document.getElementById('theme-switch');
+    var html = document.getElementsByTagName('html')[0];
+    var nightModeOption = ('auto' || 'auto').toLowerCase();
+    var storage = nightModeOption === 'manual'
+        ? localStorage
+        : sessionStorage;
+    var themeData = loadThemeData();
+
+    function saveThemeData(data) {
+      storage.setItem('theme', JSON.stringify(data));
+    }
+
+    function loadThemeData() {
+      var data = storage.getItem('theme');
+      try {
+        data = JSON.parse(data ? data : '');
+      } catch(e) {
+        data = { nightShift: undefined, autoToggleAt: 0 };
+        saveThemeData(data);
+      }
+      return data;
+    }
+
+    function handleThemeToggle(nightShift) {
+      themeData.nightShift = nightShift;
+      saveThemeData(themeData);
+      html.dataset.theme = nightShift ? 'dark' : 'light';
+      setTimeout(function() {
+        sw.checked = nightShift ? true : false;
+      }, 50);
+    }
+
+    function autoThemeToggle() {
+      // Next time point of theme toggle
+      var now = new Date();
+      var toggleAt = new Date();
+      var hours = now.getHours();
+      var nightShift = hours >= 19 || hours <=7;
+
+      if (nightShift) {
+        if (hours > 7) {
+          toggleAt.setDate(toggleAt.getDate() + 1);
+        }
+        toggleAt.setHours(7);
+      } else {
+        toggleAt.setHours(19);
+      }
+
+      toggleAt.setMinutes(0);
+      toggleAt.setSeconds(0);
+      toggleAt.setMilliseconds(0)
+
+      var delay = toggleAt.getTime() - now.getTime();
+
+      // auto toggle theme mode
+      setTimeout(function() {
+        handleThemeToggle(!nightShift);
+      }, delay);
+
+      return {
+        nightShift: nightShift,
+        toggleAt: toggleAt.getTime()
+      };
+    }
+
+    // Listen the theme toggle event
+    sw.addEventListener('change', function(event) {
+      handleThemeToggle(event.target.checked);
+    });
+
+    if (nightModeOption == 'auto') {
+      var data = autoThemeToggle();
+
+      // Toggle theme by local setting
+      if (data.toggleAt > themeData.autoToggleAt) {
+        themeData.autoToggleAt = data.toggleAt;
+        handleThemeToggle(data.nightShift);
+      } else {
+        handleThemeToggle(themeData.nightShift);
+      }
+    } else if (nightModeOption == 'manual') {
+      handleThemeToggle(themeData.nightShift);
+    } else {
+      var nightShift = themeData.nightShift;
+      if (nightShift === undefined) {
+        nightShift = nightModeOption === 'on';
+      }
+      handleThemeToggle(nightShift);
+    }
+  })();
+</script>
+<div id="click-to-top" class="click-to-top">
+  <i class="fa fa-arrow-up"></i>
+</div>
+<script>
+  (function () {
+    const clickToTop = document.getElementById('click-to-top');
+    window.addEventListener('scroll', () => {
+      if (window.scrollY > 100) {
+        clickToTop.classList.add('show')
+      }else {
+        clickToTop.classList.remove('show')
+      }
+    });
+    clickToTop.addEventListener('click', () => {
+      window.smoothScrollTo(0);
+    });
+  })();
+</script>
+<main class="page-content" aria-label="Content">
+      <div class="wrapper">
+        <div class="framework">
+  <section class="main">
+
+     <div class="post">
+  <section>
+
+
+
+
+
+
+
+
+
+<header class="post-header">
+  <h1 class="post-title p-name" itemprop="name headline">Level Up Your PolkaVM Game! 🛠️ The Essential Command-Line Tools You NEED to Know.</h1>
+  <h2 class="post-subtitle">Disassemble, analyze, and debug with ease. polkatool, benchtool, and spectool - your new best friends.</h2>
+
+  <p class="post-meta">
+    <time class="dt-published" datetime="2025-05-28T00:00:00+00:00" itemprop="datePublished"><i class="fa fa-calendar"></i> May 28, 2025
+    </time>
+
+    
+    
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    <span class="post-reading-time left-vsplit"><i class="fa fa-clock-o"></i> About 8 mins</span>
+  </p>
+<div class="post-tags">
+<a class="post-tag" href="/tags.html#PolkaVM">#PolkaVM</a><a class="post-tag" href="/tags.html#Tools">#Tools</a>
+</div></header>
+<article class="post h-entry" itemscope itemtype="http://schema.org/BlogPosting">
+
+    <div class="post-content e-content" itemprop="articleBody">
+
+      <p>This article documents the command-line tools and utilities provided by the PolkaVM project to help developers work with PolkaVM programs. These tools facilitate the compilation, disassembly, analysis, benchmarking, and testing of PolkaVM applications.</p>
+
+<h2 id="overview">Overview</h2>
+
+<p>PolkaVM provides three main command-line utilities:</p>
+
+<ol>
+  <li>
+<strong>polkatool</strong> - A utility for working with PolkaVM programs (linking, disassembling, assembling)</li>
+  <li>
+<strong>benchtool</strong> - A benchmarking tool for comparing PolkaVM with other virtual machines</li>
+  <li>
+<strong>spectool</strong> - A test case generation and execution tool for verifying VM behavior</li>
+</ol>
+
+<p>These tools complement each other in the development workflow and testing pipeline for PolkaVM applications.</p>
+
+<p><img class="mermaid" src="https://mermaid.ink/svg/eyJjb2RlIjoiJSUtXG5mbG93Y2hhcnQgVERcbnN1YmdyYXBoIERldmVsb3BtZW50IFdvcmtmbG93XG5BW0VMRiBCaW5hcnkvQXNzZW1ibHldLS0-Qltwb2xrYXRvb2xdXG5CLS0-Q1tQb2xrYVZNIFByb2dyYW0gQmxvYl1cbkRbYmVuY2h0b29sXVxuRVtzcGVjdG9vbF1cbkZbXCJwb2xrYXRvb2wgKGRpc2Fzc2VtYmxlKVwiXVxuR1tQZXJmb3JtYW5jZSBNZXRyaWNzXVxuSFtUZXN0IFZhbGlkYXRpb25dXG5JW0h1bWFuLXJlYWRhYmxlIEFzc2VtYmx5XVxuZW5kXG5DLS0-RFxuQy0tPkVcbkMtLT5GXG5ELS0-R1xuRS0tPkhcbkYtLT5JXG4lJS0iLCJtZXJtYWlkIjpudWxsfQ"></p>
+
+<h2 id="polkatool">polkatool</h2>
+
+<p><code class="language-plaintext highlighter-rouge">polkatool</code> is a versatile command-line utility for working with PolkaVM program blobs. It serves as a bridge between different program representations, allowing developers to convert ELF binaries to PolkaVM blobs, disassemble blobs into human-readable assembly, assemble text into blobs, and analyze blob statistics.</p>
+
+<h3 id="commands">Commands</h3>
+
+<p><code class="language-plaintext highlighter-rouge">polkatool</code> supports the following subcommands:</p>
+
+<table>
+  <thead>
+    <tr>
+      <th>Command</th>
+      <th>Description</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">link</code></td>
+      <td>Links a given ELF file into a <code class="language-plaintext highlighter-rouge">.polkavm</code> program blob</td>
+    </tr>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">disassemble</code></td>
+      <td>Disassembles a <code class="language-plaintext highlighter-rouge">.polkavm</code> blob into human-readable assembly</td>
+    </tr>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">assemble</code></td>
+      <td>Assembles a <code class="language-plaintext highlighter-rouge">.polkavm</code> blob from human-readable assembly</td>
+    </tr>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">stats</code></td>
+      <td>Calculates various statistics for given program blobs</td>
+    </tr>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">get-target-json-path</code></td>
+      <td>Writes a path to a JSON target file for rustc to stdout</td>
+    </tr>
+  </tbody>
+</table>
+
+<p><img class="mermaid" src="https://mermaid.ink/svg/eyJjb2RlIjoiJSUtXG5mbG93Y2hhcnQgVERcbnN1YmdyYXBoIHBvbGthdG9vbCBDb21tYW5kc1xuQVtFTEYgQmluYXJ5XS0tPkJbbGlua11cbkItLT5DW1BvbGthVk0gUHJvZ3JhbSBCbG9iXVxuRFtBc3NlbWJseSBTb3VyY2VdLS0-RVthc3NlbWJsZV1cbkUtLT5DXG5DLS0-Rltpc2Fzc2VtYmxlXVxuRi0tPkdbSHVtYW4tcmVhZGFibGUgQXNzZW1ibHldXG5DLS0-SFtzdGF0c11cbkgtLT5JW0luc3RydWN0aW9uIFN0YXRpc3RpY3NdXG5KW2dldC10YXJnZXQtanNvbi1wYXRoXS0tPktbVGFyZ2V0IEpTT04gUGF0aF1cbmVuZFxuJSUtIiwibWVybWFpZCI6bnVsbH0"></p>
+
+<h3 id="link-command">Link Command</h3>
+
+<p>The <code class="language-plaintext highlighter-rouge">link</code> command converts an ELF binary into a PolkaVM program blob. It offers several options to control the linking process:</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>polkatool link [OPTIONS] &lt;input&gt; -o &lt;output&gt;
+
+</code></pre></div></div>
+
+<p>Options:</p>
+
+<ul>
+  <li>
+<code class="language-plaintext highlighter-rouge">-o, --output &lt;PATH&gt;</code>: The output file path (required)</li>
+  <li>
+<code class="language-plaintext highlighter-rouge">-s, --strip</code>: Remove debug information</li>
+  <li>
+<code class="language-plaintext highlighter-rouge">--disable-optimizations</code>: Disable optimizations</li>
+  <li>
+<code class="language-plaintext highlighter-rouge">--run-only-if-newer</code>: Only run if the output doesn’t exist or the input is newer</li>
+  <li>
+<code class="language-plaintext highlighter-rouge">--min-stack-size &lt;SIZE&gt;</code>: Set the minimum stack size</li>
+</ul>
+
+<p>Under the hood, the link command uses <code class="language-plaintext highlighter-rouge">polkavm_linker::program_from_elf()</code> to perform the conversion.</p>
+
+<p>Sources: <a href="https://github.com/paritytech/polkavm/blob/910adbda/tools/polkatool/src/main.rs#L137-L181">tools/polkatool/src/main.rs137-181</a></p>
+
+<h3 id="disassemble-command">Disassemble Command</h3>
+
+<p>The <code class="language-plaintext highlighter-rouge">disassemble</code> command converts a PolkaVM program blob into human-readable assembly:</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>polkatool disassemble [OPTIONS] &lt;input&gt; [-o &lt;output&gt;]
+
+</code></pre></div></div>
+
+<p>Options:</p>
+
+<ul>
+  <li>
+<code class="language-plaintext highlighter-rouge">-o, --output &lt;PATH&gt;</code>: The output file path (optional, defaults to stdout)</li>
+  <li>
+<code class="language-plaintext highlighter-rouge">-f, --format &lt;FORMAT&gt;</code>: Disassembly format (Guest, GuestAndNative, Native, DiffFriendly)</li>
+  <li>
+<code class="language-plaintext highlighter-rouge">--display-gas</code>: Show gas cost information</li>
+  <li>
+<code class="language-plaintext highlighter-rouge">--show-raw-bytes</code>: Show raw instruction bytes</li>
+</ul>
+
+<p>The disassembler can display code in different formats, including guest assembly, native machine code, or a combination of both.</p>
+
+<p>Sources: <a href="https://github.com/paritytech/polkavm/blob/910adbda/tools/polkatool/src/main.rs#L232-L265">tools/polkatool/src/main.rs232-265</a> <a href="https://github.com/paritytech/polkavm/blob/910adbda/crates/polkavm-disassembler/src/lib.rs#L5-L11">crates/polkavm-disassembler/src/lib.rs5-11</a></p>
+
+<h3 id="assemble-command">Assemble Command</h3>
+
+<p>The <code class="language-plaintext highlighter-rouge">assemble</code> command creates a PolkaVM program blob from human-readable assembly:</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>polkatool assemble &lt;input&gt; -o &lt;output&gt;
+
+</code></pre></div></div>
+
+<p>Options:</p>
+
+<ul>
+  <li>
+<code class="language-plaintext highlighter-rouge">-o, --output &lt;PATH&gt;</code>: The output file path (required)</li>
+</ul>
+
+<p>The assembler takes a text file with PolkaVM assembly instructions and converts it into a binary program blob.</p>
+
+<p>Sources: <a href="https://github.com/paritytech/polkavm/blob/910adbda/tools/polkatool/src/main.rs#L267-L286">tools/polkatool/src/main.rs267-286</a> <a href="https://github.com/paritytech/polkavm/blob/910adbda/crates/polkavm-common/src/assembler.rs#L166-L938">crates/polkavm-common/src/assembler.rs166-938</a></p>
+
+<h3 id="stats-command">Stats Command</h3>
+
+<p>The <code class="language-plaintext highlighter-rouge">stats</code> command analyzes one or more program blobs and provides statistics about instruction usage:</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>polkatool stats &lt;inputs&gt;...
+
+</code></pre></div></div>
+
+<p>This command counts the occurrences of each instruction type and displays a sorted list of instructions by frequency.</p>
+
+<p>Sources: <a href="https://github.com/paritytech/polkavm/blob/910adbda/tools/polkatool/src/main.rs#L201-L230">tools/polkatool/src/main.rs201-230</a></p>
+
+<h2 id="benchtool">benchtool</h2>
+
+<p><code class="language-plaintext highlighter-rouge">benchtool</code> is a comprehensive benchmarking utility for comparing the performance of PolkaVM against other virtual machines. It supports various benchmarking methodologies and can generate detailed performance metrics.</p>
+
+<h3 id="benchmark-types">Benchmark Types</h3>
+
+<p><code class="language-plaintext highlighter-rouge">benchtool</code> supports several types of benchmarks:</p>
+
+<table>
+  <thead>
+    <tr>
+      <th>Type</th>
+      <th>Description</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">runtime</code></td>
+      <td>Measures execution performance of a program (hot path)</td>
+    </tr>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">compilation</code></td>
+      <td>Measures the time needed to compile a program</td>
+    </tr>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">oneshot</code></td>
+      <td>Measures the end-to-end performance (compilation + execution)</td>
+    </tr>
+  </tbody>
+</table>
+
+<h3 id="backends">Backends</h3>
+
+<p><code class="language-plaintext highlighter-rouge">benchtool</code> can benchmark PolkaVM against multiple virtual machine implementations:</p>
+
+<p><img class="mermaid" src="https://mermaid.ink/svg/eyJjb2RlIjoiJSUtXG5mbG93Y2hhcnQgVERcbnN1YmdyYXBoIGJlbmNodG9vbCBCYWNrZW5kc1xuQVtCYWNrZW5kS2luZF0tLT5CW1BvbGthVk0gVmFyaWFudHNdXG5BLS0-Q1tXZWJBc3NlbWJseSBFbmdpbmVzXVxuQS0tPkRbT3RoZXIgVk1zXVxuQi0tPkVbUG9sa2FWTV9Db21waWxlcjMyX05vR2FzXVxuQi0tPkZbUG9sa2FWTV9Db21waWxlcjMyX0FzeW5jR2FzXVxuQi0tPkdbUG9sa2FWTV9Db21waWxlcjMyX1N5bmNHYXNdXG5CLS0-SFtQb2xrYVZNX0NvbXBpbGVyNjRfTm9HYXNdXG5CLS0-SVtQb2xrYVZNX0NvbXBpbGVyNjRfQXN5bmNHYXNdXG5CLS0-SltQb2xrYVZNX0NvbXBpbGVyNjRfU3luY0dhc11cbkItLT5LW1BvbGthVk1fSW50ZXJwcmV0ZXIzMl1cbkItLT5MW1BvbGthVk1fSW50ZXJwcmV0ZXI2NF1cbkMtLT5NW1dhc210aW1lX0NyYW5lbGlmXVxuQy0tPk5bV2FzbWVyXVxuQy0tPk9bV2FaZXJvXVxuQy0tPlBbUHZmRXhlY3V0b3JdXG5DLS0-UVtXYXNtM11cbkMtLT5SW1dhc21pXVxuRC0tPlNbQ2tidm1dXG5ELS0-VFtTb2xhbmFSYnBmXVxuRC0tPlVbTmF0aXZlXVxuZW5kXG4lJS0iLCJtZXJtYWlkIjpudWxsfQ"></p>
+
+<h3 id="commands-1">Commands</h3>
+
+<p><code class="language-plaintext highlighter-rouge">benchtool</code> provides several subcommands:</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>benchtool &lt;SUBCOMMAND&gt;
+
+</code></pre></div></div>
+
+<p>Subcommands:</p>
+
+<ul>
+  <li>
+<code class="language-plaintext highlighter-rouge">criterion</code>: Runs benchmarks using the Criterion framework</li>
+  <li>
+<code class="language-plaintext highlighter-rouge">benchmark</code>: Runs benchmarks directly</li>
+  <li>
+<code class="language-plaintext highlighter-rouge">perf</code>: Runs the Linux <code class="language-plaintext highlighter-rouge">perf</code> tool for profiling a specific benchmark</li>
+  <li>
+<code class="language-plaintext highlighter-rouge">bench-memset</code>: Benchmarks PolkaVM’s memset implementation</li>
+</ul>
+
+<h3 id="benchmark-command">Benchmark Command</h3>
+
+<p>The <code class="language-plaintext highlighter-rouge">benchmark</code> command runs benchmarks and reports performance metrics:</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>benchtool benchmark [OPTIONS] [filter]
+
+</code></pre></div></div>
+
+<p>Options:</p>
+
+<ul>
+  <li>
+<code class="language-plaintext highlighter-rouge">-i, --iteration-limit &lt;N&gt;</code>: Number of iterations to run</li>
+  <li>
+<code class="language-plaintext highlighter-rouge">--forever</code>: Run benchmarks continuously</li>
+  <li>
+<code class="language-plaintext highlighter-rouge">--aslr</code>: Run with Address Space Layout Randomization enabled</li>
+</ul>
+
+<p>Sources: <a href="https://github.com/paritytech/polkavm/blob/910adbda/tools/benchtool/src/main.rs#L408-L632">tools/benchtool/src/main.rs408-632</a></p>
+
+<h3 id="perf-command">Perf Command</h3>
+
+<p>The <code class="language-plaintext highlighter-rouge">perf</code> command (Linux only) runs the Linux <code class="language-plaintext highlighter-rouge">perf</code> tool to profile a benchmark:</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>benchtool perf [OPTIONS] &lt;command&gt; [perf_args]...
+
+</code></pre></div></div>
+
+<p>Options:</p>
+
+<ul>
+  <li>
+<code class="language-plaintext highlighter-rouge">-b, --benchmark &lt;NAME&gt;</code>: The benchmark to run</li>
+  <li>
+<code class="language-plaintext highlighter-rouge">-t, --time-limit &lt;SECONDS&gt;</code>: The time limit for profiling</li>
+  <li>
+<code class="language-plaintext highlighter-rouge">-i, --iteration-limit &lt;N&gt;</code>: Number of iterations to run</li>
+</ul>
+
+<p>This command is useful for in-depth performance analysis and identifying hotspots in the code.</p>
+
+<p>Sources: <a href="https://github.com/paritytech/polkavm/blob/910adbda/tools/benchtool/src/main.rs#L634-L723">tools/benchtool/src/main.rs634-723</a></p>
+
+<h3 id="backend-architecture">Backend Architecture</h3>
+
+<p><code class="language-plaintext highlighter-rouge">benchtool</code> uses a trait-based architecture to support multiple VM backends:</p>
+
+<p><img class="mermaid" src="https://mermaid.ink/svg/eyJjb2RlIjoiJSUtXG5jbGFzc0RpYWdyYW1cbmNsYXNzIEJhY2tlbmR7XG48PHRyYWl0Pj5cbituYW1lKCktPnN0clxuK2NyZWF0ZShhcmdzOiBDcmVhdGVBcmdzKS0-RW5naW5lXG4rbG9hZChwYXRoOiBQYXRoKS0-QmxvYlxuK2NvbXBpbGUoZW5naW5lOiBFbmdpbmUsIGJsb2I6IEJsb2IpLT5Nb2R1bGVcbitzcGF3bihlbmdpbmU6IEVuZ2luZSwgbW9kdWxlOiBNb2R1bGUpLT5JbnN0YW5jZVxuK2luaXRpYWxpemUoaW5zdGFuY2U6IEluc3RhbmNlKVxuK3J1bihpbnN0YW5jZTogSW5zdGFuY2UpXG4rcGlkKGluc3RhbmNlOiBJbnN0YW5jZSktPk9wdGlvbjx1MzI-XG4raXNfc2xvdygpLT5ib29sXG4raXNfY29tcGlsZWQoKS0-Ym9vbFxufVxuY2xhc3MgQmFja2VuZEtpbmR7XG48PGVudW0-PlxuK1BvbGthVk1fQ29tcGlsZXIzMl9Ob0dhc1xuK1BvbGthVk1fQ29tcGlsZXIzMl9Bc3luY0dhc1xuK1BvbGthVk1fQ29tcGlsZXIzMl9TeW5jR2FzXG4rUG9sa2FWTV9Db21waWxlcjY0X05vR2FzXG4rUG9sa2FWTV9Db21waWxlcjY0X0FzeW5jR2FzXG4rUG9sa2FWTV9Db21waWxlcjY0X1N5bmNHYXNcbitQb2xrYVZNX0ludGVycHJldGVyMzJcbitQb2xrYVZNX0ludGVycHJldGVyNjRcbitXYXNtdGltZV9DcmFuZWxpZnRcbitXYXNtZXJcbisuLi5cbn1cbkJhY2tlbmQgPHwuLiBCYWNrZW5kS2luZFxuJSUtIiwibWVybWFpZCI6bnVsbH0"></p>
+
+<p>For each backend, <code class="language-plaintext highlighter-rouge">benchtool</code> implements a consistent interface that allows it to create an engine, load a program, compile it, spawn an instance, and execute it. This design makes it easy to add new backends and ensures fair comparisons between different VMs.</p>
+
+<p>Sources: <a href="https://github.com/paritytech/polkavm/blob/910adbda/tools/benchtool/src/backend.rs#L14-L29">tools/benchtool/src/backend.rs14-29</a> <a href="https://github.com/paritytech/polkavm/blob/910adbda/tools/benchtool/src/backend.rs#L233-L299">tools/benchtool/src/backend.rs233-299</a></p>
+
+<h2 id="spectool">spectool</h2>
+
+<p><code class="language-plaintext highlighter-rouge">spectool</code> is a utility for generating and executing test cases for PolkaVM. It helps validate the correctness of the VM by creating test programs and verifying their execution results.</p>
+
+<h3 id="commands-2">Commands</h3>
+
+<p><code class="language-plaintext highlighter-rouge">spectool</code> supports two main subcommands:</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>spectool &lt;SUBCOMMAND&gt;
+
+</code></pre></div></div>
+
+<p>Subcommands:</p>
+
+<ul>
+  <li>
+<code class="language-plaintext highlighter-rouge">generate</code>: Generates test cases</li>
+  <li>
+<code class="language-plaintext highlighter-rouge">test</code>: Runs test cases</li>
+</ul>
+
+<h3 id="generate-command">Generate Command</h3>
+
+<p>The <code class="language-plaintext highlighter-rouge">generate</code> command creates test cases based on either RISC-V test programs or custom assembly files:</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>spectool generate
+
+</code></pre></div></div>
+
+<p>This command:</p>
+
+<ol>
+  <li>Locates test source files in the <code class="language-plaintext highlighter-rouge">spec/src</code> directory</li>
+  <li>Assembles each test program into a PolkaVM blob</li>
+  <li>Executes the program to determine its expected behavior</li>
+  <li>Generates JSON test case files in the <code class="language-plaintext highlighter-rouge">spec/output/programs</code> directory</li>
+  <li>Creates a human-readable index of test cases in <code class="language-plaintext highlighter-rouge">spec/output/TESTCASES.md</code>
+</li>
+</ol>
+
+<p>Sources: <a href="https://github.com/paritytech/polkavm/blob/910adbda/tools/spectool/src/main.rs#L137-L608">tools/spectool/src/main.rs137-608</a></p>
+
+<h3 id="test-case-format">Test Case Format</h3>
+
+<p>Test cases follow a well-defined schema, described in both JSON Schema and ASN.1 formats:</p>
+
+<p><img class="mermaid" src="https://mermaid.ink/svg/eyJjb2RlIjoiJSUtXG5jbGFzc0RpYWdyYW1cbmNsYXNzIFRlc3RjYXNle1xuK25hbWU6IHN0cmluZ1xuK2luaXRpYWxfcmVnczogdTY0WzEzXVxuK2luaXRpYWxfcGM6IHUzMlxuK2luaXRpYWxfcGFnZV9tYXA6IFBhZ2VbXVxuK2luaXRpYWxfbWVtb3J5OiBNZW1vcnlDaHVua1tdXG4raW5pdGlhbF9nYXM6IGk2NFxuK3Byb2dyYW06IHU4W11cbitleHBlY3RlZF9zdGF0dXM6IHN0cmluZ1xuK2V4cGVjdGVkX3JlZ3M6IHU2NFtdXG4rZXhwZWN0ZWRfcGM6IHUzMlxuK2V4cGVjdGVkX21lbW9yeTogTWVtb3J5Q2h1bmtbXVxuK2V4cGVjdGVkX2dhczogaTY0XG4rZXhwZWN0ZWRfcGFnZV9mYXVsdF9hZGRyZXNzPzogdTMyXG59XG5jbGFzcyBQYWdle1xuK2FkZHJlc3M6IHUzMlxuK2xlbmd0aDogdTMyXG4raXNfd3JpdGFibGU6IGJvb2xlYW5cbn1cbiUlLVxuY2xhc3MgTWVtb3J5Q2h1bmsge1xuK2FkZHJlc3M6IHUzMlxuK2NvbnRlbnRzOiB1OFtdXG59XG4lJS1cblRlc3RjYXNlIC0tPiBQYWdlOmNvbnRhaW5zXG5UZXN0Y2FzZSAtLT4gTWVtb3J5Q2h1bms6Y29udGFpbnNcbiUlLSIsIm1lcm1haWQiOm51bGx9"></p>
+
+<p>Each test case specifies:</p>
+
+<ul>
+  <li>Initial state (registers, program counter, memory, gas)</li>
+  <li>Program to execute</li>
+  <li>Expected final state</li>
+  <li>Expected termination status</li>
+</ul>
+
+<p>The test case format is designed to be comprehensive and enable thorough testing of all VM features.</p>
+
+<p>Sources: <a href="https://github.com/paritytech/polkavm/blob/910adbda/tools/spectool/spec/schema.json#L1-L98">tools/spectool/spec/schema.json1-98</a> <a href="https://github.com/paritytech/polkavm/blob/910adbda/tools/spectool/spec/schema.asn#L1-L87">tools/spectool/spec/schema.asn1-87</a></p>
+
+<h2 id="integration-of-tools-in-development-workflow">Integration of Tools in Development Workflow</h2>
+
+<p>These tools form a comprehensive ecosystem for working with PolkaVM programs. A typical development workflow might look like:</p>
+
+<p><img class="mermaid" src="https://mermaid.ink/svg/eyJjb2RlIjoiJSUtXG5mbG93Y2hhcnQgVERcbkFbXCJTb3VyY2UgQ29kZSAoUnVzdC9DKVwiXSAtLT58Q29tcGlsZSB3aXRoIFJJU0MtViB0YXJnZXR8IEJbUklTQy1WIEVMRiBCaW5hcnldXG5CIC0tPnxwb2xrYXRvb2wgbGlua3xDW1BvbGthVk0gUHJvZ3JhbSBCbG9iXVxuQyAtLT58YmVuY2h0b29sfCBEW1BlcmZvcm1hbmNlIE1ldHJpY3NdXG5DIC0tPnxwb2xrYXRvb2wgZGlzYXNzZW1ibGV8IEVbSHVtYW4tcmVhZGFibGUgQXNzZW1ibHldXG5DIC0tPnxzcGVjdG9vbHwgRltUZXN0IENvdmVyYWdlICYgVmFsaWRhdGlvbl1cbkUgLS0-R1tNYW51YWwgQW5hbHlzaXMgJiBEZWJ1Z2dpbmddXG5HLS0-QVxuRC0tPnxPcHRpbWl6YXRpb258QVxuRi0tPnxCdWcgRml4ZXN8QVxuJSUtIiwibWVybWFpZCI6bnVsbH0"></p>
+
+<h3 id="example-debugging-a-polkavm-program">Example: Debugging a PolkaVM Program</h3>
+
+<ol>
+  <li>Compile a program to RISC-V ELF</li>
+  <li>Use <code class="language-plaintext highlighter-rouge">polkatool link</code> to create a PolkaVM blob</li>
+  <li>Use <code class="language-plaintext highlighter-rouge">polkatool disassemble</code> to analyze the program</li>
+  <li>Identify and fix issues in the source code</li>
+  <li>Repeat until the program works correctly</li>
+</ol>
+
+<h3 id="example-benchmarking-performance">Example: Benchmarking Performance</h3>
+
+<ol>
+  <li>Compile a program to PolkaVM, WebAssembly, and native formats</li>
+  <li>Use <code class="language-plaintext highlighter-rouge">benchtool</code> to measure performance across different VMs</li>
+  <li>Analyze results to identify performance bottlenecks</li>
+  <li>Optimize the code and repeat</li>
+</ol>
+
+<h3 id="example-validating-vm-behavior">Example: Validating VM Behavior</h3>
+
+<ol>
+  <li>Create test cases using custom assembly or RISC-V test programs</li>
+  <li>Use <code class="language-plaintext highlighter-rouge">spectool generate</code> to create formal test cases</li>
+  <li>Use the test cases to verify VM correctness across implementations</li>
+</ol>
+
+<h2 id="summary">Summary</h2>
+
+<p>The PolkaVM tools and utilities provide a comprehensive set of capabilities for working with PolkaVM programs:</p>
+
+<table>
+  <thead>
+    <tr>
+      <th>Tool</th>
+      <th>Primary Purpose</th>
+      <th>Key Features</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">polkatool</code></td>
+      <td>Program manipulation</td>
+      <td>Linking, disassembly, assembly, analysis</td>
+    </tr>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">benchtool</code></td>
+      <td>Performance testing</td>
+      <td>Cross-VM benchmarking, profiling, comparison</td>
+    </tr>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">spectool</code></td>
+      <td>Correctness testing</td>
+      <td>Test case generation, execution validation</td>
+    </tr>
+  </tbody>
+</table>
+
+<p>Together, these tools enable developers to build, analyze, optimize, and validate PolkaVM applications effectively.</p>
+
+<p>Sources: <a href="https://github.com/paritytech/polkavm/blob/910adbda/tools/polkatool/src/main.rs#L1-L288">tools/polkatool/src/main.rs1-288</a> <a href="https://github.com/paritytech/polkavm/blob/910adbda/tools/benchtool/src/main.rs#L1-L767">tools/benchtool/src/main.rs1-767</a> <a href="https://github.com/paritytech/polkavm/blob/910adbda/tools/spectool/src/main.rs#L1-L613">tools/spectool/src/main.rs1-613</a></p>
+
+
+    </div>
+
+</article>
+<div class="post-nav">
+<a class="previous" href="/technics/2025/05/27/System-Integration.html" title="From Raw Syscalls to Safe Sandboxes:The PolkaVM Integration Story 📖">From Raw Syscalls to Safe Sandboxes:The...</a><a class="next" href="/technics/2025/05/29/Testing-and-Debugging.html" title="PolkaVM's Testing Arsenal:🚀 From Zero to Bulletproof in Minutes!">PolkaVM's Testing Arsenal:🚀 From Zero to...</a>
+</div>
+<div class="post-related">
+      <div>Related Articles</div>
+      <ul>
+        <li><a class="post-link" href="/technics/2025/06/15/PolkaVM-Doom-Example-Program-Analysis.html" title="PolkaVM's Testing Arsenal:🚀 From Zero to Bulletproof in Minutes!">PolkaVM Doom Example Program Analysis</a></li>
+<li><a class="post-link" href="/technics/2025/05/24/Unlock-Untrusted-Code.html" title="PolkaVM's Testing Arsenal:🚀 From Zero to Bulletproof in Minutes!">Unlock Untrusted Code - PolkaVM's Architecture Deep Dive</a></li>
+<li><a class="post-link" href="/technics/2025/05/28/Tools-and-Utilities.html" title="PolkaVM's Testing Arsenal:🚀 From Zero to Bulletproof in Minutes!">Level Up Your PolkaVM Game! 🛠️ The Essential Command-Line Tools You NEED...</a></li>
+<li><a class="post-link" href="/technics/2025/05/29/Testing-and-Debugging.html" title="PolkaVM's Testing Arsenal:🚀 From Zero to Bulletproof in Minutes!">PolkaVM's Testing Arsenal:🚀 From Zero to Bulletproof in Minutes!</a></li>
+</ul>
+    </div>
+<div class="post-comments"></div></section>
+</div>
+
+
+  </section>
+  <section class="sidebar" style="margin-left: 15px;">
+    <!-- Get sidebar items --><style type="text/css" media="screen">
+.post-menu ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+</style>
+
+<div class="post-menu">
+  <div class="post-menu-title">TOC</div>
+  <div class="post-menu-content"></div>
+</div>
+
+<script>
+  function generateContent() {
+    var menu = document.querySelector(".post-menu");
+    var menuContent =  menu.querySelector(".post-menu-content");
+    var headings = document.querySelector(".post-content").querySelectorAll("h2, h3, h4, h5, h6");
+
+    // Hide menu when no headings
+    if (headings.length === 0) {
+      return menu.style.display = "none";
+    }
+
+    // Generate post menu
+    var menuHTML = '';
+    for (var i = 0; i < headings.length; i++) {
+      var h = headings[i];
+      menuHTML += (
+        '<li class="h-' + h.tagName.toLowerCase() + '">'
+        + '<a href="#h-' + h.getAttribute('id') + '">' + h.textContent + '</a></li>');
+    }
+
+    menuContent.innerHTML = '<ul>' + menuHTML + '</ul>';
+
+    // The header element
+    var header = document.querySelector('header.site-header');
+
+    function doMenuCollapse(index, over_items) {
+      var items = menuContent.firstChild.children;
+
+      if (over_items == undefined) {
+        over_items = 20;
+      }
+
+      if (items.length < over_items) {
+        return;
+      }
+
+      var activeItem = items[index];
+      var beginItem = activeItem
+      var endItem = activeItem
+      var beginIndex = index;
+      var endIndex = index + 1;
+      while (beginIndex >= 0
+        && !items[beginIndex].classList.contains('h-h2')) {
+        beginIndex -= 1;
+      }
+      while (endIndex < items.length
+        && !items[endIndex].classList.contains('h-h2')) {
+        endIndex += 1;
+      }
+      for (var i = 0; i < beginIndex; i++) {
+        item = items[i]
+        if (!item.classList.contains('h-h2')) {
+          item.style.display = 'none';
+        }
+      }
+      for (var i = beginIndex + 1; i < endIndex; i++) {
+        item = items[i]
+        // if (!item.classList.contains('h-h2')) {
+          item.style.display = '';
+        // }
+      }
+      for (var i = endIndex; i < items.length; i++) {
+        item = items[i]
+        if (!item.classList.contains('h-h2')) {
+          item.style.display = 'none';
+        }
+      }
+    }
+
+    // Init menu collapsed
+    doMenuCollapse(-1);
+
+    // Active the menu item
+    window.addEventListener('scroll', function (event) {
+      var lastActive = menuContent.querySelector('.active');
+      var changed = true;
+      var activeIndex = -1;
+      for (var i = headings.length - 1; i >= 0; i--) {
+        var h = headings[i];
+        var headingRect = h.getBoundingClientRect();
+        var headerRect = header.getBoundingClientRect();
+        var headerTop = Math.floor(headerRect.top);
+        var headerHeight = Math.floor(headerRect.height);
+        var headerHeight = headerTop + headerHeight + 20;
+        if (headingRect.top <= headerHeight) {
+          var id = 'h-' + h.getAttribute('id');
+          var a = menuContent.querySelector('a[href="#' + id  + '"]');
+          var curActive = a.parentNode;
+          if (curActive) {
+            curActive.classList.add('active');
+            activeIndex = i;
+          }
+          if (lastActive == curActive) {
+            changed = false;
+          }
+          break;
+        }
+      }
+      if (changed) {
+        if (lastActive) {
+          lastActive.classList.remove('active');
+        }
+        doMenuCollapse(activeIndex);
+      }
+      event.preventDefault();
+    });
+  }
+  generateContent();
+</script>
+</section>
+</div>
+
+      </div>
+    </main><footer class="site-footer h-card">
+  <data class="u-url" href="/"></data>
+
+  <div class="wrapper">
+    <div class="site-footer-inner">
+<div>IURDao 2017-2025 Joe</div>
+      <div class="footer-col rss-subscribe">Subscribe <a href="/feed.xml">via RSS</a>
+</div>
+    </div>
+  </div>
+</footer>
+
+</body>
+</html>

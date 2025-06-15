@@ -1,0 +1,1513 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="google-translate-customization" content="108d9124921d80c3-80e20d618ff053c8-g4f02ec6f3dba68b7-c">
+<!-- Begin Jekyll SEO tag v2.8.0 -->
+<title>Inside PolkaVM - Unveiling the Core VM Engine | Industry-University-Research Dao</title>
+<meta name="generator" content="Jekyll v4.4.1">
+<meta property="og:title" content="Inside PolkaVM - Unveiling the Core VM Engine">
+<meta name="author" content="Joe">
+<meta property="og:locale" content="en_US">
+<meta name="description" content="The Core VM Engine is the central execution system of PolkaVM, responsible for loading, compiling, and running guest programs in a secure and efficient manner. It provides the foundation for program execution, memory management, sandboxing, and interaction between host and guest code. For information about program representation, see Program Representation, and for the sandboxing system, see Sandboxing.">
+<meta property="og:description" content="The Core VM Engine is the central execution system of PolkaVM, responsible for loading, compiling, and running guest programs in a secure and efficient manner. It provides the foundation for program execution, memory management, sandboxing, and interaction between host and guest code. For information about program representation, see Program Representation, and for the sandboxing system, see Sandboxing.">
+<link rel="canonical" href="/technics/2025/05/24/Inside-PolkaVM-Unveiling-the-Core-VM-Engine.html">
+<meta property="og:url" content="/technics/2025/05/24/Inside-PolkaVM-Unveiling-the-Core-VM-Engine.html">
+<meta property="og:site_name" content="Industry-University-Research Dao">
+<meta property="og:type" content="article">
+<meta property="article:published_time" content="2025-05-24T00:00:00+00:00">
+<meta name="twitter:card" content="summary">
+<meta property="twitter:title" content="Inside PolkaVM - Unveiling the Core VM Engine">
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"BlogPosting","author":{"@type":"Person","name":"Joe"},"dateModified":"2025-05-24T00:00:00+00:00","datePublished":"2025-05-24T00:00:00+00:00","description":"The Core VM Engine is the central execution system of PolkaVM, responsible for loading, compiling, and running guest programs in a secure and efficient manner. It provides the foundation for program execution, memory management, sandboxing, and interaction between host and guest code. For information about program representation, see Program Representation, and for the sandboxing system, see Sandboxing.","headline":"Inside PolkaVM - Unveiling the Core VM Engine","mainEntityOfPage":{"@type":"WebPage","@id":"/technics/2025/05/24/Inside-PolkaVM-Unveiling-the-Core-VM-Engine.html"},"url":"/technics/2025/05/24/Inside-PolkaVM-Unveiling-the-Core-VM-Engine.html"}</script>
+<!-- End Jekyll SEO tag -->
+<link rel="icon" href="">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/typeface-noto-sans@0.0.72/index.min.css">
+  <link rel="stylesheet" href="/assets/css/main.css">
+  <script src="/assets/js/main.js"></script><link type="application/atom+xml" rel="alternate" href="/feed.xml" title="Industry-University-Research Dao">
+<link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/styles/default.min.css">
+<script src="//cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/highlight.min.js"></script>
+<!-- and it's easy to individually load additional languages -->
+<script charset="UTF-8" src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/languages/go.min.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<script>
+// Init highlight js
+document.addEventListener('DOMContentLoaded', function(event) {
+  var els = document.querySelectorAll('pre code')
+
+  function addLangData(block) {
+    var outer = block.parentElement.parentElement.parentElement;
+    var lang = block.getAttribute('data-lang');
+    for (var i = 0; i < outer.classList.length; i++) {
+      var cls = outer.classList[i];
+      if (cls.startsWith('language-')) {
+        lang = cls;
+        break;
+      }
+    }
+    if (!lang) {
+      cls = block.getAttribute('class');
+      lang = cls ? cls.replace('hljs ', '') : '';
+    }
+    if (lang.startsWith('language-')) {
+      lang = lang.substr(9);
+    }
+    block.setAttribute('class', 'hljs ' + lang);
+    block.parentNode.setAttribute('data-lang', lang);
+  }
+
+  function addBadge(block) {
+    var enabled = ('true' || 'true').toLowerCase();
+    if (enabled == 'true') {
+      var pre = block.parentElement;
+      pre.classList.add('badge');
+    }
+  }
+
+  function handle(block) {
+    addLangData(block);
+    addBadge(block)
+    hljs.highlightBlock(block);
+  }
+
+  for (var i = 0; i < els.length; i++) {
+    var el = els[i];
+    handle(el);
+  }
+});
+</script>
+
+<style>
+  /* code language badge */
+  pre.badge::before {
+    content: attr(data-lang);
+    color: #fff;
+    background-color: #ff4e00;
+    padding: 0 .5em;
+    border-radius: 0 2px;
+    text-transform: uppercase;
+    text-align: center;
+    min-width: 32px;
+    display: inline-block;
+    position: absolute;
+    right: 0;
+  }
+
+  /* fix wrong badge display for firefox browser */
+  code > table pre::before {
+    display: none;
+  }
+</style>
+<script src="//cdnjs.cloudflare.com/ajax/libs/photoswipe/4.1.3/photoswipe.min.js"></script>
+<script src="//cdnjs.cloudflare.com/ajax/libs/photoswipe/4.1.3/photoswipe-ui-default.min.js"></script>
+<link href="https://cdnjs.cloudflare.com/ajax/libs/photoswipe/4.1.3/photoswipe.css" rel="stylesheet">
+<link href="https://cdnjs.cloudflare.com/ajax/libs/photoswipe/4.1.3/default-skin/default-skin.css" rel="stylesheet">
+<style>
+  .pswp .pswp__container .pswp__img {
+    background-color: white;
+  }
+</style>
+
+<script>
+  function initPhotoSwipe() {
+    var mainEl = document.querySelector("section.main");
+
+    var imgEls = mainEl.querySelectorAll("img:not(.emoji)");
+    imgEls.forEach((imgEl) => {
+      imgEl.outerHTML = `
+    <a class="photo-swipe"
+      href="${imgEl.src}"
+      data-width="${imgEl.getAttribute("width") || imgEl.width * 2}"
+      data-height="${imgEl.getAttribute("height") || imgEl.height * 2}"
+      data-caption="${imgEl.getAttribute("caption") || imgEl.alt}"
+      target="_blank">
+      ${imgEl.outerHTML}
+    </a>`;
+    });
+
+    // Init empty gallery array
+    var container = [];
+
+    // Loop over gallery items and push it to the array
+    var linkEls = mainEl.querySelectorAll("a.photo-swipe");
+    linkEls.forEach((link) => {
+      var item = {
+        src: link.getAttribute("href"),
+        w: link.dataset.width,
+        h: link.dataset.height,
+        title: link.dataset.caption || "",
+      };
+      container.push(item);
+    });
+
+    // Define click event on gallery item
+    linkEls.forEach((link, index) => {
+      link.addEventListener("click", (event) => {
+        // Prevent location change
+        event.preventDefault();
+
+        // Define object and gallery options
+        var pswp = document.querySelector(".pswp");
+
+        var zoomLevel = 1;
+
+        // Define object and gallery options
+        var options = {
+          index: index,
+          bgOpacity: 0.85,
+          showHideOpacity: true,
+          closeOnScroll: true,
+          maxSpreadZoom: 1,
+          getDoubleTapZoom: (isMouseClick, item) => {
+            if (item.detail) {
+              zoomLevel += item.detail.origEvent.shiftKey ? -1 : 1;
+              item.detail = undefined;
+            } else {
+              zoomLevel = zoomLevel === 1 ? 2 : 1;
+            }
+            if (zoomLevel <= 1) {
+              zoomLevel = 1;
+              setTimeout(() => pswp.classList.remove("pswp--zoomed-in"), 0);
+            }
+            return item.initialZoomLevel * zoomLevel;
+          },
+        };
+
+        // Initialize PhotoSwipe
+        var gallery = new PhotoSwipe(
+          pswp,
+          PhotoSwipeUI_Default,
+          container,
+          options
+        );
+
+        gallery.init();
+
+        // Custom zoom event
+        gallery.container.addEventListener("pswpTap", (e) => {
+          gallery.currItem.detail = e.detail;
+        });
+      });
+    });
+  }
+
+  window.addEventListener("load", initPhotoSwipe);
+</script>
+
+<!-- Root element of PhotoSwipe. Must have class pswp. -->
+</head>
+<body>
+<div class="pswp" tabindex="-1" role="dialog" aria-hidden="true">
+  <!-- Background of PhotoSwipe.
+           It's a separate element as animating opacity is faster than rgba(). -->
+  <div class="pswp__bg"></div>
+  <!-- Slides wrapper with overflow:hidden. -->
+  <div class="pswp__scroll-wrap">
+    <!-- Container that holds slides.
+              PhotoSwipe keeps only 3 of them in the DOM to save memory.
+              Don't modify these 3 pswp__item elements, data is added later on. -->
+    <div class="pswp__container">
+      <div class="pswp__item"></div>
+      <div class="pswp__item"></div>
+      <div class="pswp__item"></div>
+    </div>
+    <!-- Default (PhotoSwipeUI_Default) interface on top of sliding area. Can be changed. -->
+    <div class="pswp__ui pswp__ui--hidden">
+      <div class="pswp__top-bar">
+        <!--  Controls are self-explanatory. Order can be changed. -->
+        <div class="pswp__counter"></div>
+        <button class="pswp__button pswp__button--close" title="Close (Esc)"></button>
+        <button class="pswp__button pswp__button--share" title="Share"></button>
+        <button class="pswp__button pswp__button--fs" title="Toggle fullscreen"></button>
+        <button class="pswp__button pswp__button--zoom" title="Zoom in/out"></button>
+        <!-- element will get class pswp__preloader--active when preloader is running -->
+        <div class="pswp__preloader">
+          <div class="pswp__preloader__icn">
+            <div class="pswp__preloader__cut">
+              <div class="pswp__preloader__donut"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="pswp__share-modal pswp__share-modal--hidden pswp__single-tap">
+        <div class="pswp__share-tooltip"></div>
+      </div>
+      <button class="pswp__button pswp__button--arrow--left" title="Previous (arrow left)"></button>
+      <button class="pswp__button pswp__button--arrow--right" title="Next (arrow right)"></button>
+      <div class="pswp__caption">
+        <div class="pswp__caption__center"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<header class="site-header " role="banner">
+
+  <div class="wrapper">
+    <div class="site-header-inner">
+<span class="site-brand"><a class="site-brand-inner" rel="author" href="/">
+  <img class="site-favicon" title="Industry-University-Research Dao" src="" onerror="this.style.display='none'">
+  Industry-University-Research Dao
+</a>
+</span><nav class="site-nav">
+          <input type="checkbox" id="nav-trigger" class="nav-trigger">
+          <label for="nav-trigger">
+            <span class="menu-icon">
+              <svg viewbox="0 0 18 15" width="18px" height="15px">
+                <path d="M18,1.484c0,0.82-0.665,1.484-1.484,1.484H1.484C0.665,2.969,0,2.304,0,1.484l0,0C0,0.665,0.665,0,1.484,0 h15.032C17.335,0,18,0.665,18,1.484L18,1.484z M18,7.516C18,8.335,17.335,9,16.516,9H1.484C0.665,9,0,8.335,0,7.516l0,0 c0-0.82,0.665-1.484,1.484-1.484h15.032C17.335,6.031,18,6.696,18,7.516L18,7.516z M18,13.516C18,14.335,17.335,15,16.516,15H1.484 C0.665,15,0,14.335,0,13.516l0,0c0-0.82,0.665-1.483,1.484-1.483h15.032C17.335,12.031,18,12.695,18,13.516L18,13.516z"></path>
+              </svg>
+            </span>
+          </label>
+
+          <div class="trigger">
+<a class="page-link" href="/about.html">ABOUT</a><a class="page-link" href="/archives.html">ARCHIVES</a><a class="page-link" href="/categories.html">CATEGORIES</a><a class="page-link" href="/">HOME</a><a class="page-link" href="/tags.html">TAGS</a>
+
+
+
+
+
+
+
+
+
+<span class="page-link">
+
+
+
+<div id="google_translate_element" style="display: none;">
+</div>
+
+<span class="ct-language">
+  <ul class="list-unstyled ct-language-dropdown">
+    
+      <li>
+        <a href="#" class="lang-select" data-lang="en">
+          
+          <img src="https://cdn.countryflags.com/thumbs/united-states-of-america/flag-400.png" title="English">
+          
+        </a>
+      </li>
+    
+      <li>
+        <a href="#" class="lang-select" data-lang="fr">
+          
+          <img src="https://cdn.countryflags.com/thumbs/france/flag-400.png" title="French">
+          
+        </a>
+      </li>
+    
+      <li>
+        <a href="#" class="lang-select" data-lang="zh-CN">
+          
+          <img src="https://cdn.countryflags.com/thumbs/china/flag-400.png" title="Chinese(Simple)">
+          
+        </a>
+      </li>
+    
+      <li>
+        <a href="#" class="lang-select" data-lang="ja">
+          
+          <img src="https://cdn.countryflags.com/thumbs/japan/flag-400.png" title="Japanese">
+          
+        </a>
+      </li>
+    
+      <li>
+        <a href="#" class="lang-select" data-lang="ko">
+          
+          <img src="https://cdn.countryflags.com/thumbs/south-korea/flag-400.png" title="Korean">
+          
+        </a>
+      </li>
+    
+      <li>
+        <a href="#" class="lang-select" data-lang="ru">
+          
+          <img src="https://cdn.countryflags.com/thumbs/russia/flag-400.png" title="Russian">
+          
+        </a>
+      </li>
+    
+  </ul>
+</span>
+
+<script type="text/javascript">
+function googleTranslateElementInit() {
+  new google.translate.TranslateElement({
+    pageLanguage: 'en',
+    autoDisplay: false,
+    layout: google.translate.TranslateElement.InlineLayout.VERTICAL
+  }, 'google_translate_element');
+
+  // Links to cross-origin destinations are unsafe
+  var gll = document.getElementsByClassName('goog-logo-link')[0];
+  if (gll) {
+    gll.setAttribute('rel', 'noopener');
+  }
+
+  function restoreLang() {
+    var iframe = document.getElementsByClassName('goog-te-banner-frame')[0];
+    if (!iframe) return;
+
+    var innerDoc = iframe.contentDocument || iframe.contentWindow.document;
+    var restore_el = innerDoc.getElementsByTagName("button");
+
+    for (var i = 0; i < restore_el.length; i++) {
+      if (restore_el[i].id.indexOf("restore") >= 0) {
+        restore_el[i].click();
+        var close_el = innerDoc.getElementsByClassName("goog-close-link");
+        close_el[0].click();
+        return;
+      }
+    }
+  }
+
+  function triggerHtmlEvent(element, eventName) {
+    var event;
+    if (document.createEvent) {
+      event = document.createEvent('HTMLEvents');
+      event.initEvent(eventName, true, true);
+      element.dispatchEvent(event);
+    } else {
+      event = document.createEventObject();
+      event.eventType = eventName;
+      element.fireEvent('on' + event.eventType, event);
+    }
+  }
+
+  var googleCombo = document.querySelector("select.goog-te-combo");
+  var langSelect = document.querySelector('.ct-language');
+  langSelect.addEventListener('click', function(event) {
+    if (!event.target) {
+      return;
+    }
+
+    var selected = document.querySelector('.ct-language .ct-language-selected');
+    if (selected) {
+      selected.classList.remove('ct-language-selected');
+    }
+
+    var target = event.target;
+    while (target && target !== langSelect ) {
+      if (target.matches('.lang-select')) {
+        break;
+      }
+      target = target.parentElement;
+    }
+
+    if (target && target.matches('.lang-select')) {
+      var lang = target.getAttribute('data-lang');
+      if (googleCombo.value == lang) {
+        restoreLang();
+      } else {
+        target.parentElement.classList.add('ct-language-selected');
+        googleCombo.value = lang;
+        triggerHtmlEvent(googleCombo, 'change');
+      }
+    }
+
+    event.preventDefault();
+  });
+}
+</script>
+
+<script type="text/javascript" src="//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"></script>
+</span>
+</div>
+        </nav>
+</div>
+  </div>
+</header>
+
+<script>
+  function initHeader() {
+    var lastScrollY = getScrollPos().y;
+    var documentElement = document.documentElement;
+
+    function storeScrollData() {
+      var y = getScrollPos().y;var scrollStatus = "";
+
+      if (y <= 0) {
+        scrollStatus = "top";
+      } else if ((window.innerHeight + y) >= document.body.offsetHeight) {
+        scrollStatus = "bottom";
+      } else {
+        var isScrollDown = (y - lastScrollY > 0) ? true : false;
+        scrollStatus = isScrollDown ? "down" : "up";
+      }
+
+      lastScrollY = y;
+      documentElement.setAttribute("data-scroll-status", scrollStatus);
+    }
+
+    window.addEventListener('scroll', function(e) {
+      storeScrollData();
+    });
+
+    storeScrollData();
+  }
+  document.addEventListener('DOMContentLoaded', initHeader);
+</script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<script>
+  function hashLocate(hashValue) {
+    hashValue = hashValue.replace(/^.*#h-/, '');
+    hashValue = decodeURIComponent(hashValue);
+    var element = document.getElementById(hashValue);
+
+    if (!element) {
+      return;
+    }
+
+    var header = document.querySelector('header.site-header');
+    var headerRect = header.getBoundingClientRect();
+    var headerTop = Math.floor(headerRect.top);
+    var headerHeight = Math.floor(headerRect.height);
+    var scrollPos = getScrollPos();
+    var offsetY = element.offsetTop - (headerTop + headerHeight + 20);
+
+    if (offsetY == scrollPos.y) {
+      return;
+    }
+
+    if (headerTop == 0  && offsetY > scrollPos.y) {
+      offsetY += headerHeight + 2;
+    } else if (headerTop < 0  && offsetY < scrollPos.y) {
+      offsetY -= headerHeight - 2;
+    }
+
+    smoothScrollTo(offsetY);
+  }
+
+  // The first event occurred
+  window.addEventListener('load', function(event) {
+    if (window.location.hash) {
+      hashLocate(window.location.hash);
+    }
+  });
+
+  // The first event occurred
+  window.addEventListener('click', function(event) {
+    if (event.target.tagName.toLowerCase() == 'a') {
+      hashLocate(event.target.getAttribute('href'));
+    }
+  });
+</script>
+<div class="theme-toggle">
+  <input type="checkbox" id="theme-switch">
+  <label for="theme-switch">
+    <div class="toggle"></div>
+    <div class="names">
+      <p class="light">Light</p>
+      <p class="dark">Dark</p>
+    </div>
+  </label>
+</div>
+
+
+
+
+<script>
+  (function() {
+    var sw = document.getElementById('theme-switch');
+    var html = document.getElementsByTagName('html')[0];
+    var nightModeOption = ('auto' || 'auto').toLowerCase();
+    var storage = nightModeOption === 'manual'
+        ? localStorage
+        : sessionStorage;
+    var themeData = loadThemeData();
+
+    function saveThemeData(data) {
+      storage.setItem('theme', JSON.stringify(data));
+    }
+
+    function loadThemeData() {
+      var data = storage.getItem('theme');
+      try {
+        data = JSON.parse(data ? data : '');
+      } catch(e) {
+        data = { nightShift: undefined, autoToggleAt: 0 };
+        saveThemeData(data);
+      }
+      return data;
+    }
+
+    function handleThemeToggle(nightShift) {
+      themeData.nightShift = nightShift;
+      saveThemeData(themeData);
+      html.dataset.theme = nightShift ? 'dark' : 'light';
+      setTimeout(function() {
+        sw.checked = nightShift ? true : false;
+      }, 50);
+    }
+
+    function autoThemeToggle() {
+      // Next time point of theme toggle
+      var now = new Date();
+      var toggleAt = new Date();
+      var hours = now.getHours();
+      var nightShift = hours >= 19 || hours <=7;
+
+      if (nightShift) {
+        if (hours > 7) {
+          toggleAt.setDate(toggleAt.getDate() + 1);
+        }
+        toggleAt.setHours(7);
+      } else {
+        toggleAt.setHours(19);
+      }
+
+      toggleAt.setMinutes(0);
+      toggleAt.setSeconds(0);
+      toggleAt.setMilliseconds(0)
+
+      var delay = toggleAt.getTime() - now.getTime();
+
+      // auto toggle theme mode
+      setTimeout(function() {
+        handleThemeToggle(!nightShift);
+      }, delay);
+
+      return {
+        nightShift: nightShift,
+        toggleAt: toggleAt.getTime()
+      };
+    }
+
+    // Listen the theme toggle event
+    sw.addEventListener('change', function(event) {
+      handleThemeToggle(event.target.checked);
+    });
+
+    if (nightModeOption == 'auto') {
+      var data = autoThemeToggle();
+
+      // Toggle theme by local setting
+      if (data.toggleAt > themeData.autoToggleAt) {
+        themeData.autoToggleAt = data.toggleAt;
+        handleThemeToggle(data.nightShift);
+      } else {
+        handleThemeToggle(themeData.nightShift);
+      }
+    } else if (nightModeOption == 'manual') {
+      handleThemeToggle(themeData.nightShift);
+    } else {
+      var nightShift = themeData.nightShift;
+      if (nightShift === undefined) {
+        nightShift = nightModeOption === 'on';
+      }
+      handleThemeToggle(nightShift);
+    }
+  })();
+</script>
+<div id="click-to-top" class="click-to-top">
+  <i class="fa fa-arrow-up"></i>
+</div>
+<script>
+  (function () {
+    const clickToTop = document.getElementById('click-to-top');
+    window.addEventListener('scroll', () => {
+      if (window.scrollY > 100) {
+        clickToTop.classList.add('show')
+      }else {
+        clickToTop.classList.remove('show')
+      }
+    });
+    clickToTop.addEventListener('click', () => {
+      window.smoothScrollTo(0);
+    });
+  })();
+</script>
+<main class="page-content" aria-label="Content">
+      <div class="wrapper">
+        <div class="framework">
+  <section class="main">
+
+     <div class="post">
+  <section>
+
+
+
+
+
+
+
+
+
+<header class="post-header">
+  <h1 class="post-title p-name" itemprop="name headline">Inside PolkaVM - Unveiling the Core VM Engine</h1>
+  <h2 class="post-subtitle">A Deep Dive into Secure, Efficient, and Configurable Program Execution</h2>
+
+  <p class="post-meta">
+    <time class="dt-published" datetime="2025-05-24T00:00:00+00:00" itemprop="datePublished"><i class="fa fa-calendar"></i> May 24, 2025
+    </time>
+
+    
+    
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    <span class="post-reading-time left-vsplit"><i class="fa fa-clock-o"></i> About 6 mins</span>
+  </p>
+<div class="post-tags">
+<a class="post-tag" href="/tags.html#CoreVM">#CoreVM</a><a class="post-tag" href="/tags.html#Engine">#Engine</a><a class="post-tag" href="/tags.html#JAM">#JAM</a><a class="post-tag" href="/tags.html#PolkaVM">#PolkaVM</a>
+</div></header>
+<article class="post h-entry" itemscope itemtype="http://schema.org/BlogPosting">
+
+    <div class="post-content e-content" itemprop="articleBody">
+
+      <p>The Core VM Engine is the central execution system of PolkaVM, responsible for loading, compiling, and running guest programs in a secure and efficient manner. It provides the foundation for program execution, memory management, sandboxing, and interaction between host and guest code. For information about program representation, see <a href="">Program Representation</a>, and for the sandboxing system, see <a href="https://iurdao.github.io/technics/2025/05/24/Sandboxing.html">Sandboxing</a>.</p>
+
+<h2 id="architecture-overview">Architecture Overview</h2>
+
+<p>The Core VM Engine consists of several key components that work together to enable secure and efficient execution of programs.</p>
+
+<p><img class="mermaid" src="https://mermaid.ink/svg/eyJjb2RlIjoiZmxvd2NoYXJ0IFREXG5BW0VuZ2luZV0gLS0-IEJbTW9kdWxlXVxuQiAtLT4gQ1tSYXcgSW5zdGFuY2VdXG5DIC0tPiBEW0JhY2tlbmRdXG5EIC0tPiBFW0ludGVycHJldGVyIEJhY2tlbmRdXG5EIC0tPiBGW0NvbXBpbGVyIEJhY2tlbmRdXG5GIC0tPiBHW0FyY2hpdGVjdHVyZS1zcGVjaWZpYyBjb2RlIGdlbmVyYXRpb24gXVxuQSAtLT4gSFtDb25maWd1cmF0aW9uXVxuQSAtLT4gSVtTYW5kYm94IGltcGxlbWVudGF0aW9uXVxuSSAtLT4gSltMaW51eCBTYW5kYm94XVxuSSAtLT4gS1tHZW5lcmljIFNhbmRib3hdIiwibWVybWFpZCI6bnVsbH0"></p>
+
+<p>Sources: <a href="https://github.com/paritytech/polkavm/blob/910adbda/crates/polkavm/src/api.rs#L96-L234">crates/polkavm/src/api.rs96-234</a> <a href="https://github.com/paritytech/polkavm/blob/910adbda/crates/polkavm/src/api.rs#L962-L2044">crates/polkavm/src/api.rs962-2044</a> <a href="https://github.com/paritytech/polkavm/blob/910adbda/crates/polkavm/src/lib.rs#L1-L172">crates/polkavm/src/lib.rs1-172</a></p>
+
+<h2 id="key-components">Key Components</h2>
+
+<h3 id="engine">Engine</h3>
+
+<p>The <code class="language-plaintext highlighter-rouge">Engine</code> is the main entry point for using PolkaVM. It holds global state and configuration, and is responsible for creating new modules and managing sandbox workers.</p>
+
+<p><img class="mermaid" src="https://mermaid.ink/svg/eyJjb2RlIjoiY2xhc3NEaWFncmFtXG5FbmdpbmUgLS0-IEJhY2tlbmRLaW5kXG5FbmdpbmUgLS0-IFNhbmRib3hLaW5kXG5FbmdpbmUgLS0-IEVuZ2luZVN0YXRlXG4lJS1cbmNsYXNzIEVuZ2luZSB7XG4rc2VsZWN0ZWRfYmFja2VuZDogQmFja2VuZEtpbmRcbiUlLVxuK3NlbGVjdGVkX3NhbmRib3g6IE9wdGlvbn5TYW5kYm94S2luZH5cbiUlLVxuK2ludGVycHJldGVyX2VuYWJsZWQ6IGJvb2xcbiUlLVxuK2Nyb3NzY2hlY2s6IGJvb2xcbiUlLVxuK3N0YXRlOiBBcmN-RW5naW5lU3RhdGV-XG4lJS1cbithbGxvd19keW5hbWljX3BhZ2luZzogYm9vbFxuJSUtXG4rYWxsb3dfZXhwZXJpbWVudGFsOiBib29sXG4lJS1cbituZXcoY29uZmlnOiAmQ29uZmlnKSAtPiBSZXN1bHR-RW5naW5lLCBFcnJvcn5cbiUlLVxuK2JhY2tlbmTvvIjvvIkgLT4gQmFja2VuZEtpbmRcbiUlLVxuK2lkbGVfd29ya2VyX3BpZHPvvIjvvIkgLT4gVmVjfnUzMn5cbn1cbiUlLVxuY2xhc3MgQmFja2VuZEtpbmQge1xuPDxlbnVtZXJhdGlvbj4-XG5Db21waWxlclxuSW50ZXJwcmV0ZXJcbn1cbiUlLVxuY2xhc3MgU2FuZGJveEtpbmQge1xuPDxlbnVtZXJhdGlvbj4-XG5MaW51eFxuR2VuZXJpY1xufVxuJSUtXG5jbGFzcyBFbmdpbmVTdGF0ZSB7XG4lJS1cbitzYW5kYm94aW5nX2VuYWJsZWQ6IGJvb2xcbiUlLVxuK3NhbmRib3hfZ2xvYmFsOiBPcHRpb25-R2xvYmFsU3RhdGVLaW5kflxuJSUtXG4rc2FuZGJveF9jYWNoZTogT3B0aW9ufldvcmtlckNhY2hlS2luZH5cbiUlLVxuK2NvbXBpbGVyX2NhY2hlOiBDb21waWxlckNhY2hlXG4lJS1cbittb2R1bGVfY2FjaGU6IE1vZHVsZUNhY2hlXG59IiwibWVybWFpZCI6bnVsbH0"></p>
+
+<p>Sources: <a href="https://github.com/paritytech/polkavm/blob/910adbda/crates/polkavm/src/api.rs#L96-L234">crates/polkavm/src/api.rs96-234</a> <a href="https://github.com/paritytech/polkavm/blob/910adbda/crates/polkavm/src/config.rs#L7-L49">crates/polkavm/src/config.rs7-49</a> <a href="https://github.com/paritytech/polkavm/blob/910adbda/crates/polkavm/src/config.rs#L51-L85">crates/polkavm/src/config.rs51-85</a></p>
+
+<h3 id="module">Module</h3>
+
+<p>A <code class="language-plaintext highlighter-rouge">Module</code> represents a compiled program that can be instantiated for execution. It contains the program code, memory layout, and metadata about exports and imports.</p>
+
+<p><img class="mermaid" src="https://mermaid.ink/svg/eyJjb2RlIjoiY2xhc3NEaWFncmFtXG5jbGFzcyBNb2R1bGUge1xuJSUtXG4rYmxvYu-8iO-8iSAmUHJvZ3JhbUJsb2JcbiUlLVxuK21lbW9yeV9tYXDvvIjvvIkgJk1lbW9yeU1hcFxuJSUtXG4rZGVmYXVsdF9zcO-8iO-8iSBSZWdWYWx1ZVxuJSUtXG4rZXhwb3J0c--8iO-8iSBJdGVyYXRvcn5Qcm9ncmFtRXhwb3J0flxuJSUtXG4raW1wb3J0c--8iO-8iSBJbXBvcnRzXG4lJS1cbitpc182NF9iaXTvvIjvvIkgYm9vbFxuJSUtXG4rbmV3KGVuZ2luZTogJkVuZ2luZSwgY29uZmlnOiAmTW9kdWxlQ29uZmlnLCBieXRlczogQXJjQnl0ZXMpIC0-IFJlc3VsdH5Nb2R1bGUsIEVycm9yflxuJSUtXG4rZnJvbV9ibG9iKGVuZ2luZTogJkVuZ2luZSwgY29uZmlnOiAmTW9kdWxlQ29uZmlnLCBibG9iOiBQcm9ncmFtQmxvYikgLT4gUmVzdWx0fk1vZHVsZSwgRXJyb3J-XG4lJS1cbitpbnN0YW50aWF0Ze-8iO-8iS0-IFJlc3VsdH5SYXdJbnN0YW5jZSwgRXJyb3J-XG59XG4lJS1cbmNsYXNzIE1vZHVsZVByaXZhdGUge1xuK2VuZ2luZV9zdGF0ZTogT3B0aW9ufkFyY35FbmdpbmVTdGF0ZX5-XG4lJS1cbitjcm9zc2NoZWNrOiBib29sXG4lJS1cbitibG9iOiBQcm9ncmFtQmxvYlxuJSUtXG4rY29tcGlsZWRfbW9kdWxlOiBDb21waWxlZE1vZHVsZUtpbmRcbiUlLVxuK2ludGVycHJldGVkX21vZHVsZTogT3B0aW9ufkludGVycHJldGVkTW9kdWxlflxuJSUtXG4rbWVtb3J5X21hcDogTWVtb3J5TWFwXG4lJS1cbitnYXNfbWV0ZXJpbmc6IE9wdGlvbn5HYXNNZXRlcmluZ0tpbmR-XG4lJS1cbitpc19zdHJpY3Q6IGJvb2xcbiUlLVxuK3N0ZXBfdHJhY2luZzogYm9vbFxuJSUtXG4rZHluYW1pY19wYWdpbmc6IGJvb2xcbiUlLVxuK3BhZ2Vfc2l6ZV9tYXNrOiB1MzJcbiUlLVxuK3BhZ2Vfc2hpZnQ6IHUzMlxuJSUtXG4raW5zdHJ1Y3Rpb25fc2V0OiBSdW50aW1lSW5zdHJ1Y3Rpb25TZXRcbiUlLVxuK2Nvc3RfbW9kZWw6IENvc3RNb2RlbFJlZlxufVxuJSUtXG5Nb2R1bGUgLS0-IE1vZHVsZVByaXZhdGUiLCJtZXJtYWlkIjpudWxsfQ"></p>
+
+<p>Sources: <a href="https://github.com/paritytech/polkavm/blob/910adbda/crates/polkavm/src/api.rs#L258-L780">crates/polkavm/src/api.rs258-780</a> <a href="https://github.com/paritytech/polkavm/blob/910adbda/crates/polkavm/src/api.rs#L386-L655">crates/polkavm/src/api.rs386-655</a></p>
+
+<h3 id="rawinstance">RawInstance</h3>
+
+<p>A <code class="language-plaintext highlighter-rouge">RawInstance</code> is an instantiated module that can be executed. It holds the execution state including registers, memory, and a pointer to the current instruction.</p>
+
+<p><img class="mermaid" src="https://mermaid.ink/svg/eyJjb2RlIjoiJSUtXG5jbGFzc0RpYWdyYW1cbmNsYXNzIFJhd0luc3RhbmNlIHtcbiUlLVxuK21vZHVsZTogTW9kdWxlXG4lJS1cbitiYWNrZW5kOiBJbnN0YW5jZUJhY2tlbmRcbiUlLVxuK2Nyb3NzY2hlY2tfaW5zdGFuY2U6IE9wdGlvbn5Cb3h-SW50ZXJwcmV0ZWRJbnN0YW5jZX5-XG4lJS1cbittb2R1bGUoJnNlbGYpIC0-ICZNb2R1bGVcbiUlLVxuK2lzXzY0X2JpdCgmc2VsZikgLT4gYm9vbFxuJSUtXG4rcnVuKCZtdXQgc2VsZikgLT4gUmVzdWx0fkludGVycnVwdEtpbmTvvIxFcnJvciB-XG4lJS1cbityZWcoJnNlbGYsIHJlZzogUmVnKSAtPiBSZWdWYWx1ZVxuJSUtXG4rc2V0X3JlZygmbXV0IHNlbGYsIHJlZzogUmVnLCB2YWx1ZTogUmVnVmFsdWUpXG4lJS1cbitzZXRfZ2FzKCZtdXQgc2VsZiwgZ2FzOiBHYXMpXG4lJS1cbitwcm9ncmFtX2NvdW50ZXIoJnNlbGYpIC0-IE9wdGlvbn5Qcm9ncmFtQ291bnRlcn5cbiUlLVxuK25leHRfcHJvZ3JhbV9jb3VudGVyKCZzZWxmKSAtPiBPcHRpb25-UHJvZ3JhbUNvdW50ZXJ-XG4lJS1cbitzZXRfbmV4dF9wcm9ncmFtX2NvdW50ZXIoJm11dCBzZWxmLCBwYzogUHJvZ3JhbUNvdW50ZXIpXG4lJS1cbitjbGVhcl9yZWdzKCZtdXQgc2VsZilcbiUlLVxuK3NldF9hY2Nlc3NpYmxlX2F1eF9zaXplKCZtdXQgc2VsZiwgc2l6ZTogdTMyKSAtPiBSZXN1bHR-77yI77yJ77yMRXJyb3J-XG4lJS1cbityZXNldF9tZW1vcnkoJm11dCBzZWxmKSAtPiBSZXN1bHR-77yI77yJLCBFcnJvcn5cbiUlLVxuK2lzX21lbW9yeV9hY2Nlc3NpYmxlKCZzZWxmLCBhZGRyZXNzOiB1MzIsIHNpemU6IHUzMiwgaXNfd3JpdGFibGU6IGJvb2wpIC0-IGJvb2xcbiUlLVxuK3JlYWRfbWVtb3J5X2ludG9-J3NsaWNlLCBCfigmc2VsZiwgYWRkcmVzczogdTMyLCBidWZmZXI6ICYnc2xpY2UgbXV0IEIpIC0-IFJlc3VsdH4mJ3NsaWNlIG11dCBbdThdLCBNZW1vcnlBY2Nlc3NFcnJvcn5cbiUlLVxuK3dyaXRlX21lbW9yeSgmbXV0IHNlbGYsIGFkZHJlc3M6IHUzMiwgZGF0YTogJlt1OF0pIC0-IFJlc3VsdH7vvIjvvIksIE1lbW9yeUFjY2Vzc0Vycm9yflxuJSUtXG4rcmVhZF9tZW1vcnkoJnNlbGYsIGFkZHJlc3M6IHUzMiwgbGVuZ3RoOiB1MzIpIC0-IFJlc3VsdH5WZWN-dTh-LCBNZW1vcnlBY2Nlc3NFcnJvcn5cbiUlLVxuK3plcm9fbWVtb3J5KCZtdXQgc2VsZiwgYWRkcmVzczogdTMyLCBsZW5ndGg6IHUzMikgLT4gUmVzdWx0fu-8iO-8iSwgTWVtb3J5QWNjZXNzRXJyb3J-XG4lJS1cbitwcm90ZWN0X21lbW9yeSgmbXV0IHNlbGYsIGFkZHJlc3M6IHUzMiwgbGVuZ3RoOiB1MzIpIC0-IFJlc3VsdH7vvIjvvIksIE1lbW9yeUFjY2Vzc0Vycm9yflxuJSUtXG4rZnJlZV9wYWdlcygmbXV0IHNlbGYsIGFkZHJlc3M6IHUzMiwgbGVuZ3RoOiB1MzIpIC0-IFJlc3VsdH7vvIjvvIksIEVycm9yflxuJSUtXG4raGVhcF9zaXplKCZzZWxmKSAtPiB1MzJcbiUlLVxuK3NicmsoJm11dCBzZWxmLCBzaXplOiB1MzIpIC0-IFJlc3VsdH4gT3B0aW9ufnUzMn4sIEVycm9yIH5cbiUlLVxuK3ByZXBhcmVfY2FsbF91bnR5cGVkKCZtdXQgc2VsZiwgcGM6IFByb2dyYW1Db3VudGVyLCBhcmdzOiAmW1JlZ1ZhbHVlXSlcbiUlLVxuK3ByZXBhcmVfY2FsbF90eXBlZH5GbkFyZ3N-KCZtdXQgc2VsZiwgcGM6IFByb2dyYW1Db3VudGVyLCBhcmdzOiBGbkFyZ3MpXG4lJS1cbitnZXRfcmVzdWx0X3R5cGVkfkZuUmVzdWx0figmc2VsZikgLT4gRm5SZXN1bHRcbiUlLVxuK3BpZCgmc2VsZikgLT4gT3B0aW9ufnUzMn5cbiUlLVxuK25leHRfbmF0aXZlX3Byb2dyYW1fY291bnRlcigmc2VsZikgLT4gT3B0aW9ufnVzaXplflxuJSUtXG4rcmVhZF91OChhZGRyZXNzOiB1MzIpIDogLT4gUmVzdWx0fnU4LCBNZW1vcnlBY2Nlc3NFcnJvcn5cbiUlLVxuK3JlYWRfdTE2KGFkZHJlc3M6IHUzMikgOiAtPiBSZXN1bHR-dTE2LCBNZW1vcnlBY2Nlc3NFcnJvcn5cbiUlLVxuK3JlYWRfdTMyKGFkZHJlc3M6IHUzMikgOiAtPiBSZXN1bHR-dTMyLCBNZW1vcnlBY2Nlc3NFcnJvcn5cbiUlLVxuK3JlYWRfdTY0KGFkZHJlc3M6IHUzMikgOiAtPiBSZXN1bHR-dTY0LCBNZW1vcnlBY2Nlc3NFcnJvcn5cbiUlLVxuK3dyaXRlX3U4KGFkZHJlc3M6IHUzMiwgdmFsdWU6IHU4KSAtPiBSZXN1bHR-77yI77yJLCBNZW1vcnlBY2Nlc3NFcnJvcn5cbiUlLVxuK3dyaXRlX3UxNihhZGRyZXNzOiB1MzIsIHZhbHVlOiB1MTYpIC0-IFJlc3VsdH7vvIjvvIksIE1lbW9yeUFjY2Vzc0Vycm9yflxuJSUtXG4rd3JpdGVfdTMyKGFkZHJlc3M6IHUzMiwgdmFsdWU6IHUzMikgLT4gUmVzdWx0fu-8iO-8iSwgTWVtb3J5QWNjZXNzRXJyb3J-XG4lJS1cbit3cml0ZV91NjQoYWRkcmVzczogdTMyLCB2YWx1ZTogdTY0KSAtPiBSZXN1bHR-77yI77yJLCBNZW1vcnlBY2Nlc3NFcnJvcn5cbn1cbiUlLVxuY2xhc3MgSW5zdGFuY2VCYWNrZW5ke1xufn5lbnVtZXJhdGlvfn5cbm9tcGlsZWRMaW51eChTYW5kYm94SW5zdGFuY2V-U2FuZGJveExpbnV4filcbiUlLVxuQ29tcGlsZWRHZW5lcmljKFNhbmRib3hJbnN0YW5jZX5TYW5kYm94R2VuZXJpY34pXG4lJS1cbkludGVycHJldGVkKEludGVycHJldGVkSW5zdGFuY2UpXG59XG4lJS1cblJhd0luc3RhbmNlIC0tPiBJbnN0YW5jZUJhY2tlbmRcbiUlLSIsIm1lcm1haWQiOm51bGx9"></p>
+
+<p>Sources: <a href="https://github.com/paritytech/polkavm/blob/910adbda/crates/polkavm/src/api.rs#L962-L2044">crates/polkavm/src/api.rs962-2044</a> <a href="https://github.com/paritytech/polkavm/blob/910adbda/crates/polkavm/src/api.rs#L859-L873">crates/polkavm/src/api.rs859-873</a></p>
+
+<h2 id="execution-flow">Execution Flow</h2>
+
+<p>The execution flow of the Core VM Engine encompasses program loading, instantiation, and the execution cycle.</p>
+
+<p><img class="mermaid" src="https://mermaid.ink/svg/eyJjb2RlIjoiJSUtXG5zZXF1ZW5jZURpYWdyYW1cbnBhcnRpY2lwYW50IEEgYXMgSG9zdCBQcm9ncmFtXG5wYXJ0aWNpcGFudCBCIGFzIEVuZ2luZVxucGFydGljaXBhbnQgQyBhcyBNb2R1bGVcbnBhcnRpY2lwYW50IEQgYXMgUmF3SW5zdGFuY2VcbnBhcnRpY2lwYW50IEUgYXMgRXhlY3V0aW9uIEJhY2tlbmRcbkEtPj5COiBjcmVhdGUoY29uZmlnKVxuQS0-PkI6IG5ldyBtb2R1bGUoYmxvYilcbkItPj5DOiBmcm9tX2Jsb2IoZW5naW5lLCBjb25maWcsIGJsb2IpXG5DLS0-PkI6IE1vZHVsZVxuQi0tPj5BOiBNb2R1bGVcbkEtPj5DOiBpbnN0YW50aWF0ZSgpXG5DLT4-RDogbmV3KG1vZHVsZSlcbkMtPj5FOiBpbml0aWFsaXplXG5DLS0-PkE6IGluaXRpYWxpemVcbkEtPj5EOiBzZXRfcmVnKC4uLilcbkEtPj5EOiBydW4oKVxuRC0-PkU6IHJ1bigpXG5hbHQgTm9ybWFsIEV4ZWN1dGlvblxuRS0tPj5EOiBJbnRlcnJ1cHRLaW5kOjpGaW5pc2hlZFxuRC0tPj5BOiBJbnRlcnJ1cHRLaW5kOjpGaW5pc2hlZFxuZWxzZSBIb3N0IENhbGxcbkUtLT4-RDogSW50ZXJydXB0S2luZDo6RWNhbGxpKG4pXG5ELS0-PkE6IEludGVycnVwdEtpbmQ6OkVjYWxsaShuKVxuQS0-PkQ6IHNldF9yZWcoLi4uKVxuQS0-PkQ6IHJ1bigpXG5lbHNlIEVycm9yIENvbmRpdGlvblxuRS0tPj5EOiBJbnRlcnJ1cHRLaW5kOjpUcmFwL05vdEVub3VnaEdhcy9TZWdmYXVsdFxuRC0tPj5BOiBJbnRlcnJ1cHRLaW5kOjpUcmFwL05vdEVub3VnaEdhcy9TZWdmYXVsdFxuZW5kXG4lJS0iLCJtZXJtYWlkIjpudWxsfQ"></p>
+
+<p>Sources: <a href="https://github.com/paritytech/polkavm/blob/910adbda/crates/polkavm/src/api.rs#L386-L655">crates/polkavm/src/api.rs386-655</a> <a href="https://github.com/paritytech/polkavm/blob/910adbda/crates/polkavm/src/api.rs#L962-L2044">crates/polkavm/src/api.rs962-2044</a> <a href="https://github.com/paritytech/polkavm/blob/910adbda/crates/polkavm/src/utils.rs#L103-L139">crates/polkavm/src/utils.rs103-139</a></p>
+
+<h3 id="instantiation-process">Instantiation Process</h3>
+
+<p>When a module is instantiated:</p>
+
+<ol>
+  <li>The engine selects the appropriate backend (Compiler or Interpreter)</li>
+  <li>If the Compiler backend is selected, the VM instructions are compiled to native code</li>
+  <li>If sandboxing is enabled, a sandbox environment is prepared</li>
+  <li>A RawInstance is created, linked to the appropriate backend</li>
+  <li>Memory is allocated according to the module’s memory map</li>
+</ol>
+
+<h3 id="execution-cycle">Execution Cycle</h3>
+
+<p>The execution cycle involves:</p>
+
+<ol>
+  <li>Setting up the initial state (registers, program counter)</li>
+  <li>Running the code via the selected backend</li>
+  <li>Handling interrupts that occur during execution</li>
+  <li>Returning control to the host when necessary (for host calls or on completion)</li>
+</ol>
+
+<h3 id="interrupt-types">Interrupt Types</h3>
+
+<p>The VM uses interrupts to handle various execution events:</p>
+
+<table>
+  <thead>
+    <tr>
+      <th>Interrupt Type</th>
+      <th>Description</th>
+      <th>Trigger</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Finished</td>
+      <td>Normal termination</td>
+      <td>Program jumps to <code class="language-plaintext highlighter-rouge">VM_ADDR_RETURN_TO_HOST</code>
+</td>
+    </tr>
+    <tr>
+      <td>Trap</td>
+      <td>Abnormal termination</td>
+      <td>Invalid instruction, jump, or explicit trap</td>
+    </tr>
+    <tr>
+      <td>Ecalli</td>
+      <td>Host function call</td>
+      <td>
+<code class="language-plaintext highlighter-rouge">ecalli</code> instruction executed</td>
+    </tr>
+    <tr>
+      <td>NotEnoughGas</td>
+      <td>Gas limit exceeded</td>
+      <td>Gas counter reaches zero</td>
+    </tr>
+    <tr>
+      <td>Segfault</td>
+      <td>Memory access violation</td>
+      <td>Accessing unmapped memory or writing to read-only memory</td>
+    </tr>
+    <tr>
+      <td>Step</td>
+      <td>Single step completed</td>
+      <td>Step tracing is enabled</td>
+    </tr>
+  </tbody>
+</table>
+
+<p>Sources: <a href="https://github.com/paritytech/polkavm/blob/910adbda/crates/polkavm/src/utils.rs#L103-L139">crates/polkavm/src/utils.rs103-139</a> <a href="https://github.com/paritytech/polkavm/blob/910adbda/crates/polkavm/src/tests.rs#L365-L375">crates/polkavm/src/tests.rs365-375</a></p>
+
+<h2 id="backends">Backends</h2>
+
+<p>The Core VM Engine supports two execution backends:</p>
+
+<h3 id="interpreter-backend">Interpreter Backend</h3>
+
+<p>The Interpreter backend executes instructions one by one, interpreting each instruction as it runs. It’s implemented in <code class="language-plaintext highlighter-rouge">InterpretedInstance</code>:</p>
+
+<p><img class="mermaid" src="https://mermaid.ink/svg/eyJjb2RlIjoiJSUtXG5jbGFzc0RpYWdyYW1cbmNsYXNzIEludGVycHJldGVkSW5zdGFuY2V7XG4rbW9kdWxlOiBNb2R1bGVcbitiYXNpY19tZW1vcnk6IEJhc2ljTWVtb3J5XG4rZHluYW1pY19tZW1vcnk6IER5bmFtaWNNZW1vcnlcbitwcm9ncmFtX2NvdW50ZXI6IFByb2dyYW1Db3VudGVyXG4rcHJvZ3JhbV9jb3VudGVyX3ZhbGlkOiBib29sXG4rbmV4dF9wcm9ncmFtX2NvdW50ZXI6IE9wdGlvbiB-UHJvZ3JhbUNvdW50ZXJ-XG4rbmV4dF9wcm9ncmFtX2NvdW50ZXJfY2hhbmdlZDogYm9vbFxuK2N5Y2xlX2NvdW50ZXI6IHU2NFxuK2dhczogaTY0XG4rcmVnczogW3U2NDsgUmVnOjpBTEwubGVuXVxuJSUtXG4rbmV3X2Zyb21fbW9kdWxlKG1vZHVsZTogTW9kdWxlLCBmb3JjZV9zdGVwX3RyYWNpbmc6IGJvb2wpIC0-IFNlbGZcbitydW4oKSAtPiBSZXN1bHQgfkludGVycnVwdEtpbmQsIEVycm9yflxuK3JlZyhyZWc6IFJlZykgLT4gUmVnVmFsdWVcbitzZXRfcmVnKHJlZzogUmVnLCB2YWx1ZTogUmVnVmFsdWUpXG59XG4lJS0iLCJtZXJtYWlkIjpudWxsfQ"></p>
+
+<p>Sources: <a href="https://github.com/paritytech/polkavm/blob/910adbda/crates/polkavm/src/interpreter.rs#L397-L752">crates/polkavm/src/interpreter.rs397-752</a> <a href="https://github.com/paritytech/polkavm/blob/910adbda/crates/polkavm/src/interpreter.rs#L1-L20">crates/polkavm/src/interpreter.rs1-20</a></p>
+
+<h3 id="compiler-backend">Compiler Backend</h3>
+
+<p>The Compiler backend translates the VM instructions to native machine code, which is executed directly by the CPU. This provides better performance but is more complex and requires platform-specific optimizations:</p>
+
+<p><img class="mermaid" src="https://mermaid.ink/svg/eyJjb2RlIjoiJSUtXG5mbG93Y2hhcnQgVERcbiUlLVxuQVtQcm9ncmFtQmxvYl0gLS0-IEJbQ29tcGlsZXIgVmlzaXRvcl1cbkIgLS0-IENbR2FzIFZpc2l0b3JdXG5CIC0tPiBEW0FyY2hpdGVjdHVyZSBWaXNpdG9yXVxuQyAtLT4gRVtHYXMgTWV0ZXJpbmcgU3R1YnNdXG5EIC0tPiBGW05hdGl2ZSBNYWNoaW5lIENvZGVdXG5FIC0tPiBHW0NvbXBpbGVkIE1vZHVsZV1cbkYgLS0-IEdcbkcgLS0-IEhbU2FuZGJveCBFeGVjdXRpb25dXG4lJS0iLCJtZXJtYWlkIjpudWxsfQ"></p>
+
+<p>Sources: <a href="https://github.com/paritytech/polkavm/blob/910adbda/crates/polkavm/src/api.rs#L237-L256">crates/polkavm/src/api.rs237-256</a> <a href="https://github.com/paritytech/polkavm/blob/910adbda/crates/polkavm/src/api.rs#L496-L575">crates/polkavm/src/api.rs496-575</a></p>
+
+<h2 id="memory-management">Memory Management</h2>
+
+<p>The VM has a well-defined memory layout to ensure security and proper isolation:</p>
+
+<p><img class="mermaid" src="https://mermaid.ink/svg/eyJjb2RlIjoiJSUtXG5mbG93Y2hhcnQgTFJcbiUlLVxuQVtWTSBNZW1vcnkgU3BhY2VdIC0tPiBCW0d1YXJkIFBhZ2VzXVxuQSAtLT4gQ1tDb2RlIFNlY3Rpb25dXG5BIC0tPiBEW1JlYWQtT25seSBEYXRhIFNlY3Rpb25dXG5BIC0tPiBFW1JlYWQtV3JpdGUgRGF0YSBTZWN0aW9uXVxuQSAtLT4gRltTdGFjayBSZWdpb25dXG5BIC0tPiBHW0F1eGlsaWFyeSBEYXRhIFJlZ2lvbl1cbkEgLS0-IEhbXCJIZWFwICh2aWEgc2JyaylcIl1cbiUlLSIsIm1lcm1haWQiOm51bGx9"></p>
+
+<p>The memory layout is configured by the <code class="language-plaintext highlighter-rouge">MemoryMap</code> which defines the address ranges for each section:</p>
+
+<table>
+  <thead>
+    <tr>
+      <th>Section</th>
+      <th>Purpose</th>
+      <th>Access</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Code Section</td>
+      <td>Contains executable instructions</td>
+      <td>Read-only</td>
+    </tr>
+    <tr>
+      <td>Read-Only Data</td>
+      <td>Constants and immutable data</td>
+      <td>Read-only</td>
+    </tr>
+    <tr>
+      <td>Read-Write Data</td>
+      <td>Global variables and mutable data</td>
+      <td>Read-write</td>
+    </tr>
+    <tr>
+      <td>Stack</td>
+      <td>Function calls and local variables</td>
+      <td>Read-write</td>
+    </tr>
+    <tr>
+      <td>Auxiliary Data</td>
+      <td>Host-configurable data region</td>
+      <td>Read-write (from host)</td>
+    </tr>
+    <tr>
+      <td>Heap</td>
+      <td>Dynamically allocated memory</td>
+      <td>Read-write</td>
+    </tr>
+  </tbody>
+</table>
+
+<p>Sources: <a href="https://github.com/paritytech/polkavm/blob/910adbda/crates/polkavm/src/api.rs#L594-L623">crates/polkavm/src/api.rs594-623</a> <a href="https://github.com/paritytech/polkavm/blob/910adbda/crates/polkavm/src/interpreter.rs#L79-L133">crates/polkavm/src/interpreter.rs79-133</a></p>
+
+<h3 id="dynamic-paging">Dynamic Paging</h3>
+
+<p>When enabled, dynamic paging allows memory to be mapped on-demand:</p>
+
+<ol>
+  <li>Pages are only allocated when accessed</li>
+  <li>Attempting to access an unmapped page triggers a <code class="language-plaintext highlighter-rouge">Segfault</code> interrupt</li>
+  <li>The host can map new pages or protect pages as needed</li>
+  <li>Useful for memory-efficient execution of large programs</li>
+</ol>
+
+<p>Sources: <a href="https://github.com/paritytech/polkavm/blob/910adbda/crates/polkavm/src/interpreter.rs#L250-L282">crates/polkavm/src/interpreter.rs250-282</a> <a href="https://github.com/paritytech/polkavm/blob/910adbda/crates/polkavm/src/config.rs#L458-L471">crates/polkavm/src/config.rs458-471</a></p>
+
+<h2 id="configuration">Configuration</h2>
+
+<h3 id="engine-configuration">Engine Configuration</h3>
+
+<p>The <code class="language-plaintext highlighter-rouge">Config</code> struct controls engine-level settings:</p>
+
+<table>
+  <thead>
+    <tr>
+      <th>Setting</th>
+      <th>Description</th>
+      <th>Default</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">backend</code></td>
+      <td>Execution backend (Compiler/Interpreter)</td>
+      <td>Best available</td>
+    </tr>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">sandbox</code></td>
+      <td>Sandbox implementation (Linux/Generic)</td>
+      <td>Best available</td>
+    </tr>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">crosscheck</code></td>
+      <td>Enable execution cross-checking</td>
+      <td>false</td>
+    </tr>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">allow_experimental</code></td>
+      <td>Enable experimental features</td>
+      <td>false</td>
+    </tr>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">allow_dynamic_paging</code></td>
+      <td>Enable dynamic paging</td>
+      <td>false</td>
+    </tr>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">worker_count</code></td>
+      <td>Number of worker sandboxes</td>
+      <td>2</td>
+    </tr>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">cache_enabled</code></td>
+      <td>Enable module caching</td>
+      <td>true (with module-cache feature)</td>
+    </tr>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">sandboxing_enabled</code></td>
+      <td>Enable security sandboxing</td>
+      <td>true</td>
+    </tr>
+  </tbody>
+</table>
+
+<p>Sources: <a href="https://github.com/paritytech/polkavm/blob/910adbda/crates/polkavm/src/config.rs#L100-L217">crates/polkavm/src/config.rs100-217</a> <a href="https://github.com/paritytech/polkavm/blob/910adbda/crates/polkavm/src/config.rs#L152-L366">crates/polkavm/src/config.rs152-366</a></p>
+
+<h3 id="module-configuration">Module Configuration</h3>
+
+<p>The <code class="language-plaintext highlighter-rouge">ModuleConfig</code> struct controls module-level settings:</p>
+
+<table>
+  <thead>
+    <tr>
+      <th>Setting</th>
+      <th>Description</th>
+      <th>Default</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">page_size</code></td>
+      <td>Memory page size</td>
+      <td>4096 (4K)</td>
+    </tr>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">gas_metering</code></td>
+      <td>Gas metering type (None/Sync/Async)</td>
+      <td>None</td>
+    </tr>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">is_strict</code></td>
+      <td>Enable strict mode for validation</td>
+      <td>false</td>
+    </tr>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">step_tracing</code></td>
+      <td>Enable instruction-by-instruction tracing</td>
+      <td>false</td>
+    </tr>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">dynamic_paging</code></td>
+      <td>Enable dynamic paging for this module</td>
+      <td>false</td>
+    </tr>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">aux_data_size</code></td>
+      <td>Size of auxiliary data region</td>
+      <td>0</td>
+    </tr>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">allow_sbrk</code></td>
+      <td>Allow dynamic heap allocation</td>
+      <td>true</td>
+    </tr>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">cost_model</code></td>
+      <td>Gas cost model</td>
+      <td>Naive cost model</td>
+    </tr>
+  </tbody>
+</table>
+
+<p>Sources: <a href="https://github.com/paritytech/polkavm/blob/910adbda/crates/polkavm/src/config.rs#L392-L583">crates/polkavm/src/config.rs392-583</a> <a href="https://github.com/paritytech/polkavm/blob/910adbda/crates/polkavm/src/config.rs#L413-L427">crates/polkavm/src/config.rs413-427</a></p>
+
+<h2 id="gas-metering">Gas Metering</h2>
+
+<p>Gas metering limits the computational resources a program can use:</p>
+
+<p><img class="mermaid" src="https://mermaid.ink/svg/eyJjb2RlIjoiJSUtXG5mbG93Y2hhcnQgVERcbiUlLVxuQVtNb2R1bGUgQ29uZmlndXJhdGlvbl0gLS0-IEJbR2FzIE1ldGVyaW5nIEtpbmRdXG5CIC0tPiBDW1N5bmNocm9ub3VzXVxuQiAtLT4gRFtBc3luY2hyb25vdXNdXG5DIC0tPiBFW0NoZWNrIGFmdGVyIGV2ZXJ5IGluc3RydWN0aW9uXVxuRCAtLT4gRltQZXJpb2RpYyBjaGVja2luZ11cbkUgLS0-IEdbSW50ZXJydXB0OiBOb3RFbm91Z2hHYXNdXG5GIC0tPiBHXG4lJS0iLCJtZXJtYWlkIjpudWxsfQ"></p>
+
+<h3 id="gas-metering-types">Gas Metering Types</h3>
+
+<ul>
+  <li>
+<strong>Synchronous</strong>: Checks gas after every instruction. Precise but higher overhead.</li>
+  <li>
+<strong>Asynchronous</strong>: Checks gas periodically. Lower overhead but less precise timing of interruption.</li>
+</ul>
+
+<p>Sources: <a href="https://github.com/paritytech/polkavm/blob/910adbda/crates/polkavm/src/config.rs#L369-L385">crates/polkavm/src/config.rs369-385</a> <a href="https://github.com/paritytech/polkavm/blob/910adbda/crates/polkavm/src/api.rs#L361-L365">crates/polkavm/src/api.rs361-365</a></p>
+
+<h2 id="security-considerations">Security Considerations</h2>
+
+<h3 id="sandboxing">Sandboxing</h3>
+
+<p>The Core VM Engine provides security through sandboxing:</p>
+
+<ul>
+  <li>
+<strong>Linux Sandbox</strong>: Uses Linux-specific security features (seccomp, namespaces)</li>
+  <li>
+<strong>Generic Sandbox</strong>: Uses signal handlers for basic protection (less secure, considered experimental)</li>
+</ul>
+
+<h3 id="memory-protection">Memory Protection</h3>
+
+<p>Memory protection ensures that:</p>
+
+<ul>
+  <li>Code and read-only data cannot be modified</li>
+  <li>Out-of-bounds memory access is prevented</li>
+  <li>Stack overflows are caught</li>
+  <li>Guard pages isolate different memory regions</li>
+</ul>
+
+<p>Sources: <a href="https://github.com/paritytech/polkavm/blob/910adbda/crates/polkavm/src/api.rs#L153-L188">crates/polkavm/src/api.rs153-188</a> <a href="https://github.com/paritytech/polkavm/blob/910adbda/crates/polkavm/src/config.rs#L357-L366">crates/polkavm/src/config.rs357-366</a></p>
+
+<h2 id="error-handling">Error Handling</h2>
+
+<p>The VM uses a comprehensive error handling system:</p>
+
+<ol>
+  <li>The <code class="language-plaintext highlighter-rouge">Error</code> type encapsulates various error kinds</li>
+  <li>The <code class="language-plaintext highlighter-rouge">InterruptKind</code> enum represents different types of execution interrupts</li>
+  <li>The <code class="language-plaintext highlighter-rouge">MemoryAccessError</code> handles memory access failures</li>
+</ol>
+
+<p>Sources: <a href="https://github.com/paritytech/polkavm/blob/910adbda/crates/polkavm/src/error.rs#L19-L108">crates/polkavm/src/error.rs19-108</a> <a href="https://github.com/paritytech/polkavm/blob/910adbda/crates/polkavm/src/utils.rs#L103-L139">crates/polkavm/src/utils.rs103-139</a> <a href="https://github.com/paritytech/polkavm/blob/910adbda/crates/polkavm/src/api.rs#L876-L909">crates/polkavm/src/api.rs876-909</a></p>
+
+
+    </div>
+
+</article>
+<div class="post-nav">
+<span></span><a class="next" href="/technics/2025/05/24/Sandboxing.html" title="Isolate or Integrate? PolkaVM's Sandboxing Choices Explained 🤔">Isolate or Integrate? PolkaVM's Sandboxing Choices...</a>
+</div>
+<div class="post-related">
+      <div>Related Articles</div>
+      <ul>
+        <li><a class="post-link" href="/technics/2025/05/29/Testing-and-Debugging.html" title="Isolate or Integrate? PolkaVM's Sandboxing Choices Explained 🤔">PolkaVM's Testing Arsenal:🚀 From Zero to Bulletproof in Minutes!</a></li>
+<li><a class="post-link" href="/technics/2025/06/15/PolkaVM-Doom-Example-Program-Analysis.html" title="Isolate or Integrate? PolkaVM's Sandboxing Choices Explained 🤔">PolkaVM Doom Example Program Analysis</a></li>
+<li><a class="post-link" href="/technics/2025/05/24/Unlock-Untrusted-Code.html" title="Isolate or Integrate? PolkaVM's Sandboxing Choices Explained 🤔">Unlock Untrusted Code - PolkaVM's Architecture Deep Dive</a></li>
+<li><a class="post-link" href="/technics/2025/05/25/Unveiling-PolkaVMs-Secrets-How-Programs-Really-Work.html" title="Isolate or Integrate? PolkaVM's Sandboxing Choices Explained 🤔">Unveiling PolkaVM's Secrets:How Programs Really Work ⚙️</a></li>
+</ul>
+    </div>
+<div class="post-comments"></div></section>
+</div>
+
+
+  </section>
+  <section class="sidebar" style="margin-left: 15px;">
+    <!-- Get sidebar items --><style type="text/css" media="screen">
+.post-menu ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+</style>
+
+<div class="post-menu">
+  <div class="post-menu-title">TOC</div>
+  <div class="post-menu-content"></div>
+</div>
+
+<script>
+  function generateContent() {
+    var menu = document.querySelector(".post-menu");
+    var menuContent =  menu.querySelector(".post-menu-content");
+    var headings = document.querySelector(".post-content").querySelectorAll("h2, h3, h4, h5, h6");
+
+    // Hide menu when no headings
+    if (headings.length === 0) {
+      return menu.style.display = "none";
+    }
+
+    // Generate post menu
+    var menuHTML = '';
+    for (var i = 0; i < headings.length; i++) {
+      var h = headings[i];
+      menuHTML += (
+        '<li class="h-' + h.tagName.toLowerCase() + '">'
+        + '<a href="#h-' + h.getAttribute('id') + '">' + h.textContent + '</a></li>');
+    }
+
+    menuContent.innerHTML = '<ul>' + menuHTML + '</ul>';
+
+    // The header element
+    var header = document.querySelector('header.site-header');
+
+    function doMenuCollapse(index, over_items) {
+      var items = menuContent.firstChild.children;
+
+      if (over_items == undefined) {
+        over_items = 20;
+      }
+
+      if (items.length < over_items) {
+        return;
+      }
+
+      var activeItem = items[index];
+      var beginItem = activeItem
+      var endItem = activeItem
+      var beginIndex = index;
+      var endIndex = index + 1;
+      while (beginIndex >= 0
+        && !items[beginIndex].classList.contains('h-h2')) {
+        beginIndex -= 1;
+      }
+      while (endIndex < items.length
+        && !items[endIndex].classList.contains('h-h2')) {
+        endIndex += 1;
+      }
+      for (var i = 0; i < beginIndex; i++) {
+        item = items[i]
+        if (!item.classList.contains('h-h2')) {
+          item.style.display = 'none';
+        }
+      }
+      for (var i = beginIndex + 1; i < endIndex; i++) {
+        item = items[i]
+        // if (!item.classList.contains('h-h2')) {
+          item.style.display = '';
+        // }
+      }
+      for (var i = endIndex; i < items.length; i++) {
+        item = items[i]
+        if (!item.classList.contains('h-h2')) {
+          item.style.display = 'none';
+        }
+      }
+    }
+
+    // Init menu collapsed
+    doMenuCollapse(-1);
+
+    // Active the menu item
+    window.addEventListener('scroll', function (event) {
+      var lastActive = menuContent.querySelector('.active');
+      var changed = true;
+      var activeIndex = -1;
+      for (var i = headings.length - 1; i >= 0; i--) {
+        var h = headings[i];
+        var headingRect = h.getBoundingClientRect();
+        var headerRect = header.getBoundingClientRect();
+        var headerTop = Math.floor(headerRect.top);
+        var headerHeight = Math.floor(headerRect.height);
+        var headerHeight = headerTop + headerHeight + 20;
+        if (headingRect.top <= headerHeight) {
+          var id = 'h-' + h.getAttribute('id');
+          var a = menuContent.querySelector('a[href="#' + id  + '"]');
+          var curActive = a.parentNode;
+          if (curActive) {
+            curActive.classList.add('active');
+            activeIndex = i;
+          }
+          if (lastActive == curActive) {
+            changed = false;
+          }
+          break;
+        }
+      }
+      if (changed) {
+        if (lastActive) {
+          lastActive.classList.remove('active');
+        }
+        doMenuCollapse(activeIndex);
+      }
+      event.preventDefault();
+    });
+  }
+  generateContent();
+</script>
+</section>
+</div>
+
+      </div>
+    </main><footer class="site-footer h-card">
+  <data class="u-url" href="/"></data>
+
+  <div class="wrapper">
+    <div class="site-footer-inner">
+<div>IURDao 2017-2025 Joe</div>
+      <div class="footer-col rss-subscribe">Subscribe <a href="/feed.xml">via RSS</a>
+</div>
+    </div>
+  </div>
+</footer>
+
+</body>
+</html>

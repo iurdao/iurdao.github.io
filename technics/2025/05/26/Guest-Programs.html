@@ -1,0 +1,1405 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="google-translate-customization" content="108d9124921d80c3-80e20d618ff053c8-g4f02ec6f3dba68b7-c">
+<!-- Begin Jekyll SEO tag v2.8.0 -->
+<title>Beyond WASM:The Future is RISC-V with PolkaVM Guest Programs ✨ | Industry-University-Research Dao</title>
+<meta name="generator" content="Jekyll v4.4.1">
+<meta property="og:title" content="Beyond WASM:The Future is RISC-V with PolkaVM Guest Programs ✨">
+<meta name="author" content="Joe">
+<meta property="og:locale" content="en_US">
+<meta name="description" content="This document explains how to develop programs that run inside the PolkaVM virtual machine. It covers the development environment, build process, and the Application Binary Interface (ABI) that allows guest programs to interact with the host system. For details on how the VM executes these programs, see Core VM Engine and for in-depth details on exports and imports, see ABI and Exports/Imports.">
+<meta property="og:description" content="This document explains how to develop programs that run inside the PolkaVM virtual machine. It covers the development environment, build process, and the Application Binary Interface (ABI) that allows guest programs to interact with the host system. For details on how the VM executes these programs, see Core VM Engine and for in-depth details on exports and imports, see ABI and Exports/Imports.">
+<link rel="canonical" href="/technics/2025/05/26/Guest-Programs.html">
+<meta property="og:url" content="/technics/2025/05/26/Guest-Programs.html">
+<meta property="og:site_name" content="Industry-University-Research Dao">
+<meta property="og:type" content="article">
+<meta property="article:published_time" content="2025-05-26T00:00:00+00:00">
+<meta name="twitter:card" content="summary">
+<meta property="twitter:title" content="Beyond WASM:The Future is RISC-V with PolkaVM Guest Programs ✨">
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"BlogPosting","author":{"@type":"Person","name":"Joe"},"dateModified":"2025-05-26T00:00:00+00:00","datePublished":"2025-05-26T00:00:00+00:00","description":"This document explains how to develop programs that run inside the PolkaVM virtual machine. It covers the development environment, build process, and the Application Binary Interface (ABI) that allows guest programs to interact with the host system. For details on how the VM executes these programs, see Core VM Engine and for in-depth details on exports and imports, see ABI and Exports/Imports.","headline":"Beyond WASM:The Future is RISC-V with PolkaVM Guest Programs ✨","mainEntityOfPage":{"@type":"WebPage","@id":"/technics/2025/05/26/Guest-Programs.html"},"url":"/technics/2025/05/26/Guest-Programs.html"}</script>
+<!-- End Jekyll SEO tag -->
+<link rel="icon" href="">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/typeface-noto-sans@0.0.72/index.min.css">
+  <link rel="stylesheet" href="/assets/css/main.css">
+  <script src="/assets/js/main.js"></script><link type="application/atom+xml" rel="alternate" href="/feed.xml" title="Industry-University-Research Dao">
+<link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/styles/default.min.css">
+<script src="//cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/highlight.min.js"></script>
+<!-- and it's easy to individually load additional languages -->
+<script charset="UTF-8" src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/languages/go.min.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<script>
+// Init highlight js
+document.addEventListener('DOMContentLoaded', function(event) {
+  var els = document.querySelectorAll('pre code')
+
+  function addLangData(block) {
+    var outer = block.parentElement.parentElement.parentElement;
+    var lang = block.getAttribute('data-lang');
+    for (var i = 0; i < outer.classList.length; i++) {
+      var cls = outer.classList[i];
+      if (cls.startsWith('language-')) {
+        lang = cls;
+        break;
+      }
+    }
+    if (!lang) {
+      cls = block.getAttribute('class');
+      lang = cls ? cls.replace('hljs ', '') : '';
+    }
+    if (lang.startsWith('language-')) {
+      lang = lang.substr(9);
+    }
+    block.setAttribute('class', 'hljs ' + lang);
+    block.parentNode.setAttribute('data-lang', lang);
+  }
+
+  function addBadge(block) {
+    var enabled = ('true' || 'true').toLowerCase();
+    if (enabled == 'true') {
+      var pre = block.parentElement;
+      pre.classList.add('badge');
+    }
+  }
+
+  function handle(block) {
+    addLangData(block);
+    addBadge(block)
+    hljs.highlightBlock(block);
+  }
+
+  for (var i = 0; i < els.length; i++) {
+    var el = els[i];
+    handle(el);
+  }
+});
+</script>
+
+<style>
+  /* code language badge */
+  pre.badge::before {
+    content: attr(data-lang);
+    color: #fff;
+    background-color: #ff4e00;
+    padding: 0 .5em;
+    border-radius: 0 2px;
+    text-transform: uppercase;
+    text-align: center;
+    min-width: 32px;
+    display: inline-block;
+    position: absolute;
+    right: 0;
+  }
+
+  /* fix wrong badge display for firefox browser */
+  code > table pre::before {
+    display: none;
+  }
+</style>
+<script src="//cdnjs.cloudflare.com/ajax/libs/photoswipe/4.1.3/photoswipe.min.js"></script>
+<script src="//cdnjs.cloudflare.com/ajax/libs/photoswipe/4.1.3/photoswipe-ui-default.min.js"></script>
+<link href="https://cdnjs.cloudflare.com/ajax/libs/photoswipe/4.1.3/photoswipe.css" rel="stylesheet">
+<link href="https://cdnjs.cloudflare.com/ajax/libs/photoswipe/4.1.3/default-skin/default-skin.css" rel="stylesheet">
+<style>
+  .pswp .pswp__container .pswp__img {
+    background-color: white;
+  }
+</style>
+
+<script>
+  function initPhotoSwipe() {
+    var mainEl = document.querySelector("section.main");
+
+    var imgEls = mainEl.querySelectorAll("img:not(.emoji)");
+    imgEls.forEach((imgEl) => {
+      imgEl.outerHTML = `
+    <a class="photo-swipe"
+      href="${imgEl.src}"
+      data-width="${imgEl.getAttribute("width") || imgEl.width * 2}"
+      data-height="${imgEl.getAttribute("height") || imgEl.height * 2}"
+      data-caption="${imgEl.getAttribute("caption") || imgEl.alt}"
+      target="_blank">
+      ${imgEl.outerHTML}
+    </a>`;
+    });
+
+    // Init empty gallery array
+    var container = [];
+
+    // Loop over gallery items and push it to the array
+    var linkEls = mainEl.querySelectorAll("a.photo-swipe");
+    linkEls.forEach((link) => {
+      var item = {
+        src: link.getAttribute("href"),
+        w: link.dataset.width,
+        h: link.dataset.height,
+        title: link.dataset.caption || "",
+      };
+      container.push(item);
+    });
+
+    // Define click event on gallery item
+    linkEls.forEach((link, index) => {
+      link.addEventListener("click", (event) => {
+        // Prevent location change
+        event.preventDefault();
+
+        // Define object and gallery options
+        var pswp = document.querySelector(".pswp");
+
+        var zoomLevel = 1;
+
+        // Define object and gallery options
+        var options = {
+          index: index,
+          bgOpacity: 0.85,
+          showHideOpacity: true,
+          closeOnScroll: true,
+          maxSpreadZoom: 1,
+          getDoubleTapZoom: (isMouseClick, item) => {
+            if (item.detail) {
+              zoomLevel += item.detail.origEvent.shiftKey ? -1 : 1;
+              item.detail = undefined;
+            } else {
+              zoomLevel = zoomLevel === 1 ? 2 : 1;
+            }
+            if (zoomLevel <= 1) {
+              zoomLevel = 1;
+              setTimeout(() => pswp.classList.remove("pswp--zoomed-in"), 0);
+            }
+            return item.initialZoomLevel * zoomLevel;
+          },
+        };
+
+        // Initialize PhotoSwipe
+        var gallery = new PhotoSwipe(
+          pswp,
+          PhotoSwipeUI_Default,
+          container,
+          options
+        );
+
+        gallery.init();
+
+        // Custom zoom event
+        gallery.container.addEventListener("pswpTap", (e) => {
+          gallery.currItem.detail = e.detail;
+        });
+      });
+    });
+  }
+
+  window.addEventListener("load", initPhotoSwipe);
+</script>
+
+<!-- Root element of PhotoSwipe. Must have class pswp. -->
+</head>
+<body>
+<div class="pswp" tabindex="-1" role="dialog" aria-hidden="true">
+  <!-- Background of PhotoSwipe.
+           It's a separate element as animating opacity is faster than rgba(). -->
+  <div class="pswp__bg"></div>
+  <!-- Slides wrapper with overflow:hidden. -->
+  <div class="pswp__scroll-wrap">
+    <!-- Container that holds slides.
+              PhotoSwipe keeps only 3 of them in the DOM to save memory.
+              Don't modify these 3 pswp__item elements, data is added later on. -->
+    <div class="pswp__container">
+      <div class="pswp__item"></div>
+      <div class="pswp__item"></div>
+      <div class="pswp__item"></div>
+    </div>
+    <!-- Default (PhotoSwipeUI_Default) interface on top of sliding area. Can be changed. -->
+    <div class="pswp__ui pswp__ui--hidden">
+      <div class="pswp__top-bar">
+        <!--  Controls are self-explanatory. Order can be changed. -->
+        <div class="pswp__counter"></div>
+        <button class="pswp__button pswp__button--close" title="Close (Esc)"></button>
+        <button class="pswp__button pswp__button--share" title="Share"></button>
+        <button class="pswp__button pswp__button--fs" title="Toggle fullscreen"></button>
+        <button class="pswp__button pswp__button--zoom" title="Zoom in/out"></button>
+        <!-- element will get class pswp__preloader--active when preloader is running -->
+        <div class="pswp__preloader">
+          <div class="pswp__preloader__icn">
+            <div class="pswp__preloader__cut">
+              <div class="pswp__preloader__donut"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="pswp__share-modal pswp__share-modal--hidden pswp__single-tap">
+        <div class="pswp__share-tooltip"></div>
+      </div>
+      <button class="pswp__button pswp__button--arrow--left" title="Previous (arrow left)"></button>
+      <button class="pswp__button pswp__button--arrow--right" title="Next (arrow right)"></button>
+      <div class="pswp__caption">
+        <div class="pswp__caption__center"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<header class="site-header " role="banner">
+
+  <div class="wrapper">
+    <div class="site-header-inner">
+<span class="site-brand"><a class="site-brand-inner" rel="author" href="/">
+  <img class="site-favicon" title="Industry-University-Research Dao" src="" onerror="this.style.display='none'">
+  Industry-University-Research Dao
+</a>
+</span><nav class="site-nav">
+          <input type="checkbox" id="nav-trigger" class="nav-trigger">
+          <label for="nav-trigger">
+            <span class="menu-icon">
+              <svg viewbox="0 0 18 15" width="18px" height="15px">
+                <path d="M18,1.484c0,0.82-0.665,1.484-1.484,1.484H1.484C0.665,2.969,0,2.304,0,1.484l0,0C0,0.665,0.665,0,1.484,0 h15.032C17.335,0,18,0.665,18,1.484L18,1.484z M18,7.516C18,8.335,17.335,9,16.516,9H1.484C0.665,9,0,8.335,0,7.516l0,0 c0-0.82,0.665-1.484,1.484-1.484h15.032C17.335,6.031,18,6.696,18,7.516L18,7.516z M18,13.516C18,14.335,17.335,15,16.516,15H1.484 C0.665,15,0,14.335,0,13.516l0,0c0-0.82,0.665-1.483,1.484-1.483h15.032C17.335,12.031,18,12.695,18,13.516L18,13.516z"></path>
+              </svg>
+            </span>
+          </label>
+
+          <div class="trigger">
+<a class="page-link" href="/about.html">ABOUT</a><a class="page-link" href="/archives.html">ARCHIVES</a><a class="page-link" href="/categories.html">CATEGORIES</a><a class="page-link" href="/">HOME</a><a class="page-link" href="/tags.html">TAGS</a>
+
+
+
+
+
+
+
+
+
+<span class="page-link">
+
+
+
+<div id="google_translate_element" style="display: none;">
+</div>
+
+<span class="ct-language">
+  <ul class="list-unstyled ct-language-dropdown">
+    
+      <li>
+        <a href="#" class="lang-select" data-lang="en">
+          
+          <img src="https://cdn.countryflags.com/thumbs/united-states-of-america/flag-400.png" title="English">
+          
+        </a>
+      </li>
+    
+      <li>
+        <a href="#" class="lang-select" data-lang="fr">
+          
+          <img src="https://cdn.countryflags.com/thumbs/france/flag-400.png" title="French">
+          
+        </a>
+      </li>
+    
+      <li>
+        <a href="#" class="lang-select" data-lang="zh-CN">
+          
+          <img src="https://cdn.countryflags.com/thumbs/china/flag-400.png" title="Chinese(Simple)">
+          
+        </a>
+      </li>
+    
+      <li>
+        <a href="#" class="lang-select" data-lang="ja">
+          
+          <img src="https://cdn.countryflags.com/thumbs/japan/flag-400.png" title="Japanese">
+          
+        </a>
+      </li>
+    
+      <li>
+        <a href="#" class="lang-select" data-lang="ko">
+          
+          <img src="https://cdn.countryflags.com/thumbs/south-korea/flag-400.png" title="Korean">
+          
+        </a>
+      </li>
+    
+      <li>
+        <a href="#" class="lang-select" data-lang="ru">
+          
+          <img src="https://cdn.countryflags.com/thumbs/russia/flag-400.png" title="Russian">
+          
+        </a>
+      </li>
+    
+  </ul>
+</span>
+
+<script type="text/javascript">
+function googleTranslateElementInit() {
+  new google.translate.TranslateElement({
+    pageLanguage: 'en',
+    autoDisplay: false,
+    layout: google.translate.TranslateElement.InlineLayout.VERTICAL
+  }, 'google_translate_element');
+
+  // Links to cross-origin destinations are unsafe
+  var gll = document.getElementsByClassName('goog-logo-link')[0];
+  if (gll) {
+    gll.setAttribute('rel', 'noopener');
+  }
+
+  function restoreLang() {
+    var iframe = document.getElementsByClassName('goog-te-banner-frame')[0];
+    if (!iframe) return;
+
+    var innerDoc = iframe.contentDocument || iframe.contentWindow.document;
+    var restore_el = innerDoc.getElementsByTagName("button");
+
+    for (var i = 0; i < restore_el.length; i++) {
+      if (restore_el[i].id.indexOf("restore") >= 0) {
+        restore_el[i].click();
+        var close_el = innerDoc.getElementsByClassName("goog-close-link");
+        close_el[0].click();
+        return;
+      }
+    }
+  }
+
+  function triggerHtmlEvent(element, eventName) {
+    var event;
+    if (document.createEvent) {
+      event = document.createEvent('HTMLEvents');
+      event.initEvent(eventName, true, true);
+      element.dispatchEvent(event);
+    } else {
+      event = document.createEventObject();
+      event.eventType = eventName;
+      element.fireEvent('on' + event.eventType, event);
+    }
+  }
+
+  var googleCombo = document.querySelector("select.goog-te-combo");
+  var langSelect = document.querySelector('.ct-language');
+  langSelect.addEventListener('click', function(event) {
+    if (!event.target) {
+      return;
+    }
+
+    var selected = document.querySelector('.ct-language .ct-language-selected');
+    if (selected) {
+      selected.classList.remove('ct-language-selected');
+    }
+
+    var target = event.target;
+    while (target && target !== langSelect ) {
+      if (target.matches('.lang-select')) {
+        break;
+      }
+      target = target.parentElement;
+    }
+
+    if (target && target.matches('.lang-select')) {
+      var lang = target.getAttribute('data-lang');
+      if (googleCombo.value == lang) {
+        restoreLang();
+      } else {
+        target.parentElement.classList.add('ct-language-selected');
+        googleCombo.value = lang;
+        triggerHtmlEvent(googleCombo, 'change');
+      }
+    }
+
+    event.preventDefault();
+  });
+}
+</script>
+
+<script type="text/javascript" src="//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"></script>
+</span>
+</div>
+        </nav>
+</div>
+  </div>
+</header>
+
+<script>
+  function initHeader() {
+    var lastScrollY = getScrollPos().y;
+    var documentElement = document.documentElement;
+
+    function storeScrollData() {
+      var y = getScrollPos().y;var scrollStatus = "";
+
+      if (y <= 0) {
+        scrollStatus = "top";
+      } else if ((window.innerHeight + y) >= document.body.offsetHeight) {
+        scrollStatus = "bottom";
+      } else {
+        var isScrollDown = (y - lastScrollY > 0) ? true : false;
+        scrollStatus = isScrollDown ? "down" : "up";
+      }
+
+      lastScrollY = y;
+      documentElement.setAttribute("data-scroll-status", scrollStatus);
+    }
+
+    window.addEventListener('scroll', function(e) {
+      storeScrollData();
+    });
+
+    storeScrollData();
+  }
+  document.addEventListener('DOMContentLoaded', initHeader);
+</script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<script>
+  function hashLocate(hashValue) {
+    hashValue = hashValue.replace(/^.*#h-/, '');
+    hashValue = decodeURIComponent(hashValue);
+    var element = document.getElementById(hashValue);
+
+    if (!element) {
+      return;
+    }
+
+    var header = document.querySelector('header.site-header');
+    var headerRect = header.getBoundingClientRect();
+    var headerTop = Math.floor(headerRect.top);
+    var headerHeight = Math.floor(headerRect.height);
+    var scrollPos = getScrollPos();
+    var offsetY = element.offsetTop - (headerTop + headerHeight + 20);
+
+    if (offsetY == scrollPos.y) {
+      return;
+    }
+
+    if (headerTop == 0  && offsetY > scrollPos.y) {
+      offsetY += headerHeight + 2;
+    } else if (headerTop < 0  && offsetY < scrollPos.y) {
+      offsetY -= headerHeight - 2;
+    }
+
+    smoothScrollTo(offsetY);
+  }
+
+  // The first event occurred
+  window.addEventListener('load', function(event) {
+    if (window.location.hash) {
+      hashLocate(window.location.hash);
+    }
+  });
+
+  // The first event occurred
+  window.addEventListener('click', function(event) {
+    if (event.target.tagName.toLowerCase() == 'a') {
+      hashLocate(event.target.getAttribute('href'));
+    }
+  });
+</script>
+<div class="theme-toggle">
+  <input type="checkbox" id="theme-switch">
+  <label for="theme-switch">
+    <div class="toggle"></div>
+    <div class="names">
+      <p class="light">Light</p>
+      <p class="dark">Dark</p>
+    </div>
+  </label>
+</div>
+
+
+
+
+<script>
+  (function() {
+    var sw = document.getElementById('theme-switch');
+    var html = document.getElementsByTagName('html')[0];
+    var nightModeOption = ('auto' || 'auto').toLowerCase();
+    var storage = nightModeOption === 'manual'
+        ? localStorage
+        : sessionStorage;
+    var themeData = loadThemeData();
+
+    function saveThemeData(data) {
+      storage.setItem('theme', JSON.stringify(data));
+    }
+
+    function loadThemeData() {
+      var data = storage.getItem('theme');
+      try {
+        data = JSON.parse(data ? data : '');
+      } catch(e) {
+        data = { nightShift: undefined, autoToggleAt: 0 };
+        saveThemeData(data);
+      }
+      return data;
+    }
+
+    function handleThemeToggle(nightShift) {
+      themeData.nightShift = nightShift;
+      saveThemeData(themeData);
+      html.dataset.theme = nightShift ? 'dark' : 'light';
+      setTimeout(function() {
+        sw.checked = nightShift ? true : false;
+      }, 50);
+    }
+
+    function autoThemeToggle() {
+      // Next time point of theme toggle
+      var now = new Date();
+      var toggleAt = new Date();
+      var hours = now.getHours();
+      var nightShift = hours >= 19 || hours <=7;
+
+      if (nightShift) {
+        if (hours > 7) {
+          toggleAt.setDate(toggleAt.getDate() + 1);
+        }
+        toggleAt.setHours(7);
+      } else {
+        toggleAt.setHours(19);
+      }
+
+      toggleAt.setMinutes(0);
+      toggleAt.setSeconds(0);
+      toggleAt.setMilliseconds(0)
+
+      var delay = toggleAt.getTime() - now.getTime();
+
+      // auto toggle theme mode
+      setTimeout(function() {
+        handleThemeToggle(!nightShift);
+      }, delay);
+
+      return {
+        nightShift: nightShift,
+        toggleAt: toggleAt.getTime()
+      };
+    }
+
+    // Listen the theme toggle event
+    sw.addEventListener('change', function(event) {
+      handleThemeToggle(event.target.checked);
+    });
+
+    if (nightModeOption == 'auto') {
+      var data = autoThemeToggle();
+
+      // Toggle theme by local setting
+      if (data.toggleAt > themeData.autoToggleAt) {
+        themeData.autoToggleAt = data.toggleAt;
+        handleThemeToggle(data.nightShift);
+      } else {
+        handleThemeToggle(themeData.nightShift);
+      }
+    } else if (nightModeOption == 'manual') {
+      handleThemeToggle(themeData.nightShift);
+    } else {
+      var nightShift = themeData.nightShift;
+      if (nightShift === undefined) {
+        nightShift = nightModeOption === 'on';
+      }
+      handleThemeToggle(nightShift);
+    }
+  })();
+</script>
+<div id="click-to-top" class="click-to-top">
+  <i class="fa fa-arrow-up"></i>
+</div>
+<script>
+  (function () {
+    const clickToTop = document.getElementById('click-to-top');
+    window.addEventListener('scroll', () => {
+      if (window.scrollY > 100) {
+        clickToTop.classList.add('show')
+      }else {
+        clickToTop.classList.remove('show')
+      }
+    });
+    clickToTop.addEventListener('click', () => {
+      window.smoothScrollTo(0);
+    });
+  })();
+</script>
+<main class="page-content" aria-label="Content">
+      <div class="wrapper">
+        <div class="framework">
+  <section class="main">
+
+     <div class="post">
+  <section>
+
+
+
+
+
+
+
+
+
+<header class="post-header">
+  <h1 class="post-title p-name" itemprop="name headline">Beyond WASM:The Future is RISC-V with PolkaVM Guest Programs ✨</h1>
+  <h2 class="post-subtitle">From Rust to RISC-V:Build blazing-fast dApps inside a secure VM sandbox. Your guide to exports, imports, and memory management!</h2>
+
+  <p class="post-meta">
+    <time class="dt-published" datetime="2025-05-26T00:00:00+00:00" itemprop="datePublished"><i class="fa fa-calendar"></i> May 26, 2025
+    </time>
+
+    
+    
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    <span class="post-reading-time left-vsplit"><i class="fa fa-clock-o"></i> About 8 mins</span>
+  </p>
+<div class="post-tags">
+<a class="post-tag" href="/tags.html#PolkaVM">#PolkaVM</a><a class="post-tag" href="/tags.html#GuestPrograms">#GuestPrograms</a>
+</div></header>
+<article class="post h-entry" itemscope itemtype="http://schema.org/BlogPosting">
+
+    <div class="post-content e-content" itemprop="articleBody">
+
+      <p>This document explains how to develop programs that run inside the PolkaVM virtual machine. It covers the development environment, build process, and the Application Binary Interface (ABI) that allows guest programs to interact with the host system. For details on how the VM executes these programs, see <a href="https://iurdao.github.io/technics/2025/05/24/Inside-PolkaVM-Unveiling-the-Core-VM-Engine.html">Core VM Engine</a> and for in-depth details on exports and imports, see <a href="">ABI and Exports/Imports</a>.</p>
+
+<h2 id="overview-of-guest-programs">Overview of Guest Programs</h2>
+
+<p>Guest programs in PolkaVM are applications that run within the sandboxed virtual machine environment. These programs are written in languages like Rust that can compile to RISC-V architecture, and are then transformed into a format that PolkaVM can execute.</p>
+
+<p>The key characteristics of PolkaVM guest programs include:</p>
+
+<ol>
+  <li>
+<strong>RISC-V Based</strong>: Guest programs target the RISC-V architecture, specifically using custom target configurations provided by PolkaVM.</li>
+  <li>
+<strong>No Standard Library</strong>: Programs run in a <code class="language-plaintext highlighter-rouge">no_std</code> environment as they don’t have access to an operating system.</li>
+  <li>
+<strong>Import/Export System</strong>: Communication with the host happens through a well-defined function import/export system.</li>
+  <li>
+<strong>Memory Constraints</strong>: Programs operate within a confined memory space with specialized allocation mechanisms.</li>
+</ol>
+
+<p><img class="mermaid" src="https://mermaid.ink/svg/eyJjb2RlIjoiJSUtXG5mbG93Y2hhcnQgVERcbnN1YmdyYXBoIEhvc3QgRW52aXJvbm1lbnRcbkFbRW5naW5lXSAtLT5CW01vZHVsZV1cbkIgLS0-IENbUmF3SW5zdGFuY2VdXG5DIC0tPkRbU2FuZGJveF1cbkVbSG9zdCBGdW5jdGlvbnNdXG5lbmRcbiUlLVxuc3ViZ3JhcGggR3Vlc3QgUHJvZ3JhbVxuRltHdWVzdCBDb2RlXS0tPnxVc2Vyc3xHW0d1ZXN0IE1lbW9yeV1cbkYtLT58Q2FsbHN8SFtJbXBvcnRlZCBGdW5jdGlvbnNdXG5GLS0-fEltcGxlbWVudHN8SVtFeHBvcnRlZCBGdW5jdGlvbnNdXG5lbmRcbiUlLVxuRC0tPnxFeGVjdXRlc3xGXG5FLS0-fFByb3ZpZGVzfEhcbkktLT58RXhwb3Nlc3xDXG4lJS0iLCJtZXJtYWlkIjpudWxsfQ"></p>
+
+<p>Sources: <a href="https://github.com/paritytech/polkavm/blob/910adbda/crates/polkavm-derive-impl/src/export.rs">crates/polkavm-derive-impl/src/export.rs</a> <a href="https://github.com/paritytech/polkavm/blob/910adbda/crates/polkavm-derive-impl/src/import.rs">crates/polkavm-derive-impl/src/import.rs</a></p>
+
+<h2 id="development-environment-setup">Development Environment Setup</h2>
+
+<p>To develop guest programs for PolkaVM, you need to set up a development environment that can compile for the RISC-V architecture. The system uses custom target configurations for RISC-V with specific extensions enabled.</p>
+
+<h3 id="required-components">Required Components</h3>
+
+<ol>
+  <li>
+<strong>Rust Toolchain</strong>: A recent version of Rust with support for custom targets</li>
+  <li>
+<strong>RISC-V Target</strong>: The <code class="language-plaintext highlighter-rouge">riscv32emac-unknown-none-polkavm</code> target (for 32-bit programs) or <code class="language-plaintext highlighter-rouge">riscv64emac-unknown-none-polkavm</code> target (for 64-bit programs)</li>
+  <li>
+<strong>Build Tools</strong>: The <code class="language-plaintext highlighter-rouge">polkatool</code> utility for linking and processing the compiled binaries</li>
+</ol>
+
+<p>The cargo configuration for guest programs is typically set to use the 32-bit RISC-V target by default:</p>
+
+<div class="language-rust highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="p">[</span><span class="n">build</span><span class="p">]</span>
+<span class="n">target</span> <span class="o">=</span> <span class="s">"../crates/polkavm-linker/riscv32emac-unknown-none-polkavm.json"</span>
+
+<span class="p">[</span><span class="n">unstable</span><span class="p">]</span>
+<span class="n">build</span><span class="o">-</span><span class="n">std</span> <span class="o">=</span> <span class="p">[</span><span class="s">"core"</span><span class="p">,</span> <span class="s">"alloc"</span><span class="p">]</span>
+
+</code></pre></div></div>
+
+<p>Sources: <a href="https://github.com/paritytech/polkavm/blob/910adbda/guest-programs/.cargo/config.toml">guest-programs/.cargo/config.toml</a> <a href="https://github.com/paritytech/polkavm/blob/910adbda/guest-programs/build-benchmarks.sh#L66-L94">guest-programs/build-benchmarks.sh66-94</a></p>
+
+<h2 id="building-guest-programs">Building Guest Programs</h2>
+
+<p>Building guest programs for PolkaVM involves a multi-step process:</p>
+
+<ol>
+  <li>Compile the Rust code to a RISC-V binary</li>
+  <li>Use <code class="language-plaintext highlighter-rouge">polkatool</code> to link and convert the binary to PolkaVM’s program blob format</li>
+</ol>
+
+<p>The repository includes helper scripts like <code class="language-plaintext highlighter-rouge">build-examples.sh</code> and <code class="language-plaintext highlighter-rouge">build-benchmarks.sh</code> that automate this process.</p>
+
+<p><img class="mermaid" src="https://mermaid.ink/svg/eyJjb2RlIjoiJSUtXG5mbG93Y2hhcnQgVERcbnN1YmdyYXBoIEJ1aWxkIE9wdGlvbnNcbkFbMzItYml0IFRhcmdldF1cbkJbNjQtYml0IFRhcmdldF1cbkNbbm9fc3RkIEVudmlyb25tZW50XVxuRFtTYW5kYmJ1aWxkLXN0ZD1jb3JlLGFsbG9jb3hdXG5lbmRcbkEtLT58UmVxdWlyZWQgQ29uZmlndXJhdGlvbnxFXG5CLS0-fFJlcXVpcmVkIENvbmZpZ3VyYXRpb258RVxuQy0tPnxSZXF1aXJlZCBDb25maWd1cmF0aW9ufEVcbkQtLT58UmVxdWlyZWQgQ29uZmlndXJhdGlvbnxFXG4lJS1cbkVbXCJSdXN0IFNvdXJjZSAoLnJzKVwiXS0tPkZbXCJjYXJnbyBidWlsZFxuLS10YXJnZXQgcmlzY3YzMmVtYWMtdW5rbm93bi1ub25lLXBvbGthdm1cIl1cbiUlLVxuRi0tPkdbXCJSSVNDLVYgQmluYXJ5ICguZWxmKVwiXVxuRy0tPnxwb2xrYXRvb2wgbGlua3xIW1wiUG9sa2FWTSBQcm9ncmFtICgucG9sa2F2bSlcIl1cbiUlLSIsIm1lcm1haWQiOm51bGx9"></p>
+
+<h3 id="example-build-command-sequence">Example Build Command Sequence</h3>
+
+<p>For a typical guest program, the build process looks like this:</p>
+
+<div class="language-rust highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="cs"># Compile to RISC-V binary</span>
+<span class="n">cargo</span> <span class="n">build</span> <span class="o">-</span><span class="n">Z</span> <span class="n">build</span><span class="o">-</span><span class="n">std</span><span class="o">=</span><span class="n">core</span><span class="p">,</span><span class="n">alloc</span> <span class="o">--</span><span class="n">target</span> <span class="n">riscv32emac</span><span class="o">-</span><span class="n">unknown</span><span class="o">-</span><span class="n">none</span><span class="o">-</span><span class="n">polkavm</span> <span class="o">--</span><span class="n">release</span> <span class="o">--</span><span class="n">bin</span> <span class="n">my</span><span class="o">-</span><span class="n">program</span>
+
+<span class="cs"># Link and convert to PolkaVM format</span>
+<span class="n">polkatool</span> <span class="n">link</span> <span class="n">path</span><span class="o">/</span><span class="n">to</span><span class="o">/</span><span class="n">my</span><span class="o">-</span><span class="n">program</span> <span class="o">-</span><span class="n">o</span> <span class="n">my</span><span class="o">-</span><span class="n">program</span><span class="py">.polkavm</span>
+
+</code></pre></div></div>
+
+<p>Sources: <a href="https://github.com/paritytech/polkavm/blob/910adbda/guest-programs/build-examples.sh#L12-L30">guest-programs/build-examples.sh12-30</a> <a href="https://github.com/paritytech/polkavm/blob/910adbda/guest-programs/build-benchmarks.sh#L96-L133">guest-programs/build-benchmarks.sh96-133</a></p>
+
+<h2 id="application-binary-interface-abi">Application Binary Interface (ABI)</h2>
+
+<p>PolkaVM uses a well-defined Application Binary Interface (ABI) for communication between the guest program and the host. This ABI consists of:</p>
+
+<ol>
+  <li>
+<strong>Exports</strong>: Functions implemented in the guest program that can be called by the host</li>
+  <li>
+<strong>Imports</strong>: Host functions that can be called by the guest program</li>
+</ol>
+
+<p>The ABI is implemented using Rust procedural macros provided by the <code class="language-plaintext highlighter-rouge">polkavm-derive</code> crate.</p>
+
+<p><img class="mermaid" src="https://mermaid.ink/svg/eyJjb2RlIjoiJSUtXG5mbG93Y2hhcnQgTFJcbnN1YmdyYXBoIEd1ZXN0IFByb2dyYW1cbkFbXCIjW3BvbGthdm1fZXhwb3J0XCJdIC0tPnxQcm9jZXNzZXN8QltFeHBvcnRlZCBGdW5jdGlvbl1cbkNbXCIjW3BvbGthdm1faW1wb3J0XVwiXSAtLT58UHJvY2Vzc2VzfERbSW1wb3J0ZWQgRnVuY3Rpb25dXG5FW0d1ZXN0IENvZGVdLS0-fFVzZXN8RFxuRS0tPnxEZWZpbmVzfEJcbmVuZFxuJSUtXG5zdWJncmFwaCBIb3N0IFN5c3RlbVxuRltIb3N0IEZ1bmN0aW9uXS0tPnxSZWdpc3RlcnN8R1tWTSBJbnN0YW5jZV1cbkctLT58RXhlY3V0ZXN8SFtDYWxsIEV4cG9ydGVkIEZ1bmN0aW9uXVxuZW5kXG4lJS1cbkYtLT58SW1wbGVtZW50c3xEXG5CLS0-fEV4cG9zZXMgdG8gSG9zdHxHXG5ILS0-fEludm9rZXN8QlxuJSUtIiwibWVybWFpZCI6bnVsbH0"></p>
+
+<h3 id="exporting-functions-to-the-host">Exporting Functions to the Host</h3>
+
+<p>To make a function in your guest program callable from the host, use the <code class="language-plaintext highlighter-rouge">#[polkavm_export]</code> attribute macro:</p>
+
+<div class="language-rust highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nd">#[polkavm_export]</span>
+<span class="k">fn</span> <span class="nf">add</span><span class="p">(</span><span class="n">a</span><span class="p">:</span> <span class="nb">u32</span><span class="p">,</span> <span class="n">b</span><span class="p">:</span> <span class="nb">u32</span><span class="p">)</span> <span class="k">-&gt;</span> <span class="nb">u32</span> <span class="p">{</span>
+    <span class="n">a</span> <span class="o">+</span> <span class="n">b</span>
+<span class="p">}</span>
+</code></pre></div></div>
+
+<p>Behind the scenes, this macro generates:</p>
+
+<ol>
+  <li>A trampoline function that handles the ABI conversion</li>
+  <li>Metadata about the exported function (name, arguments, return type)</li>
+  <li>Special ELF sections that the PolkaVM linker uses to identify exports</li>
+</ol>
+
+<p>The export system supports up to 6 function arguments due to the RISC-V register usage convention implemented in the ABI.</p>
+
+<p>Sources: <a href="https://github.com/paritytech/polkavm/blob/910adbda/crates/polkavm-derive-impl/src/export.rs#L75-L229">crates/polkavm-derive-impl/src/export.rs75-229</a></p>
+
+<h3 id="importing-host-functions">Importing Host Functions</h3>
+
+<p>To call functions implemented by the host from your guest program, use the <code class="language-plaintext highlighter-rouge">#[polkavm_import]</code> attribute with an <code class="language-plaintext highlighter-rouge">extern "C"</code> block:</p>
+
+<div class="language-rust highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nd">#[polkavm_import]</span>
+<span class="k">extern</span> <span class="s">"C"</span> <span class="p">{</span>
+    <span class="k">fn</span> <span class="nf">host_log</span><span class="p">(</span><span class="n">message</span><span class="p">:</span> <span class="o">&amp;</span><span class="nb">str</span><span class="p">);</span>     
+    <span class="nd">#[polkavm_import(index</span> <span class="nd">=</span> <span class="mi">1</span><span class="nd">)]</span>
+    <span class="k">fn</span> <span class="nf">host_get_timestamp</span><span class="p">()</span> <span class="k">-&gt;</span> <span class="nb">u64</span><span class="p">;</span> 
+<span class="p">}</span>
+</code></pre></div></div>
+
+<p>Each imported function can have an optional numeric index for efficient resolution, or it will use the function name as a string symbol by default.</p>
+
+<p>Sources: <a href="https://github.com/paritytech/polkavm/blob/910adbda/crates/polkavm-derive-impl/src/import.rs#L160-L386">crates/polkavm-derive-impl/src/import.rs160-386</a> <a href="https://github.com/paritytech/polkavm/blob/910adbda/crates/polkavm-derive-impl/src/abi_support_impl/common_private.rs#L164-L351">crates/polkavm-derive-impl/src/abi_support_impl/common_private.rs164-351</a></p>
+
+<h2 id="memory-management">Memory Management</h2>
+
+<p>PolkaVM guest programs operate within a confined memory space. The VM provides special primitives for memory management:</p>
+
+<ol>
+  <li>
+<strong><code class="language-plaintext highlighter-rouge">sbrk</code></strong>: A function to expand the program’s heap</li>
+  <li>
+<strong><code class="language-plaintext highlighter-rouge">LeakingAllocator</code></strong>: A basic memory allocator that doesn’t support deallocation</li>
+  <li>
+<strong><code class="language-plaintext highlighter-rouge">memset</code></strong>: A hardware-accelerated memory set function</li>
+  <li>
+<strong><code class="language-plaintext highlighter-rouge">min_stack_size</code></strong>: A macro to set the minimum stack size for the program</li>
+</ol>
+
+<p>Example usage of these memory management primitives:</p>
+
+<div class="language-rust highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1">// Increase heap size by 1024 bytes </span>
+<span class="k">let</span> <span class="n">new_heap_end</span> <span class="o">=</span> <span class="nn">polkavm_derive</span><span class="p">::</span><span class="nf">sbrk</span><span class="p">(</span><span class="mi">1024</span><span class="p">);</span> 
+<span class="k">if</span> <span class="n">new_heap_end</span><span class="nf">.is_null</span><span class="p">()</span> <span class="p">{</span>
+<span class="c1">// Handle allocation failure</span>
+<span class="p">}</span>
+
+<span class="c1">// Define a global allocator</span>
+<span class="nd">#[global_allocator]</span>
+<span class="k">static</span> <span class="n">ALLOCATOR</span><span class="p">:</span> <span class="nn">polkavm_derive</span><span class="p">::</span><span class="n">LeakingAllocator</span> <span class="o">=</span> <span class="nn">polkavm_derive</span><span class="p">::</span><span class="n">LeakingAllocator</span><span class="p">;</span> 
+<span class="c1">// Set minimum stack size</span>
+<span class="nn">polkavm_derive</span><span class="p">::</span><span class="nd">min_stack_size!</span><span class="p">(</span><span class="mi">8192</span><span class="p">);</span>
+</code></pre></div></div>
+
+<p>Sources: <a href="https://github.com/paritytech/polkavm/blob/910adbda/crates/polkavm-derive/src/lib.rs#L12-L107">crates/polkavm-derive/src/lib.rs12-107</a></p>
+
+<h2 id="creating-a-basic-guest-program">Creating a Basic Guest Program</h2>
+
+<p>Here’s the basic structure of a minimal PolkaVM guest program:</p>
+
+<div class="language-rust highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nd">#![no_std]</span>
+<span class="nd">#![no_main]</span> 
+<span class="k">use</span> <span class="nn">polkavm_derive</span><span class="p">::{</span><span class="n">polkavm_export</span><span class="p">,</span> <span class="n">polkavm_import</span><span class="p">};</span> 
+<span class="c1">// Define host functions that the guest can call</span>
+<span class="nd">#[polkavm_import]</span>
+<span class="k">extern</span> <span class="s">"C"</span> <span class="p">{</span>
+    <span class="k">fn</span> <span class="nf">host_print</span><span class="p">(</span><span class="n">message</span><span class="p">:</span> <span class="o">&amp;</span><span class="nb">str</span><span class="p">);</span> 
+<span class="p">}</span>
+
+<span class="c1">// Export a function to be called by the host</span>
+<span class="nd">#[polkavm_export]</span>
+<span class="k">fn</span> <span class="nf">hello_world</span><span class="p">()</span> <span class="p">{</span>
+    <span class="k">unsafe</span> <span class="p">{</span>
+        <span class="nf">host_print</span><span class="p">(</span><span class="s">"Hello from PolkaVM!"</span><span class="p">);</span>
+    <span class="p">}</span> 
+<span class="p">}</span>
+
+<span class="c1">// Required for panic handling in no_std environment</span>
+<span class="nd">#[panic_handler]</span>
+<span class="k">fn</span> <span class="nf">panic</span><span class="p">(</span><span class="n">_info</span><span class="p">:</span> <span class="o">&amp;</span><span class="nn">core</span><span class="p">::</span><span class="nn">panic</span><span class="p">::</span><span class="n">PanicInfo</span><span class="p">)</span> <span class="k">-&gt;</span> <span class="o">!</span> <span class="p">{</span>
+    <span class="k">loop</span> <span class="p">{}</span>
+<span class="p">}</span>
+</code></pre></div></div>
+
+<p>The program must be compiled with:</p>
+
+<ul>
+  <li>The <code class="language-plaintext highlighter-rouge">no_std</code> attribute because it runs without an operating system</li>
+  <li>The <code class="language-plaintext highlighter-rouge">no_main</code> attribute because the entry point is defined by the host calling an exported function</li>
+</ul>
+
+<p>When building such a program, the scripts from the repository will automatically handle the proper compilation steps and linking.</p>
+
+<p>Sources: <a href="https://github.com/paritytech/polkavm/blob/910adbda/guest-programs/test-blob/src/main.rs#L1-L4">guest-programs/test-blob/src/main.rs1-4</a> <a href="https://github.com/paritytech/polkavm/blob/910adbda/guest-programs/build-examples.sh#L32-L32">guest-programs/build-examples.sh32</a></p>
+
+<h2 id="benchmark-programs">Benchmark Programs</h2>
+
+<p>PolkaVM includes a set of benchmark programs used to evaluate the performance of the VM:</p>
+
+<ul>
+  <li>
+<code class="language-plaintext highlighter-rouge">bench-minimal</code>: A minimal program for basic overhead testing</li>
+  <li>
+<code class="language-plaintext highlighter-rouge">bench-pinky</code>: A more complex example with various features</li>
+  <li>
+<code class="language-plaintext highlighter-rouge">bench-prime-sieve</code>: A CPU-intensive prime number calculation</li>
+  <li>
+<code class="language-plaintext highlighter-rouge">bench-memset</code>: Memory operations benchmark</li>
+</ul>
+
+<p>These benchmarks can be built for multiple targets to compare performance:</p>
+
+<table>
+  <thead>
+    <tr>
+      <th>Target</th>
+      <th>Description</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>polkavm (32-bit)</td>
+      <td>Default target for PolkaVM</td>
+    </tr>
+    <tr>
+      <td>polkavm (64-bit)</td>
+      <td>64-bit version of PolkaVM target</td>
+    </tr>
+    <tr>
+      <td>wasm32</td>
+      <td>WebAssembly target for comparison</td>
+    </tr>
+    <tr>
+      <td>native x86_64</td>
+      <td>Native Linux x86_64 compilation</td>
+    </tr>
+    <tr>
+      <td>native i686</td>
+      <td>Native Linux x86 (32-bit) compilation</td>
+    </tr>
+    <tr>
+      <td>CKB VM</td>
+      <td>Another RISC-V based VM</td>
+    </tr>
+    <tr>
+      <td>Solana eBPF</td>
+      <td>Solana’s BPF virtual machine</td>
+    </tr>
+  </tbody>
+</table>
+
+<p>Sources: <a href="https://github.com/paritytech/polkavm/blob/910adbda/guest-programs/build-benchmarks.sh#L135-L139">guest-programs/build-benchmarks.sh135-139</a> <a href="https://github.com/paritytech/polkavm/blob/910adbda/guest-programs/build-benchmarks.sh#L9-L61">guest-programs/build-benchmarks.sh9-61</a></p>
+
+<h2 id="conclusion">Conclusion</h2>
+
+<p>PolkaVM guest programs are RISC-V-based applications that run within the PolkaVM sandboxed environment. They use a specialized ABI system to communicate with the host, with exports (functions accessible to the host) and imports (host functions accessible to the guest). Guest programs have constrained memory management and operate in a <code class="language-plaintext highlighter-rouge">no_std</code> environment.</p>
+
+<p>Development requires Rust with the RISC-V target configuration, and the build process involves compiling to RISC-V and then using <code class="language-plaintext highlighter-rouge">polkatool</code> to convert to the PolkaVM format. The PolkaVM repository provides various examples and benchmarks that demonstrate how to write effective guest programs.</p>
+
+<p>For more details on specific ABI features and advanced usage patterns, see <a href="">ABI and Exports/Imports</a> and <a href="">Building Guest Programs</a>.</p>
+
+
+    </div>
+
+</article>
+<div class="post-nav">
+<a class="previous" href="/technics/2025/05/25/Unveiling-PolkaVMs-Secrets-How-Programs-Really-Work.html" title="Unveiling PolkaVM's Secrets:How Programs Really Work ⚙️">Unveiling PolkaVM's Secrets:How Programs Really Work...</a><a class="next" href="/technics/2025/05/26/PolkaVM-DOOM-Analysis.html" title="Level Up Your Understanding of PolkaVM:The DOOM Edition ⬆️">Level Up Your Understanding of PolkaVM:The...</a>
+</div>
+<div class="post-related">
+      <div>Related Articles</div>
+      <ul>
+        <li><a class="post-link" href="/technics/2025/05/26/Guest-Programs.html" title="Level Up Your Understanding of PolkaVM:The DOOM Edition ⬆️">Beyond WASM:The Future is RISC-V with PolkaVM Guest Programs ✨</a></li>
+<li><a class="post-link" href="/technics/2025/05/24/Sandboxing.html" title="Level Up Your Understanding of PolkaVM:The DOOM Edition ⬆️">Isolate or Integrate? PolkaVM's Sandboxing Choices Explained 🤔</a></li>
+<li><a class="post-link" href="/technics/2025/05/28/Tools-and-Utilities.html" title="Level Up Your Understanding of PolkaVM:The DOOM Edition ⬆️">Level Up Your PolkaVM Game! 🛠️ The Essential Command-Line Tools You NEED...</a></li>
+<li><a class="post-link" href="/technics/2025/05/25/Unveiling-PolkaVMs-Secrets-How-Programs-Really-Work.html" title="Level Up Your Understanding of PolkaVM:The DOOM Edition ⬆️">Unveiling PolkaVM's Secrets:How Programs Really Work ⚙️</a></li>
+</ul>
+    </div>
+<div class="post-comments"></div></section>
+</div>
+
+
+  </section>
+  <section class="sidebar" style="margin-left: 15px;">
+    <!-- Get sidebar items --><style type="text/css" media="screen">
+.post-menu ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+</style>
+
+<div class="post-menu">
+  <div class="post-menu-title">TOC</div>
+  <div class="post-menu-content"></div>
+</div>
+
+<script>
+  function generateContent() {
+    var menu = document.querySelector(".post-menu");
+    var menuContent =  menu.querySelector(".post-menu-content");
+    var headings = document.querySelector(".post-content").querySelectorAll("h2, h3, h4, h5, h6");
+
+    // Hide menu when no headings
+    if (headings.length === 0) {
+      return menu.style.display = "none";
+    }
+
+    // Generate post menu
+    var menuHTML = '';
+    for (var i = 0; i < headings.length; i++) {
+      var h = headings[i];
+      menuHTML += (
+        '<li class="h-' + h.tagName.toLowerCase() + '">'
+        + '<a href="#h-' + h.getAttribute('id') + '">' + h.textContent + '</a></li>');
+    }
+
+    menuContent.innerHTML = '<ul>' + menuHTML + '</ul>';
+
+    // The header element
+    var header = document.querySelector('header.site-header');
+
+    function doMenuCollapse(index, over_items) {
+      var items = menuContent.firstChild.children;
+
+      if (over_items == undefined) {
+        over_items = 20;
+      }
+
+      if (items.length < over_items) {
+        return;
+      }
+
+      var activeItem = items[index];
+      var beginItem = activeItem
+      var endItem = activeItem
+      var beginIndex = index;
+      var endIndex = index + 1;
+      while (beginIndex >= 0
+        && !items[beginIndex].classList.contains('h-h2')) {
+        beginIndex -= 1;
+      }
+      while (endIndex < items.length
+        && !items[endIndex].classList.contains('h-h2')) {
+        endIndex += 1;
+      }
+      for (var i = 0; i < beginIndex; i++) {
+        item = items[i]
+        if (!item.classList.contains('h-h2')) {
+          item.style.display = 'none';
+        }
+      }
+      for (var i = beginIndex + 1; i < endIndex; i++) {
+        item = items[i]
+        // if (!item.classList.contains('h-h2')) {
+          item.style.display = '';
+        // }
+      }
+      for (var i = endIndex; i < items.length; i++) {
+        item = items[i]
+        if (!item.classList.contains('h-h2')) {
+          item.style.display = 'none';
+        }
+      }
+    }
+
+    // Init menu collapsed
+    doMenuCollapse(-1);
+
+    // Active the menu item
+    window.addEventListener('scroll', function (event) {
+      var lastActive = menuContent.querySelector('.active');
+      var changed = true;
+      var activeIndex = -1;
+      for (var i = headings.length - 1; i >= 0; i--) {
+        var h = headings[i];
+        var headingRect = h.getBoundingClientRect();
+        var headerRect = header.getBoundingClientRect();
+        var headerTop = Math.floor(headerRect.top);
+        var headerHeight = Math.floor(headerRect.height);
+        var headerHeight = headerTop + headerHeight + 20;
+        if (headingRect.top <= headerHeight) {
+          var id = 'h-' + h.getAttribute('id');
+          var a = menuContent.querySelector('a[href="#' + id  + '"]');
+          var curActive = a.parentNode;
+          if (curActive) {
+            curActive.classList.add('active');
+            activeIndex = i;
+          }
+          if (lastActive == curActive) {
+            changed = false;
+          }
+          break;
+        }
+      }
+      if (changed) {
+        if (lastActive) {
+          lastActive.classList.remove('active');
+        }
+        doMenuCollapse(activeIndex);
+      }
+      event.preventDefault();
+    });
+  }
+  generateContent();
+</script>
+</section>
+</div>
+
+      </div>
+    </main><footer class="site-footer h-card">
+  <data class="u-url" href="/"></data>
+
+  <div class="wrapper">
+    <div class="site-footer-inner">
+<div>IURDao 2017-2025 Joe</div>
+      <div class="footer-col rss-subscribe">Subscribe <a href="/feed.xml">via RSS</a>
+</div>
+    </div>
+  </div>
+</footer>
+
+</body>
+</html>

@@ -1,0 +1,1319 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="google-translate-customization" content="108d9124921d80c3-80e20d618ff053c8-g4f02ec6f3dba68b7-c">
+<!-- Begin Jekyll SEO tag v2.8.0 -->
+<title>PolkaVM Doom Example Program Analysis | Industry-University-Research Dao</title>
+<meta name="generator" content="Jekyll v4.4.1">
+<meta property="og:title" content="PolkaVM Doom Example Program Analysis">
+<meta name="author" content="Joe">
+<meta property="og:locale" content="en_US">
+<meta name="description" content="Program Structure">
+<meta property="og:description" content="Program Structure">
+<link rel="canonical" href="/technics/2025/06/15/PolkaVM-Doom-Example-Program-Analysis.html">
+<meta property="og:url" content="/technics/2025/06/15/PolkaVM-Doom-Example-Program-Analysis.html">
+<meta property="og:site_name" content="Industry-University-Research Dao">
+<meta property="og:type" content="article">
+<meta property="article:published_time" content="2025-06-15T00:00:00+00:00">
+<meta name="twitter:card" content="summary">
+<meta property="twitter:title" content="PolkaVM Doom Example Program Analysis">
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"BlogPosting","author":{"@type":"Person","name":"Joe"},"dateModified":"2025-06-15T00:00:00+00:00","datePublished":"2025-06-15T00:00:00+00:00","description":"Program Structure","headline":"PolkaVM Doom Example Program Analysis","mainEntityOfPage":{"@type":"WebPage","@id":"/technics/2025/06/15/PolkaVM-Doom-Example-Program-Analysis.html"},"url":"/technics/2025/06/15/PolkaVM-Doom-Example-Program-Analysis.html"}</script>
+<!-- End Jekyll SEO tag -->
+<link rel="icon" href="">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/typeface-noto-sans@0.0.72/index.min.css">
+  <link rel="stylesheet" href="/assets/css/main.css">
+  <script src="/assets/js/main.js"></script><link type="application/atom+xml" rel="alternate" href="/feed.xml" title="Industry-University-Research Dao">
+<link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/styles/default.min.css">
+<script src="//cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/highlight.min.js"></script>
+<!-- and it's easy to individually load additional languages -->
+<script charset="UTF-8" src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/languages/go.min.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<script>
+// Init highlight js
+document.addEventListener('DOMContentLoaded', function(event) {
+  var els = document.querySelectorAll('pre code')
+
+  function addLangData(block) {
+    var outer = block.parentElement.parentElement.parentElement;
+    var lang = block.getAttribute('data-lang');
+    for (var i = 0; i < outer.classList.length; i++) {
+      var cls = outer.classList[i];
+      if (cls.startsWith('language-')) {
+        lang = cls;
+        break;
+      }
+    }
+    if (!lang) {
+      cls = block.getAttribute('class');
+      lang = cls ? cls.replace('hljs ', '') : '';
+    }
+    if (lang.startsWith('language-')) {
+      lang = lang.substr(9);
+    }
+    block.setAttribute('class', 'hljs ' + lang);
+    block.parentNode.setAttribute('data-lang', lang);
+  }
+
+  function addBadge(block) {
+    var enabled = ('true' || 'true').toLowerCase();
+    if (enabled == 'true') {
+      var pre = block.parentElement;
+      pre.classList.add('badge');
+    }
+  }
+
+  function handle(block) {
+    addLangData(block);
+    addBadge(block)
+    hljs.highlightBlock(block);
+  }
+
+  for (var i = 0; i < els.length; i++) {
+    var el = els[i];
+    handle(el);
+  }
+});
+</script>
+
+<style>
+  /* code language badge */
+  pre.badge::before {
+    content: attr(data-lang);
+    color: #fff;
+    background-color: #ff4e00;
+    padding: 0 .5em;
+    border-radius: 0 2px;
+    text-transform: uppercase;
+    text-align: center;
+    min-width: 32px;
+    display: inline-block;
+    position: absolute;
+    right: 0;
+  }
+
+  /* fix wrong badge display for firefox browser */
+  code > table pre::before {
+    display: none;
+  }
+</style>
+<script src="//cdnjs.cloudflare.com/ajax/libs/photoswipe/4.1.3/photoswipe.min.js"></script>
+<script src="//cdnjs.cloudflare.com/ajax/libs/photoswipe/4.1.3/photoswipe-ui-default.min.js"></script>
+<link href="https://cdnjs.cloudflare.com/ajax/libs/photoswipe/4.1.3/photoswipe.css" rel="stylesheet">
+<link href="https://cdnjs.cloudflare.com/ajax/libs/photoswipe/4.1.3/default-skin/default-skin.css" rel="stylesheet">
+<style>
+  .pswp .pswp__container .pswp__img {
+    background-color: white;
+  }
+</style>
+
+<script>
+  function initPhotoSwipe() {
+    var mainEl = document.querySelector("section.main");
+
+    var imgEls = mainEl.querySelectorAll("img:not(.emoji)");
+    imgEls.forEach((imgEl) => {
+      imgEl.outerHTML = `
+    <a class="photo-swipe"
+      href="${imgEl.src}"
+      data-width="${imgEl.getAttribute("width") || imgEl.width * 2}"
+      data-height="${imgEl.getAttribute("height") || imgEl.height * 2}"
+      data-caption="${imgEl.getAttribute("caption") || imgEl.alt}"
+      target="_blank">
+      ${imgEl.outerHTML}
+    </a>`;
+    });
+
+    // Init empty gallery array
+    var container = [];
+
+    // Loop over gallery items and push it to the array
+    var linkEls = mainEl.querySelectorAll("a.photo-swipe");
+    linkEls.forEach((link) => {
+      var item = {
+        src: link.getAttribute("href"),
+        w: link.dataset.width,
+        h: link.dataset.height,
+        title: link.dataset.caption || "",
+      };
+      container.push(item);
+    });
+
+    // Define click event on gallery item
+    linkEls.forEach((link, index) => {
+      link.addEventListener("click", (event) => {
+        // Prevent location change
+        event.preventDefault();
+
+        // Define object and gallery options
+        var pswp = document.querySelector(".pswp");
+
+        var zoomLevel = 1;
+
+        // Define object and gallery options
+        var options = {
+          index: index,
+          bgOpacity: 0.85,
+          showHideOpacity: true,
+          closeOnScroll: true,
+          maxSpreadZoom: 1,
+          getDoubleTapZoom: (isMouseClick, item) => {
+            if (item.detail) {
+              zoomLevel += item.detail.origEvent.shiftKey ? -1 : 1;
+              item.detail = undefined;
+            } else {
+              zoomLevel = zoomLevel === 1 ? 2 : 1;
+            }
+            if (zoomLevel <= 1) {
+              zoomLevel = 1;
+              setTimeout(() => pswp.classList.remove("pswp--zoomed-in"), 0);
+            }
+            return item.initialZoomLevel * zoomLevel;
+          },
+        };
+
+        // Initialize PhotoSwipe
+        var gallery = new PhotoSwipe(
+          pswp,
+          PhotoSwipeUI_Default,
+          container,
+          options
+        );
+
+        gallery.init();
+
+        // Custom zoom event
+        gallery.container.addEventListener("pswpTap", (e) => {
+          gallery.currItem.detail = e.detail;
+        });
+      });
+    });
+  }
+
+  window.addEventListener("load", initPhotoSwipe);
+</script>
+
+<!-- Root element of PhotoSwipe. Must have class pswp. -->
+</head>
+<body>
+<div class="pswp" tabindex="-1" role="dialog" aria-hidden="true">
+  <!-- Background of PhotoSwipe.
+           It's a separate element as animating opacity is faster than rgba(). -->
+  <div class="pswp__bg"></div>
+  <!-- Slides wrapper with overflow:hidden. -->
+  <div class="pswp__scroll-wrap">
+    <!-- Container that holds slides.
+              PhotoSwipe keeps only 3 of them in the DOM to save memory.
+              Don't modify these 3 pswp__item elements, data is added later on. -->
+    <div class="pswp__container">
+      <div class="pswp__item"></div>
+      <div class="pswp__item"></div>
+      <div class="pswp__item"></div>
+    </div>
+    <!-- Default (PhotoSwipeUI_Default) interface on top of sliding area. Can be changed. -->
+    <div class="pswp__ui pswp__ui--hidden">
+      <div class="pswp__top-bar">
+        <!--  Controls are self-explanatory. Order can be changed. -->
+        <div class="pswp__counter"></div>
+        <button class="pswp__button pswp__button--close" title="Close (Esc)"></button>
+        <button class="pswp__button pswp__button--share" title="Share"></button>
+        <button class="pswp__button pswp__button--fs" title="Toggle fullscreen"></button>
+        <button class="pswp__button pswp__button--zoom" title="Zoom in/out"></button>
+        <!-- element will get class pswp__preloader--active when preloader is running -->
+        <div class="pswp__preloader">
+          <div class="pswp__preloader__icn">
+            <div class="pswp__preloader__cut">
+              <div class="pswp__preloader__donut"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="pswp__share-modal pswp__share-modal--hidden pswp__single-tap">
+        <div class="pswp__share-tooltip"></div>
+      </div>
+      <button class="pswp__button pswp__button--arrow--left" title="Previous (arrow left)"></button>
+      <button class="pswp__button pswp__button--arrow--right" title="Next (arrow right)"></button>
+      <div class="pswp__caption">
+        <div class="pswp__caption__center"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<header class="site-header " role="banner">
+
+  <div class="wrapper">
+    <div class="site-header-inner">
+<span class="site-brand"><a class="site-brand-inner" rel="author" href="/">
+  <img class="site-favicon" title="Industry-University-Research Dao" src="" onerror="this.style.display='none'">
+  Industry-University-Research Dao
+</a>
+</span><nav class="site-nav">
+          <input type="checkbox" id="nav-trigger" class="nav-trigger">
+          <label for="nav-trigger">
+            <span class="menu-icon">
+              <svg viewbox="0 0 18 15" width="18px" height="15px">
+                <path d="M18,1.484c0,0.82-0.665,1.484-1.484,1.484H1.484C0.665,2.969,0,2.304,0,1.484l0,0C0,0.665,0.665,0,1.484,0 h15.032C17.335,0,18,0.665,18,1.484L18,1.484z M18,7.516C18,8.335,17.335,9,16.516,9H1.484C0.665,9,0,8.335,0,7.516l0,0 c0-0.82,0.665-1.484,1.484-1.484h15.032C17.335,6.031,18,6.696,18,7.516L18,7.516z M18,13.516C18,14.335,17.335,15,16.516,15H1.484 C0.665,15,0,14.335,0,13.516l0,0c0-0.82,0.665-1.483,1.484-1.483h15.032C17.335,12.031,18,12.695,18,13.516L18,13.516z"></path>
+              </svg>
+            </span>
+          </label>
+
+          <div class="trigger">
+<a class="page-link" href="/about.html">ABOUT</a><a class="page-link" href="/archives.html">ARCHIVES</a><a class="page-link" href="/categories.html">CATEGORIES</a><a class="page-link" href="/">HOME</a><a class="page-link" href="/tags.html">TAGS</a>
+
+
+
+
+
+
+
+
+
+<span class="page-link">
+
+
+
+<div id="google_translate_element" style="display: none;">
+</div>
+
+<span class="ct-language">
+  <ul class="list-unstyled ct-language-dropdown">
+    
+      <li>
+        <a href="#" class="lang-select" data-lang="en">
+          
+          <img src="https://cdn.countryflags.com/thumbs/united-states-of-america/flag-400.png" title="English">
+          
+        </a>
+      </li>
+    
+      <li>
+        <a href="#" class="lang-select" data-lang="fr">
+          
+          <img src="https://cdn.countryflags.com/thumbs/france/flag-400.png" title="French">
+          
+        </a>
+      </li>
+    
+      <li>
+        <a href="#" class="lang-select" data-lang="zh-CN">
+          
+          <img src="https://cdn.countryflags.com/thumbs/china/flag-400.png" title="Chinese(Simple)">
+          
+        </a>
+      </li>
+    
+      <li>
+        <a href="#" class="lang-select" data-lang="ja">
+          
+          <img src="https://cdn.countryflags.com/thumbs/japan/flag-400.png" title="Japanese">
+          
+        </a>
+      </li>
+    
+      <li>
+        <a href="#" class="lang-select" data-lang="ko">
+          
+          <img src="https://cdn.countryflags.com/thumbs/south-korea/flag-400.png" title="Korean">
+          
+        </a>
+      </li>
+    
+      <li>
+        <a href="#" class="lang-select" data-lang="ru">
+          
+          <img src="https://cdn.countryflags.com/thumbs/russia/flag-400.png" title="Russian">
+          
+        </a>
+      </li>
+    
+  </ul>
+</span>
+
+<script type="text/javascript">
+function googleTranslateElementInit() {
+  new google.translate.TranslateElement({
+    pageLanguage: 'en',
+    autoDisplay: false,
+    layout: google.translate.TranslateElement.InlineLayout.VERTICAL
+  }, 'google_translate_element');
+
+  // Links to cross-origin destinations are unsafe
+  var gll = document.getElementsByClassName('goog-logo-link')[0];
+  if (gll) {
+    gll.setAttribute('rel', 'noopener');
+  }
+
+  function restoreLang() {
+    var iframe = document.getElementsByClassName('goog-te-banner-frame')[0];
+    if (!iframe) return;
+
+    var innerDoc = iframe.contentDocument || iframe.contentWindow.document;
+    var restore_el = innerDoc.getElementsByTagName("button");
+
+    for (var i = 0; i < restore_el.length; i++) {
+      if (restore_el[i].id.indexOf("restore") >= 0) {
+        restore_el[i].click();
+        var close_el = innerDoc.getElementsByClassName("goog-close-link");
+        close_el[0].click();
+        return;
+      }
+    }
+  }
+
+  function triggerHtmlEvent(element, eventName) {
+    var event;
+    if (document.createEvent) {
+      event = document.createEvent('HTMLEvents');
+      event.initEvent(eventName, true, true);
+      element.dispatchEvent(event);
+    } else {
+      event = document.createEventObject();
+      event.eventType = eventName;
+      element.fireEvent('on' + event.eventType, event);
+    }
+  }
+
+  var googleCombo = document.querySelector("select.goog-te-combo");
+  var langSelect = document.querySelector('.ct-language');
+  langSelect.addEventListener('click', function(event) {
+    if (!event.target) {
+      return;
+    }
+
+    var selected = document.querySelector('.ct-language .ct-language-selected');
+    if (selected) {
+      selected.classList.remove('ct-language-selected');
+    }
+
+    var target = event.target;
+    while (target && target !== langSelect ) {
+      if (target.matches('.lang-select')) {
+        break;
+      }
+      target = target.parentElement;
+    }
+
+    if (target && target.matches('.lang-select')) {
+      var lang = target.getAttribute('data-lang');
+      if (googleCombo.value == lang) {
+        restoreLang();
+      } else {
+        target.parentElement.classList.add('ct-language-selected');
+        googleCombo.value = lang;
+        triggerHtmlEvent(googleCombo, 'change');
+      }
+    }
+
+    event.preventDefault();
+  });
+}
+</script>
+
+<script type="text/javascript" src="//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"></script>
+</span>
+</div>
+        </nav>
+</div>
+  </div>
+</header>
+
+<script>
+  function initHeader() {
+    var lastScrollY = getScrollPos().y;
+    var documentElement = document.documentElement;
+
+    function storeScrollData() {
+      var y = getScrollPos().y;var scrollStatus = "";
+
+      if (y <= 0) {
+        scrollStatus = "top";
+      } else if ((window.innerHeight + y) >= document.body.offsetHeight) {
+        scrollStatus = "bottom";
+      } else {
+        var isScrollDown = (y - lastScrollY > 0) ? true : false;
+        scrollStatus = isScrollDown ? "down" : "up";
+      }
+
+      lastScrollY = y;
+      documentElement.setAttribute("data-scroll-status", scrollStatus);
+    }
+
+    window.addEventListener('scroll', function(e) {
+      storeScrollData();
+    });
+
+    storeScrollData();
+  }
+  document.addEventListener('DOMContentLoaded', initHeader);
+</script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<script>
+  function hashLocate(hashValue) {
+    hashValue = hashValue.replace(/^.*#h-/, '');
+    hashValue = decodeURIComponent(hashValue);
+    var element = document.getElementById(hashValue);
+
+    if (!element) {
+      return;
+    }
+
+    var header = document.querySelector('header.site-header');
+    var headerRect = header.getBoundingClientRect();
+    var headerTop = Math.floor(headerRect.top);
+    var headerHeight = Math.floor(headerRect.height);
+    var scrollPos = getScrollPos();
+    var offsetY = element.offsetTop - (headerTop + headerHeight + 20);
+
+    if (offsetY == scrollPos.y) {
+      return;
+    }
+
+    if (headerTop == 0  && offsetY > scrollPos.y) {
+      offsetY += headerHeight + 2;
+    } else if (headerTop < 0  && offsetY < scrollPos.y) {
+      offsetY -= headerHeight - 2;
+    }
+
+    smoothScrollTo(offsetY);
+  }
+
+  // The first event occurred
+  window.addEventListener('load', function(event) {
+    if (window.location.hash) {
+      hashLocate(window.location.hash);
+    }
+  });
+
+  // The first event occurred
+  window.addEventListener('click', function(event) {
+    if (event.target.tagName.toLowerCase() == 'a') {
+      hashLocate(event.target.getAttribute('href'));
+    }
+  });
+</script>
+<div class="theme-toggle">
+  <input type="checkbox" id="theme-switch">
+  <label for="theme-switch">
+    <div class="toggle"></div>
+    <div class="names">
+      <p class="light">Light</p>
+      <p class="dark">Dark</p>
+    </div>
+  </label>
+</div>
+
+
+
+
+<script>
+  (function() {
+    var sw = document.getElementById('theme-switch');
+    var html = document.getElementsByTagName('html')[0];
+    var nightModeOption = ('auto' || 'auto').toLowerCase();
+    var storage = nightModeOption === 'manual'
+        ? localStorage
+        : sessionStorage;
+    var themeData = loadThemeData();
+
+    function saveThemeData(data) {
+      storage.setItem('theme', JSON.stringify(data));
+    }
+
+    function loadThemeData() {
+      var data = storage.getItem('theme');
+      try {
+        data = JSON.parse(data ? data : '');
+      } catch(e) {
+        data = { nightShift: undefined, autoToggleAt: 0 };
+        saveThemeData(data);
+      }
+      return data;
+    }
+
+    function handleThemeToggle(nightShift) {
+      themeData.nightShift = nightShift;
+      saveThemeData(themeData);
+      html.dataset.theme = nightShift ? 'dark' : 'light';
+      setTimeout(function() {
+        sw.checked = nightShift ? true : false;
+      }, 50);
+    }
+
+    function autoThemeToggle() {
+      // Next time point of theme toggle
+      var now = new Date();
+      var toggleAt = new Date();
+      var hours = now.getHours();
+      var nightShift = hours >= 19 || hours <=7;
+
+      if (nightShift) {
+        if (hours > 7) {
+          toggleAt.setDate(toggleAt.getDate() + 1);
+        }
+        toggleAt.setHours(7);
+      } else {
+        toggleAt.setHours(19);
+      }
+
+      toggleAt.setMinutes(0);
+      toggleAt.setSeconds(0);
+      toggleAt.setMilliseconds(0)
+
+      var delay = toggleAt.getTime() - now.getTime();
+
+      // auto toggle theme mode
+      setTimeout(function() {
+        handleThemeToggle(!nightShift);
+      }, delay);
+
+      return {
+        nightShift: nightShift,
+        toggleAt: toggleAt.getTime()
+      };
+    }
+
+    // Listen the theme toggle event
+    sw.addEventListener('change', function(event) {
+      handleThemeToggle(event.target.checked);
+    });
+
+    if (nightModeOption == 'auto') {
+      var data = autoThemeToggle();
+
+      // Toggle theme by local setting
+      if (data.toggleAt > themeData.autoToggleAt) {
+        themeData.autoToggleAt = data.toggleAt;
+        handleThemeToggle(data.nightShift);
+      } else {
+        handleThemeToggle(themeData.nightShift);
+      }
+    } else if (nightModeOption == 'manual') {
+      handleThemeToggle(themeData.nightShift);
+    } else {
+      var nightShift = themeData.nightShift;
+      if (nightShift === undefined) {
+        nightShift = nightModeOption === 'on';
+      }
+      handleThemeToggle(nightShift);
+    }
+  })();
+</script>
+<div id="click-to-top" class="click-to-top">
+  <i class="fa fa-arrow-up"></i>
+</div>
+<script>
+  (function () {
+    const clickToTop = document.getElementById('click-to-top');
+    window.addEventListener('scroll', () => {
+      if (window.scrollY > 100) {
+        clickToTop.classList.add('show')
+      }else {
+        clickToTop.classList.remove('show')
+      }
+    });
+    clickToTop.addEventListener('click', () => {
+      window.smoothScrollTo(0);
+    });
+  })();
+</script>
+<main class="page-content" aria-label="Content">
+      <div class="wrapper">
+        <div class="framework">
+  <section class="main">
+
+     <div class="post">
+  <section>
+
+
+
+
+
+
+
+
+
+<header class="post-header">
+  <h1 class="post-title p-name" itemprop="name headline">PolkaVM Doom Example Program Analysis</h1>
+  <h2 class="post-subtitle">Doom + Blockchain = 🔥 PolkaVM's Killer Demo Explained.</h2>
+
+  <p class="post-meta">
+    <time class="dt-published" datetime="2025-06-15T00:00:00+00:00" itemprop="datePublished"><i class="fa fa-calendar"></i> Jun 15, 2025
+    </time>
+
+    
+    
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    <span class="post-reading-time left-vsplit"><i class="fa fa-clock-o"></i> About 4 mins</span>
+  </p>
+<div class="post-tags">
+<a class="post-tag" href="/tags.html#PolkaVM">#PolkaVM</a><a class="post-tag" href="/tags.html#Doom">#Doom</a><a class="post-tag" href="/tags.html#Example">#Example</a>
+</div></header>
+<article class="post h-entry" itemscope itemtype="http://schema.org/BlogPosting">
+
+    <div class="post-content e-content" itemprop="articleBody">
+
+      <h2 id="program-structure">Program Structure</h2>
+
+<p>The Polkavm github repo provides an example program that uses the PolkaVM virtual machine to run the classic game Doom. This program demonstrates how to use PolkaVM to execute complex game code while handling graphics rendering, audio output, and user input. This article aims to gain a glimpse into the mysteries of PolkaVM as the next-generation execution environment on the blockchain by analyzing the structure and runtime logic of this example program.</p>
+
+<p><iframe id="media-yYRd3TMzPX8" class="media" src="https://www.youtube.com/embed/yYRd3TMzPX8" title="" width="100%" height="350" style="max-width: 600px;outline: none" allow="encrypted-media; picture-in-picture" frameborder="0" allowfullscreen></iframe></p>
+
+<h3 id="file-structure">File Structure</h3>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>/examples/doom/
+├── Cargo.toml         # Rust project configuration file
+├── README.md          # Project description document
+├── roms/              # Game ROM file directory
+│   ├── README.md      # ROM file description
+│   ├── doom-wad-shareware-license.txt  # Doom WAD file license
+│   ├── doom.polkavm   # Doom engine binary compiled to PolkaVM format
+│   ├── doom1.wad      # Doom game data file
+│   └── relink.sh      # Relink script
+└── src/               # Source code directory
+    ├── keys.rs        # Key mapping definition
+    ├── main.rs        # Main program entry point
+    └── vm.rs          # PolkaVM virtual machine interface implementation
+</code></pre></div></div>
+
+<h3 id="core-components">Core Components</h3>
+
+<ol>
+  <li>
+<strong>Main Program (main.rs)</strong>
+    <ul>
+      <li>Responsible for initializing the environment, loading game ROMs and the engine.</li>
+      <li>Sets up the SDL2 graphics and audio system.</li>
+      <li>Handles user input.</li>
+      <li>Implements the game main loop.</li>
+    </ul>
+  </li>
+  <li>
+<strong>Virtual Machine Interface (vm.rs)</strong>
+    <ul>
+      <li>Defines the <code class="language-plaintext highlighter-rouge">Vm</code> struct, encapsulating the PolkaVM instance.</li>
+      <li>Implements the interface for interacting with the virtual machine.</li>
+      <li>Defines external functions for the Doom engine to call (video output, audio output, ROM reading, etc.).</li>
+    </ul>
+  </li>
+  <li>
+<strong>Key Mapping (keys.rs)</strong>
+    <ul>
+      <li>Defines key constants used by Doom.</li>
+      <li>Provides a mapping function from SDL2 keys to Doom keys.</li>
+    </ul>
+  </li>
+  <li>
+<strong>ROM Files</strong>
+    <ul>
+      <li>
+<code class="language-plaintext highlighter-rouge">doom.polkavm</code>: Doom engine compiled into PolkaVM format.</li>
+      <li>
+<code class="language-plaintext highlighter-rouge">doom1.wad</code>: Doom game data file (freely distributed shareware version).</li>
+    </ul>
+  </li>
+</ol>
+
+<h2 id="execution-flow">Execution Flow</h2>
+
+<h3 id="initialization-phase">Initialization Phase</h3>
+
+<ol>
+  <li>Initialize the environment logging system.</li>
+  <li>Process command-line arguments, which can optionally override the default program and ROM files.</li>
+  <li>Load the Doom engine binary file (<code class="language-plaintext highlighter-rouge">doom.polkavm</code>).</li>
+  <li>Create a PolkaVM virtual machine instance.</li>
+  <li>Load the Doom game data file (<code class="language-plaintext highlighter-rouge">doom1.wad</code>).</li>
+  <li>Initialize SDL2 graphics, audio, and event systems.</li>
+  <li>Set up the audio callback function.</li>
+</ol>
+
+<h3 id="game-main-loop">Game Main Loop</h3>
+
+<ol>
+  <li>
+<strong>Event Handling</strong>
+    <ul>
+      <li>Handle SDL2 events (keyboard, mouse input).</li>
+      <li>Map SDL2 keys to Doom keys.</li>
+      <li>Pass the key state to the virtual machine via <code class="language-plaintext highlighter-rouge">vm.on_keychange()</code>.</li>
+    </ul>
+  </li>
+  <li>
+<strong>Audio Processing</strong>
+    <ul>
+      <li>Check the audio queue status.</li>
+      <li>If there is insufficient audio data in the queue, continue the game loop.</li>
+      <li>Otherwise, sleep briefly to avoid excessive CPU usage.</li>
+    </ul>
+  </li>
+  <li>
+<strong>Game Frame Update</strong>
+    <ul>
+      <li>Call <code class="language-plaintext highlighter-rouge">vm.run_for_a_frame()</code> to execute one frame of the Doom engine.</li>
+      <li>Get the frame image data generated by the engine.</li>
+    </ul>
+  </li>
+  <li>
+<strong>Rendering</strong>
+    <ul>
+      <li>Clear the canvas.</li>
+      <li>Update the SDL2 texture.</li>
+      <li>Render the texture to the canvas.</li>
+      <li>Present the screen.</li>
+    </ul>
+  </li>
+</ol>
+
+<h3 id="interaction-between-virtual-machine-and-host">Interaction between Virtual Machine and Host</h3>
+
+<p>The Doom engine (client program) interacts with the host machine through the following interfaces:</p>
+
+<ol>
+  <li>
+<strong>Video Output</strong>: <code class="language-plaintext highlighter-rouge">ext_output_video</code>
+    <ul>
+      <li>The engine passes the rendered frame data to the host machine.</li>
+      <li>The host machine stores the data and prepares it for display.</li>
+    </ul>
+  </li>
+  <li>
+<strong>Audio Output</strong>: <code class="language-plaintext highlighter-rouge">ext_output_audio</code>
+    <ul>
+      <li>The engine generates audio samples and passes them to the host machine.</li>
+      <li>The host machine adds the audio data to the SDL2 audio queue.</li>
+    </ul>
+  </li>
+  <li>
+<strong>ROM Access</strong>: <code class="language-plaintext highlighter-rouge">ext_rom_size</code> and <code class="language-plaintext highlighter-rouge">ext_rom_read</code>
+    <ul>
+      <li>The engine queries the ROM size and reads ROM data.</li>
+      <li>The host machine provides access to the WAD file.</li>
+    </ul>
+  </li>
+  <li>
+<strong>Standard Output</strong>: <code class="language-plaintext highlighter-rouge">ext_stdout</code>
+    <ul>
+      <li>The engine can write data to the host machine’s standard output.</li>
+    </ul>
+  </li>
+  <li>
+<strong>Key Input</strong>: <code class="language-plaintext highlighter-rouge">ext_on_keychange</code>
+    <ul>
+      <li>The host machine passes user input events to the engine.</li>
+    </ul>
+  </li>
+</ol>
+
+<h2 id="sequence-diagram">Sequence Diagram</h2>
+
+<p><img class="mermaid" src="https://mermaid.ink/svg/eyJjb2RlIjoic2VxdWVuY2VEaWFncmFtXG5wYXJ0aWNpcGFudCBVc2VyIGFzIFVzZXJcbnBhcnRpY2lwYW50IEhvc3QgYXMgSG9zdCBQcm9ncmFtKG1haW4ucnMpXG5wYXJ0aWNpcGFudCBWTSBhcyBWaXJ0dWFsIE1hY2hpbmUodm0ucnMpXG5wYXJ0aWNpcGFudCBFbmdpbmUgYXMgRG9vbSBFbmdpbmUoZG9vbS5wb2xrYXZtKVxucGFydGljaXBhbnQgU0RMIGFzIFNETDIgU3lzdGVtXG4lJS1cbkhvc3QtPj5Ib3N0OiBJbml0aWFsaXplIGVudmlyb25tZW50IGxvZ2dpbmdcbkhvc3QtPj5Ib3N0OiBQcm9jZXNzIGNvbW1hbmQtbGluZSBhcmd1bWVudHNcbkhvc3QtPj5WTTogTG9hZCBEb29tIGVuZ2luZShQcm9ncmFtQmxvYjo6cGFyc2UpXG5Ib3N0LT4-Vk06IENyZWF0ZSBWTSBpbnN0YW5jZShWbTo6ZnJvbV9ibG9iKVxuVk0tPj5WTTogU2V0IGV4dGVybmFsIGZ1bmN0aW9ucyhsaW5rZXIuZGVmaW5lX3R5cGVkKVxuSG9zdC0-PlZNOiBMb2FkIFdBRCBmaWxlKGluaXRpYWxpemUpXG5WTS0-PkVuZ2luZTogSW5pdGlhbGl6ZSBlbmdpbmUoZXh0X2luaXRpYWxpemUpXG5Ib3N0LT4-U0RMOiBJbml0aWFsaXplIFNETDIodmlkZW8sIGF1ZGlvLCBldmVudHMpXG5Ib3N0LT4-Vk06IFNldCBhdWRpbyBjYWxsYmFjayhzZXRfb25fYXVkaW9fZnJhbWUpXG4lJS1cbmxvb3AgR2FtZSBNYWluIExvb3BcblVzZXItPj5Ib3N0OiBJbnB1dCBldmVudChrZXlib2FyZC9tb3VzZSlcbkhvc3QtPj5TREw6IEdldCBldmVudChldmVudF9wdW1wLnBvbGxfZXZlbnQpXG5Ib3N0LT4-SG9zdDogTWFwIFNETDIga2V5IHRvIERvb20ga2V5XG5Ib3N0LT4-Vk06IFBhc3Mga2V5IHN0YXRlKG9uX2tleWNoYW5nZSlcblZNLT4-RW5naW5lOiBVcGRhdGUga2V5IHN0YXRlKGV4dF9vbl9rZXljaGFuZ2UpXG4lJS1cbkhvc3QtPj5Ib3N0OiBDaGVjayBhdWRpbyBxdWV1ZSBzdGF0dXNcbmFsdCBBdWRpbyBxdWV1ZSBmdWxsXG5Ib3N0LT4-SG9zdDogU2hvcnQgc2xlZXBcbmVuZFxuJSUtXG5Ib3N0LT4-Vk06IEV4ZWN1dGUgb25lIGZyYW1lKHJ1bl9mb3JfYV9mcmFtZSlcblZNLT4-RW5naW5lOiBFeGVjdXRlIGdhbWUgbG9naWMoZXh0X3RpY2spXG5FbmdpbmUtPj5WTTogT3V0cHV0IHZpZGVvIGZyYW1lKGV4dF9vdXRwdXRfdmlkZW8pXG5FbmdpbmUtPj5WTTogT3V0cHV0IGF1ZGlvIGRhdGEoZXh0X291dHB1dF9hdWRpbylcblZNLT4-SG9zdDogUmV0dXJuIGZyYW1lIGRhdGFcblZNLT4-U0RMOiBBZGQgYXVkaW8gZGF0YSB0byBxdWV1ZVxuJSUtXG5Ib3N0LT4-U0RMOiBVcGRhdGUgdGV4dHVyZVxuSG9zdC0-PlNETDogUmVuZGVyIHRvIGNhbnZhc1xuU0RMLT4-VXNlcjogRGlzcGxheSBzY3JlZW5cbmVuZCIsIm1lcm1haWQiOm51bGx9"></p>
+
+<h2 id="structure-diagram">Structure Diagram</h2>
+
+<p><img class="mermaid" src="https://mermaid.ink/svg/eyJjb2RlIjoiY2xhc3NEaWFncmFtXG5jbGFzcyBNYWluIHtcbittYWluKClcbi1Qcm9jZXNzIGNvbW1hbmQtbGluZSBhcmd1bWVudHNcbi1Jbml0aWFsaXplIFNETDJcbi1HYW1lIG1haW4gbG9vcFxuLUhhbmRsZSBpbnB1dCBldmVudHNcbi1SZW5kZXIgc2NyZWVuXG59XG4lJS1cbmNsYXNzIFZtIHtcbi1zdGF0ZTogU3RhdGVcbi1pbnN0YW5jZTogSW5zdGFuY2Vcbitmcm9tX2Jsb2IoYmxvYikgVm1cbitpbml0aWFsaXplKHJvbSkgUmVzdWx0XG4rcnVuX2Zvcl9hX2ZyYW1lKCkgUmVzdWx0XG4rb25fa2V5Y2hhbmdlKGtleSwgaXNfcHJlc3NlZCkgUmVzdWx0XG4rc2V0X29uX2F1ZGlvX2ZyYW1lKGNhbGxiYWNrKVxufVxuJSUtXG5jbGFzcyBTdGF0ZSB7XG4tcm9tOiBWZWN-dTh-XG4tZnJhbWU6IFZlY351OH5cbi1mcmFtZV93aWR0aDogdTMyXG4tZnJhbWVfaGVpZ2h0OiB1MzJcbi1hdWRpb19idWZmZXI6IFZlY35pMTZ-XG4tb25fYXVkaW9fZnJhbWU6IE9wdGlvbn5Cb3h-ZHluIEZuTXV0fn5cbn1cbiUlLVxuY2xhc3MgS2V5cyB7XG4rQ29uc3RhbnQgZGVmaW5pdGlvbnMoVVBBUlJPVywgRE9XTkFSUk9XLCBldGMuKVxuK2Zyb21fc2RsMihrZXkpIE9wdGlvbn51OH5cbn1cbiUlLVxuY2xhc3MgRG9vbUVuZ2luZSB7XG4rZXh0X2luaXRpYWxpemUoKVxuK2V4dF90aWNrKClcbitleHRfb25fa2V5Y2hhbmdlKGtleSwgaXNfcHJlc3NlZClcbitleHRfb3V0cHV0X3ZpZGVvKGFkZHJlc3MsIHdpZHRoLCBoZWlnaHQpXG4rZXh0X291dHB1dF9hdWRpbyhhZGRyZXNzLCBzYW1wbGVzKVxuK2V4dF9yb21fc2l6ZSgpXG4rZXh0X3JvbV9yZWFkKHBvaW50ZXIsIG9mZnNldCwgbGVuZ3RoKVxuK2V4dF9zdGRvdXQoYnVmZmVyLCBsZW5ndGgpXG59XG4lJS1cbmNsYXNzIFNETDIge1xuK1ZpZGVvIHN5c3RlbVxuK0F1ZGlvIHN5c3RlbVxuK0V2ZW50IHN5c3RlbVxufVxuJSUtXG5NYWluIC0tPiBWbSA6IENyZWF0ZXMgYW5kIHVzZXNcbk1haW4gLS0-IEtleXMgOiBVc2VzXG5NYWluIC0tPiBTREwyIDogVXNlc1xuVm0gKi0tIFN0YXRlIDogQ29udGFpbnNcblZtIC0tPiBEb29tRW5naW5lIDogTG9hZHMgYW5kIGV4ZWN1dGVzXG5Eb29tRW5naW5lIC0tPiBWbSA6IENhbGxzIGV4dGVybmFsIGZ1bmN0aW9ucyIsIm1lcm1haWQiOm51bGx9"></p>
+
+<h2 id="running-environment">Running Environment</h2>
+
+<p>This example program supports running on different operating systems:</p>
+
+<ol>
+  <li>
+<strong>Linux</strong>: Requires SDL2 to be installed, run using the command <code class="language-plaintext highlighter-rouge">cargo run --release --no-default-features</code>.</li>
+  <li>
+<strong>macOS</strong>: Requires specific environment variable settings, the command is:
+    <div class="language-plaintext highlighter-rouge">
+<div class="highlight"><pre class="highlight"><code>LIBRARY_PATH="$LIBRARY_PATH:$(brew --prefix)/lib" POLKAVM_ALLOW_INSECURE=1 POLKAVM_SANDBOX=generic POLKAVM_BACKEND=compiler cargo run --target=x86_64-apple-darwin --release
+</code></pre></div>    </div>
+  </li>
+  <li>
+<strong>Other Operating Systems</strong>: Can run, but will use interpreter mode, which is slower.</li>
+</ol>
+
+<h2 id="summary">Summary</h2>
+
+<p>This Doom example demonstrates the powerful capabilities of PolkaVM, being able to run a complex game engine while handling graphics, audio, and input. The program adopts a clear modular design, encapsulating virtual machine operations in a dedicated module, with the main program responsible for handling SDL2 interaction and the game loop. By defining external function interfaces, efficient communication between the Doom engine within the virtual machine and the host environment is achieved.</p>
+
+
+    </div>
+
+</article>
+<div class="post-nav">
+<a class="previous" href="/technics/2025/05/29/Testing-and-Debugging.html" title="PolkaVM's Testing Arsenal:🚀 From Zero to Bulletproof in Minutes!">PolkaVM's Testing Arsenal:🚀 From Zero to...</a><span></span>
+</div>
+<div class="post-related">
+      <div>Related Articles</div>
+      <ul>
+        <li><a class="post-link" href="/technics/2025/05/28/Tools-and-Utilities.html" title="">Level Up Your PolkaVM Game! 🛠️ The Essential Command-Line Tools You NEED...</a></li>
+<li><a class="post-link" href="/technics/2025/05/27/System-Integration.html" title="">From Raw Syscalls to Safe Sandboxes:The PolkaVM Integration Story 📖</a></li>
+<li><a class="post-link" href="/technics/2025/05/26/Guest-Programs.html" title="">Beyond WASM:The Future is RISC-V with PolkaVM Guest Programs ✨</a></li>
+<li><a class="post-link" href="/technics/2025/05/26/PolkaVM-DOOM-Analysis.html" title="">Level Up Your Understanding of PolkaVM:The DOOM Edition ⬆️</a></li>
+</ul>
+    </div>
+<div class="post-comments"></div></section>
+</div>
+
+
+  </section>
+  <section class="sidebar" style="margin-left: 15px;">
+    <!-- Get sidebar items --><style type="text/css" media="screen">
+.post-menu ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+</style>
+
+<div class="post-menu">
+  <div class="post-menu-title">TOC</div>
+  <div class="post-menu-content"></div>
+</div>
+
+<script>
+  function generateContent() {
+    var menu = document.querySelector(".post-menu");
+    var menuContent =  menu.querySelector(".post-menu-content");
+    var headings = document.querySelector(".post-content").querySelectorAll("h2, h3, h4, h5, h6");
+
+    // Hide menu when no headings
+    if (headings.length === 0) {
+      return menu.style.display = "none";
+    }
+
+    // Generate post menu
+    var menuHTML = '';
+    for (var i = 0; i < headings.length; i++) {
+      var h = headings[i];
+      menuHTML += (
+        '<li class="h-' + h.tagName.toLowerCase() + '">'
+        + '<a href="#h-' + h.getAttribute('id') + '">' + h.textContent + '</a></li>');
+    }
+
+    menuContent.innerHTML = '<ul>' + menuHTML + '</ul>';
+
+    // The header element
+    var header = document.querySelector('header.site-header');
+
+    function doMenuCollapse(index, over_items) {
+      var items = menuContent.firstChild.children;
+
+      if (over_items == undefined) {
+        over_items = 20;
+      }
+
+      if (items.length < over_items) {
+        return;
+      }
+
+      var activeItem = items[index];
+      var beginItem = activeItem
+      var endItem = activeItem
+      var beginIndex = index;
+      var endIndex = index + 1;
+      while (beginIndex >= 0
+        && !items[beginIndex].classList.contains('h-h2')) {
+        beginIndex -= 1;
+      }
+      while (endIndex < items.length
+        && !items[endIndex].classList.contains('h-h2')) {
+        endIndex += 1;
+      }
+      for (var i = 0; i < beginIndex; i++) {
+        item = items[i]
+        if (!item.classList.contains('h-h2')) {
+          item.style.display = 'none';
+        }
+      }
+      for (var i = beginIndex + 1; i < endIndex; i++) {
+        item = items[i]
+        // if (!item.classList.contains('h-h2')) {
+          item.style.display = '';
+        // }
+      }
+      for (var i = endIndex; i < items.length; i++) {
+        item = items[i]
+        if (!item.classList.contains('h-h2')) {
+          item.style.display = 'none';
+        }
+      }
+    }
+
+    // Init menu collapsed
+    doMenuCollapse(-1);
+
+    // Active the menu item
+    window.addEventListener('scroll', function (event) {
+      var lastActive = menuContent.querySelector('.active');
+      var changed = true;
+      var activeIndex = -1;
+      for (var i = headings.length - 1; i >= 0; i--) {
+        var h = headings[i];
+        var headingRect = h.getBoundingClientRect();
+        var headerRect = header.getBoundingClientRect();
+        var headerTop = Math.floor(headerRect.top);
+        var headerHeight = Math.floor(headerRect.height);
+        var headerHeight = headerTop + headerHeight + 20;
+        if (headingRect.top <= headerHeight) {
+          var id = 'h-' + h.getAttribute('id');
+          var a = menuContent.querySelector('a[href="#' + id  + '"]');
+          var curActive = a.parentNode;
+          if (curActive) {
+            curActive.classList.add('active');
+            activeIndex = i;
+          }
+          if (lastActive == curActive) {
+            changed = false;
+          }
+          break;
+        }
+      }
+      if (changed) {
+        if (lastActive) {
+          lastActive.classList.remove('active');
+        }
+        doMenuCollapse(activeIndex);
+      }
+      event.preventDefault();
+    });
+  }
+  generateContent();
+</script>
+</section>
+</div>
+
+      </div>
+    </main><footer class="site-footer h-card">
+  <data class="u-url" href="/"></data>
+
+  <div class="wrapper">
+    <div class="site-footer-inner">
+<div>IURDao 2017-2025 Joe</div>
+      <div class="footer-col rss-subscribe">Subscribe <a href="/feed.xml">via RSS</a>
+</div>
+    </div>
+  </div>
+</footer>
+
+</body>
+</html>

@@ -1,0 +1,2609 @@
+<?xml version="1.0" encoding="utf-8"?><feed xmlns="http://www.w3.org/2005/Atom" ><generator uri="https://jekyllrb.com/" version="4.4.1">Jekyll</generator><link href="/feed.xml" rel="self" type="application/atom+xml" /><link href="/" rel="alternate" type="text/html" /><updated>2025-06-15T13:10:33+00:00</updated><id>/feed.xml</id><title type="html">Industry-University-Research Dao</title><subtitle>Industry-University-Research Dao in the Polkadot ecosystem</subtitle><author><name>Joe</name></author><entry><title type="html">PolkaVM Doom Example Program Analysis</title><link href="/technics/2025/06/15/PolkaVM-Doom-Example-Program-Analysis.html" rel="alternate" type="text/html" title="PolkaVM Doom Example Program Analysis" /><published>2025-06-15T00:00:00+00:00</published><updated>2025-06-15T00:00:00+00:00</updated><id>/technics/2025/06/15/PolkaVM-Doom-Example-Program%20Analysis</id><content type="html" xml:base="/technics/2025/06/15/PolkaVM-Doom-Example-Program-Analysis.html"><![CDATA[<h2 id="program-structure">Program Structure</h2>
+
+<p>The Polkavm github repo provides an example program that uses the PolkaVM virtual machine to run the classic game Doom. This program demonstrates how to use PolkaVM to execute complex game code while handling graphics rendering, audio output, and user input. This article aims to gain a glimpse into the mysteries of PolkaVM as the next-generation execution environment on the blockchain by analyzing the structure and runtime logic of this example program.</p>
+
+<p><img src="//https://www.youtube.com/watch?v=yYRd3TMzPX8" alt="" /></p>
+
+<h3 id="file-structure">File Structure</h3>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>/examples/doom/
+├── Cargo.toml         # Rust project configuration file
+├── README.md          # Project description document
+├── roms/              # Game ROM file directory
+│   ├── README.md      # ROM file description
+│   ├── doom-wad-shareware-license.txt  # Doom WAD file license
+│   ├── doom.polkavm   # Doom engine binary compiled to PolkaVM format
+│   ├── doom1.wad      # Doom game data file
+│   └── relink.sh      # Relink script
+└── src/               # Source code directory
+    ├── keys.rs        # Key mapping definition
+    ├── main.rs        # Main program entry point
+    └── vm.rs          # PolkaVM virtual machine interface implementation
+</code></pre></div></div>
+
+<h3 id="core-components">Core Components</h3>
+
+<ol>
+  <li><strong>Main Program (main.rs)</strong>
+    <ul>
+      <li>Responsible for initializing the environment, loading game ROMs and the engine.</li>
+      <li>Sets up the SDL2 graphics and audio system.</li>
+      <li>Handles user input.</li>
+      <li>Implements the game main loop.</li>
+    </ul>
+  </li>
+  <li><strong>Virtual Machine Interface (vm.rs)</strong>
+    <ul>
+      <li>Defines the <code class="language-plaintext highlighter-rouge">Vm</code> struct, encapsulating the PolkaVM instance.</li>
+      <li>Implements the interface for interacting with the virtual machine.</li>
+      <li>Defines external functions for the Doom engine to call (video output, audio output, ROM reading, etc.).</li>
+    </ul>
+  </li>
+  <li><strong>Key Mapping (keys.rs)</strong>
+    <ul>
+      <li>Defines key constants used by Doom.</li>
+      <li>Provides a mapping function from SDL2 keys to Doom keys.</li>
+    </ul>
+  </li>
+  <li><strong>ROM Files</strong>
+    <ul>
+      <li><code class="language-plaintext highlighter-rouge">doom.polkavm</code>: Doom engine compiled into PolkaVM format.</li>
+      <li><code class="language-plaintext highlighter-rouge">doom1.wad</code>: Doom game data file (freely distributed shareware version).</li>
+    </ul>
+  </li>
+</ol>
+
+<h2 id="execution-flow">Execution Flow</h2>
+
+<h3 id="initialization-phase">Initialization Phase</h3>
+
+<ol>
+  <li>Initialize the environment logging system.</li>
+  <li>Process command-line arguments, which can optionally override the default program and ROM files.</li>
+  <li>Load the Doom engine binary file (<code class="language-plaintext highlighter-rouge">doom.polkavm</code>).</li>
+  <li>Create a PolkaVM virtual machine instance.</li>
+  <li>Load the Doom game data file (<code class="language-plaintext highlighter-rouge">doom1.wad</code>).</li>
+  <li>Initialize SDL2 graphics, audio, and event systems.</li>
+  <li>Set up the audio callback function.</li>
+</ol>
+
+<h3 id="game-main-loop">Game Main Loop</h3>
+
+<ol>
+  <li><strong>Event Handling</strong>
+    <ul>
+      <li>Handle SDL2 events (keyboard, mouse input).</li>
+      <li>Map SDL2 keys to Doom keys.</li>
+      <li>Pass the key state to the virtual machine via <code class="language-plaintext highlighter-rouge">vm.on_keychange()</code>.</li>
+    </ul>
+  </li>
+  <li><strong>Audio Processing</strong>
+    <ul>
+      <li>Check the audio queue status.</li>
+      <li>If there is insufficient audio data in the queue, continue the game loop.</li>
+      <li>Otherwise, sleep briefly to avoid excessive CPU usage.</li>
+    </ul>
+  </li>
+  <li><strong>Game Frame Update</strong>
+    <ul>
+      <li>Call <code class="language-plaintext highlighter-rouge">vm.run_for_a_frame()</code> to execute one frame of the Doom engine.</li>
+      <li>Get the frame image data generated by the engine.</li>
+    </ul>
+  </li>
+  <li><strong>Rendering</strong>
+    <ul>
+      <li>Clear the canvas.</li>
+      <li>Update the SDL2 texture.</li>
+      <li>Render the texture to the canvas.</li>
+      <li>Present the screen.</li>
+    </ul>
+  </li>
+</ol>
+
+<h3 id="interaction-between-virtual-machine-and-host">Interaction between Virtual Machine and Host</h3>
+
+<p>The Doom engine (client program) interacts with the host machine through the following interfaces:</p>
+
+<ol>
+  <li><strong>Video Output</strong>: <code class="language-plaintext highlighter-rouge">ext_output_video</code>
+    <ul>
+      <li>The engine passes the rendered frame data to the host machine.</li>
+      <li>The host machine stores the data and prepares it for display.</li>
+    </ul>
+  </li>
+  <li><strong>Audio Output</strong>: <code class="language-plaintext highlighter-rouge">ext_output_audio</code>
+    <ul>
+      <li>The engine generates audio samples and passes them to the host machine.</li>
+      <li>The host machine adds the audio data to the SDL2 audio queue.</li>
+    </ul>
+  </li>
+  <li><strong>ROM Access</strong>: <code class="language-plaintext highlighter-rouge">ext_rom_size</code> and <code class="language-plaintext highlighter-rouge">ext_rom_read</code>
+    <ul>
+      <li>The engine queries the ROM size and reads ROM data.</li>
+      <li>The host machine provides access to the WAD file.</li>
+    </ul>
+  </li>
+  <li><strong>Standard Output</strong>: <code class="language-plaintext highlighter-rouge">ext_stdout</code>
+    <ul>
+      <li>The engine can write data to the host machine’s standard output.</li>
+    </ul>
+  </li>
+  <li><strong>Key Input</strong>: <code class="language-plaintext highlighter-rouge">ext_on_keychange</code>
+    <ul>
+      <li>The host machine passes user input events to the engine.</li>
+    </ul>
+  </li>
+</ol>
+
+<h2 id="sequence-diagram">Sequence Diagram</h2>
+
+<p><img class="mermaid" src="https://mermaid.ink/svg/eyJjb2RlIjoic2VxdWVuY2VEaWFncmFtXG5wYXJ0aWNpcGFudCBVc2VyIGFzIFVzZXJcbnBhcnRpY2lwYW50IEhvc3QgYXMgSG9zdCBQcm9ncmFtKG1haW4ucnMpXG5wYXJ0aWNpcGFudCBWTSBhcyBWaXJ0dWFsIE1hY2hpbmUodm0ucnMpXG5wYXJ0aWNpcGFudCBFbmdpbmUgYXMgRG9vbSBFbmdpbmUoZG9vbS5wb2xrYXZtKVxucGFydGljaXBhbnQgU0RMIGFzIFNETDIgU3lzdGVtXG4lJS1cbkhvc3QtPj5Ib3N0OiBJbml0aWFsaXplIGVudmlyb25tZW50IGxvZ2dpbmdcbkhvc3QtPj5Ib3N0OiBQcm9jZXNzIGNvbW1hbmQtbGluZSBhcmd1bWVudHNcbkhvc3QtPj5WTTogTG9hZCBEb29tIGVuZ2luZShQcm9ncmFtQmxvYjo6cGFyc2UpXG5Ib3N0LT4-Vk06IENyZWF0ZSBWTSBpbnN0YW5jZShWbTo6ZnJvbV9ibG9iKVxuVk0tPj5WTTogU2V0IGV4dGVybmFsIGZ1bmN0aW9ucyhsaW5rZXIuZGVmaW5lX3R5cGVkKVxuSG9zdC0-PlZNOiBMb2FkIFdBRCBmaWxlKGluaXRpYWxpemUpXG5WTS0-PkVuZ2luZTogSW5pdGlhbGl6ZSBlbmdpbmUoZXh0X2luaXRpYWxpemUpXG5Ib3N0LT4-U0RMOiBJbml0aWFsaXplIFNETDIodmlkZW8sIGF1ZGlvLCBldmVudHMpXG5Ib3N0LT4-Vk06IFNldCBhdWRpbyBjYWxsYmFjayhzZXRfb25fYXVkaW9fZnJhbWUpXG4lJS1cbmxvb3AgR2FtZSBNYWluIExvb3BcblVzZXItPj5Ib3N0OiBJbnB1dCBldmVudChrZXlib2FyZC9tb3VzZSlcbkhvc3QtPj5TREw6IEdldCBldmVudChldmVudF9wdW1wLnBvbGxfZXZlbnQpXG5Ib3N0LT4-SG9zdDogTWFwIFNETDIga2V5IHRvIERvb20ga2V5XG5Ib3N0LT4-Vk06IFBhc3Mga2V5IHN0YXRlKG9uX2tleWNoYW5nZSlcblZNLT4-RW5naW5lOiBVcGRhdGUga2V5IHN0YXRlKGV4dF9vbl9rZXljaGFuZ2UpXG4lJS1cbkhvc3QtPj5Ib3N0OiBDaGVjayBhdWRpbyBxdWV1ZSBzdGF0dXNcbmFsdCBBdWRpbyBxdWV1ZSBmdWxsXG5Ib3N0LT4-SG9zdDogU2hvcnQgc2xlZXBcbmVuZFxuJSUtXG5Ib3N0LT4-Vk06IEV4ZWN1dGUgb25lIGZyYW1lKHJ1bl9mb3JfYV9mcmFtZSlcblZNLT4-RW5naW5lOiBFeGVjdXRlIGdhbWUgbG9naWMoZXh0X3RpY2spXG5FbmdpbmUtPj5WTTogT3V0cHV0IHZpZGVvIGZyYW1lKGV4dF9vdXRwdXRfdmlkZW8pXG5FbmdpbmUtPj5WTTogT3V0cHV0IGF1ZGlvIGRhdGEoZXh0X291dHB1dF9hdWRpbylcblZNLT4-SG9zdDogUmV0dXJuIGZyYW1lIGRhdGFcblZNLT4-U0RMOiBBZGQgYXVkaW8gZGF0YSB0byBxdWV1ZVxuJSUtXG5Ib3N0LT4-U0RMOiBVcGRhdGUgdGV4dHVyZVxuSG9zdC0-PlNETDogUmVuZGVyIHRvIGNhbnZhc1xuU0RMLT4-VXNlcjogRGlzcGxheSBzY3JlZW5cbmVuZCIsIm1lcm1haWQiOm51bGx9" /></p>
+
+<h2 id="structure-diagram">Structure Diagram</h2>
+
+<p><img class="mermaid" src="https://mermaid.ink/svg/eyJjb2RlIjoiY2xhc3NEaWFncmFtXG5jbGFzcyBNYWluIHtcbittYWluKClcbi1Qcm9jZXNzIGNvbW1hbmQtbGluZSBhcmd1bWVudHNcbi1Jbml0aWFsaXplIFNETDJcbi1HYW1lIG1haW4gbG9vcFxuLUhhbmRsZSBpbnB1dCBldmVudHNcbi1SZW5kZXIgc2NyZWVuXG59XG4lJS1cbmNsYXNzIFZtIHtcbi1zdGF0ZTogU3RhdGVcbi1pbnN0YW5jZTogSW5zdGFuY2Vcbitmcm9tX2Jsb2IoYmxvYikgVm1cbitpbml0aWFsaXplKHJvbSkgUmVzdWx0XG4rcnVuX2Zvcl9hX2ZyYW1lKCkgUmVzdWx0XG4rb25fa2V5Y2hhbmdlKGtleSwgaXNfcHJlc3NlZCkgUmVzdWx0XG4rc2V0X29uX2F1ZGlvX2ZyYW1lKGNhbGxiYWNrKVxufVxuJSUtXG5jbGFzcyBTdGF0ZSB7XG4tcm9tOiBWZWN-dTh-XG4tZnJhbWU6IFZlY351OH5cbi1mcmFtZV93aWR0aDogdTMyXG4tZnJhbWVfaGVpZ2h0OiB1MzJcbi1hdWRpb19idWZmZXI6IFZlY35pMTZ-XG4tb25fYXVkaW9fZnJhbWU6IE9wdGlvbn5Cb3h-ZHluIEZuTXV0fn5cbn1cbiUlLVxuY2xhc3MgS2V5cyB7XG4rQ29uc3RhbnQgZGVmaW5pdGlvbnMoVVBBUlJPVywgRE9XTkFSUk9XLCBldGMuKVxuK2Zyb21fc2RsMihrZXkpIE9wdGlvbn51OH5cbn1cbiUlLVxuY2xhc3MgRG9vbUVuZ2luZSB7XG4rZXh0X2luaXRpYWxpemUoKVxuK2V4dF90aWNrKClcbitleHRfb25fa2V5Y2hhbmdlKGtleSwgaXNfcHJlc3NlZClcbitleHRfb3V0cHV0X3ZpZGVvKGFkZHJlc3MsIHdpZHRoLCBoZWlnaHQpXG4rZXh0X291dHB1dF9hdWRpbyhhZGRyZXNzLCBzYW1wbGVzKVxuK2V4dF9yb21fc2l6ZSgpXG4rZXh0X3JvbV9yZWFkKHBvaW50ZXIsIG9mZnNldCwgbGVuZ3RoKVxuK2V4dF9zdGRvdXQoYnVmZmVyLCBsZW5ndGgpXG59XG4lJS1cbmNsYXNzIFNETDIge1xuK1ZpZGVvIHN5c3RlbVxuK0F1ZGlvIHN5c3RlbVxuK0V2ZW50IHN5c3RlbVxufVxuJSUtXG5NYWluIC0tPiBWbSA6IENyZWF0ZXMgYW5kIHVzZXNcbk1haW4gLS0-IEtleXMgOiBVc2VzXG5NYWluIC0tPiBTREwyIDogVXNlc1xuVm0gKi0tIFN0YXRlIDogQ29udGFpbnNcblZtIC0tPiBEb29tRW5naW5lIDogTG9hZHMgYW5kIGV4ZWN1dGVzXG5Eb29tRW5naW5lIC0tPiBWbSA6IENhbGxzIGV4dGVybmFsIGZ1bmN0aW9ucyIsIm1lcm1haWQiOm51bGx9" /></p>
+
+<h2 id="running-environment">Running Environment</h2>
+
+<p>This example program supports running on different operating systems:</p>
+
+<ol>
+  <li><strong>Linux</strong>: Requires SDL2 to be installed, run using the command <code class="language-plaintext highlighter-rouge">cargo run --release --no-default-features</code>.</li>
+  <li><strong>macOS</strong>: Requires specific environment variable settings, the command is:
+    <div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>LIBRARY_PATH="$LIBRARY_PATH:$(brew --prefix)/lib" POLKAVM_ALLOW_INSECURE=1 POLKAVM_SANDBOX=generic POLKAVM_BACKEND=compiler cargo run --target=x86_64-apple-darwin --release
+</code></pre></div>    </div>
+  </li>
+  <li><strong>Other Operating Systems</strong>: Can run, but will use interpreter mode, which is slower.</li>
+</ol>
+
+<h2 id="summary">Summary</h2>
+
+<p>This Doom example demonstrates the powerful capabilities of PolkaVM, being able to run a complex game engine while handling graphics, audio, and input. The program adopts a clear modular design, encapsulating virtual machine operations in a dedicated module, with the main program responsible for handling SDL2 interaction and the game loop. By defining external function interfaces, efficient communication between the Doom engine within the virtual machine and the host environment is achieved.</p>]]></content><author><name>Joe</name></author><category term="Technics" /><category term="PolkaVM" /><category term="Doom" /><category term="Example" /><summary type="html"><![CDATA[Program Structure]]></summary></entry><entry><title type="html">PolkaVM’s Testing Arsenal:🚀 From Zero to Bulletproof in Minutes!</title><link href="/technics/2025/05/29/Testing-and-Debugging.html" rel="alternate" type="text/html" title="PolkaVM’s Testing Arsenal:🚀 From Zero to Bulletproof in Minutes!" /><published>2025-05-29T00:00:00+00:00</published><updated>2025-05-29T00:00:00+00:00</updated><id>/technics/2025/05/29/Testing-and-Debugging</id><content type="html" xml:base="/technics/2025/05/29/Testing-and-Debugging.html"><![CDATA[<p>This article describes the testing and debugging infrastructure for PolkaVM, including automated test case generation, fuzzing capabilities, and tools for debugging VM execution. For information about benchmarking performance, see <a href="https://iurdao.github.io/technics/2025/05/28/Tools-and-Utilities.html">Tools and Utilities</a>.</p>
+
+<h2 id="test-specification-infrastructure">Test Specification Infrastructure</h2>
+
+<p>PolkaVM employs a comprehensive test specification framework that allows for defining test cases with precise initial conditions and expected outcomes. This infrastructure is primarily implemented via the <code class="language-plaintext highlighter-rouge">spectool</code> utility.</p>
+
+<h3 id="test-case-schema">Test Case Schema</h3>
+
+<p>Test cases are defined using a structured schema that specifies:</p>
+
+<ul>
+  <li>Initial VM state (registers, memory, gas)</li>
+  <li>Program to execute</li>
+  <li>Expected final state after execution</li>
+  <li>Expected execution status (halt, trap, page fault)</li>
+</ul>
+
+<p>The schema is formally defined in both ASN.1 and JSON Schema formats:</p>
+
+<p><img class="mermaid" src="https://mermaid.ink/svg/eyJjb2RlIjoiJSUtXG5jbGFzc0RpYWdyYW1cbmNsYXNzIFRlc3RjYXNle1xubmFtZTogc3RyaW5nXG5pbml0aWFsX3JlZ3M6IHU2NFsxM11cbmluaXRpYWxfcGM6IHUzMlxuaW5pdGlhbF9wYWdlX21hcDogUGFnZVtdXG5pbml0aWFsX21lbW9yeTogTWVtb3J5Q2h1bmtbXVxuaW5pdGlhbF9nYXM6IGk2NFxucHJvZ3JhbTogdThbXVxuZXhwZWN0ZWRfc3RhdHVzOiBzdHJpbmdcbmV4cGVjdGVkX3JlZ3M6IHU2NFsxM11cbmV4cGVjdGVkX3BjOiB1MzJcbmV4cGVjdGVkX21lbW9yeTogTWVtb3J5Q2h1bmtbXVxuZXhwZWN0ZWRfZ2FzOiBpNjRcbmV4cGVjdGVkX3BhZ2VfZmF1bHRfYWRkcmVzcz86IHUzMlxufVxuY2xhc3MgUGFnZXtcbmFkZHJlc3M6IHUzMlxubGVuZ3RoOiB1MzJcbmlzX3dyaXRhYmxlOiBib29sZWFuXG59XG5jbGFzcyBNZW1vcnlDaHVua3tcbmFkZHJlc3M6IHUzMlxuY29udGVudHM6IHU4W11cbn1cblRlc3RjYXNlIC0tPiBQYWdlOmNvbnRhaW5zXG5UZXN0Y2FzZSAtLT4gTWVtb3J5Q2h1bms6Y29udGFpbnNcbiUlLSIsIm1lcm1haWQiOm51bGx9" /></p>
+
+<p>Sources: <a href="https://github.com/paritytech/polkavm/blob/910adbda/tools/spectool/spec/schema.json#L1-L98">tools/spectool/spec/schema.json1-98</a> <a href="https://github.com/paritytech/polkavm/blob/910adbda/tools/spectool/spec/schema.asn#L1-L87">tools/spectool/spec/schema.asn1-87</a></p>
+
+<h3 id="test-case-generation">Test Case Generation</h3>
+
+<p>The <code class="language-plaintext highlighter-rouge">spectool generate</code> command creates test cases by:</p>
+
+<ol>
+  <li>Loading assembly code or ELF files</li>
+  <li>Assembling them into program blobs</li>
+  <li>Executing them in a controlled environment</li>
+  <li>Recording state changes during execution</li>
+  <li>Generating JSON test case files</li>
+  <li>Creating a human-readable index (TESTCASES.md)</li>
+</ol>
+
+<p>Sources: <a href="https://github.com/paritytech/polkavm/blob/910adbda/tools/spectool/src/main.rs#L137-L608">tools/spectool/src/main.rs137-608</a></p>
+
+<h3 id="prepost-directives">Pre/Post Directives</h3>
+
+<p>Test assembly files can include special directives to specify assertions about the initial and expected state:</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>pre: r1 = 42      # Set register r1 to 42 before execution
+pre: gas = 10000  # Set initial gas to 10000
+
+post: r2 = 84     # Expect register r2 to be 84 after execution
+post: pc = @label[2] # Expect program counter to be at offset 2 from label
+
+</code></pre></div></div>
+
+<p>These directives are processed when generating test cases and verified during test execution.</p>
+
+<p>Sources: <a href="https://github.com/paritytech/polkavm/blob/910adbda/tools/spectool/src/main.rs#L97-L134">tools/spectool/src/main.rs97-134</a> <a href="https://github.com/paritytech/polkavm/blob/910adbda/tools/spectool/src/main.rs#L173-L186">tools/spectool/src/main.rs173-186</a></p>
+
+<h2 id="fuzzing-infrastructure">Fuzzing Infrastructure</h2>
+
+<p>PolkaVM uses LibFuzzer to perform structured fuzzing of various components. Fuzzing helps find edge cases, vulnerabilities, and correctness issues by generating random but valid inputs.</p>
+
+<h3 id="fuzz-targets">Fuzz Targets</h3>
+
+<p>The project includes several fuzzing targets:</p>
+
+<table>
+  <thead>
+    <tr>
+      <th>Target</th>
+      <th>Purpose</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">fuzz_shm_allocator</code></td>
+      <td>Tests the shared memory allocator</td>
+    </tr>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">fuzz_generic_allocator</code></td>
+      <td>Tests the generic allocator</td>
+    </tr>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">fuzz_linker</code></td>
+      <td>Tests the linker by generating random RISC-V instructions</td>
+    </tr>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">fuzz_polkavm</code></td>
+      <td>Tests VM execution with randomly generated operations</td>
+    </tr>
+  </tbody>
+</table>
+
+<p>Sources: <a href="https://github.com/paritytech/polkavm/blob/910adbda/fuzz/Cargo.toml#L24-L50">fuzz/Cargo.toml24-50</a></p>
+
+<h3 id="vm-execution-fuzzing">VM Execution Fuzzing</h3>
+
+<p>The <code class="language-plaintext highlighter-rouge">fuzz_polkavm</code> target is particularly important as it tests the VM execution correctness by:</p>
+
+<ol>
+  <li>Generating random, but valid VM instructions</li>
+  <li>Building a program blob from these instructions</li>
+  <li>Executing the program in both interpreter and compiler backends</li>
+  <li>Comparing results to ensure identical behavior</li>
+</ol>
+
+<p><img class="mermaid" src="https://mermaid.ink/svg/eyJjb2RlIjoiJSUtXG5mbG93Y2hhcnQgVERcbnN1YmdyYXBoIENvbXBhcmVkIFN0YXRlXG5BW0ludGVycnVwdCBLaW5kXVxuQltQcm9ncmFtIENvdW50ZXJdXG5DW1JlZ2lzdGVyIFZhbHVlc11cbmVuZFxuRFtSYW5kb20gT3BlcmF0aW9uc10tLT5FW0J1aWxkIFByb2dyYW0gQmxvYl1cbkUtLT5GW0V4ZWN1dGUgaW4gSW50ZXJwcmV0ZXJdXG5FLS0-R1tFeGVjdXRlIGluIENvbXBpbGVyXVxuRi0tPkhbQ29tcGFyZSBSZXN1bHRzXVxuRy0tPkhcbkgtLT58TWF0Y2h8SVtTdWNjZXNzXVxuSC0tPnxNaXNtYXRjaHxKW1wiRmFpbHVyZSAoQnVnIEZvdW5kKVwiXVxuJSUtIiwibWVybWFpZCI6bnVsbH0" /></p>
+
+<p>Sources: <a href="https://github.com/paritytech/polkavm/blob/910adbda/fuzz/fuzz_targets/fuzz_polkavm.rs#L539-L617">fuzz/fuzz_targets/fuzz_polkavm.rs539-617</a></p>
+
+<h3 id="linker-fuzzing">Linker Fuzzing</h3>
+
+<p>The <code class="language-plaintext highlighter-rouge">fuzz_linker</code> target tests the linker by:</p>
+
+<ol>
+  <li>Generating random, but valid RISC-V instructions</li>
+  <li>Creating a minimal ELF file with these instructions</li>
+  <li>Passing the ELF file to the linker</li>
+  <li>Verifying that the linker processes it without crashing</li>
+</ol>
+
+<p>This helps identify potential issues in the instruction transformation and optimization pipeline.</p>
+
+<p>Sources: <a href="https://github.com/paritytech/polkavm/blob/910adbda/fuzz/fuzz_targets/fuzz_linker.rs#L239-L248">fuzz/fuzz_targets/fuzz_linker.rs239-248</a></p>
+
+<h2 id="debugging-capabilities">Debugging Capabilities</h2>
+
+<h3 id="step-tracing">Step Tracing</h3>
+
+<p>PolkaVM supports step-by-step execution tracing via the <code class="language-plaintext highlighter-rouge">step_tracing</code> option in <code class="language-plaintext highlighter-rouge">ModuleConfig</code>. When enabled, the VM generates <code class="language-plaintext highlighter-rouge">InterruptKind::Step</code> after executing each instruction, allowing for detailed execution analysis.</p>
+
+<p><img class="mermaid" src="https://mermaid.ink/svg/eyJjb2RlIjoiJSUtXG5zZXF1ZW5jZURpYWdyYW1cbnBhcnRpY2lwYW50IEEgYXMgSG9zdCBQcm9ncmFtXG5wYXJ0aWNpcGFudCBCIGFzIFBvbGthVk1cbnBhcnRpY2lwYW50IEMgYXMgR3Vlc3QgUHJvZ3JhbVxuJSUtXG5BIC0-PkI6IHNldF9zdGVwX3RyYWNpbmcodHJ1ZSlcbkEgLT4-QjogcnVuKClcbkIgLT4-QzogZXhlY3V0ZSBpbnN0cnVjdGlvblxuQiAtLT4-QTogSW50ZXJydXB0S2luZDo6U3RlcFxuQSAtPj5COiBpbnNwZWN0IHN0YXRlXG5BIC0-PkI6IHJ1bigpXG5CIC0-PkM6IGV4ZWN1dGUgbmV4dCBpbnN0cnVjdGlvblxuQiAtLT4-QTogSW50ZXJydXB0S2luZDo6U3RlcFxuQSAtPj5COiBpbnNwZWN0IHN0YXRlXG5Ob3RlIG92ZXIgQSxDIDogUmVwZWF0IHVudGlsIHByb2dyYW0gY29tcGxldGVzXG4lJS0iLCJtZXJtYWlkIjpudWxsfQ" /></p>
+
+<p>Sources: <a href="https://github.com/paritytech/polkavm/blob/910adbda/tools/spectool/src/main.rs#L274-L274">tools/spectool/src/main.rs274</a></p>
+
+<h3 id="disassembly">Disassembly</h3>
+
+<p>The PolkaVM disassembler provides tools to convert program blobs back to human-readable assembly code. The disassembler supports various options:</p>
+
+<ul>
+  <li>Showing raw instruction bytes</li>
+  <li>Using different register naming conventions</li>
+  <li>Showing original or optimized instructions</li>
+  <li>Displaying jump targets as offsets or labels</li>
+</ul>
+
+<p>This is useful for debugging VM behavior and verifying code transformations.</p>
+
+<p>Sources: <a href="https://github.com/paritytech/polkavm/blob/910adbda/tools/spectool/src/main.rs#L427-L438">tools/spectool/src/main.rs427-438</a></p>
+
+<h3 id="memory-inspection">Memory Inspection</h3>
+
+<p>The VM provides APIs to inspect and modify memory during execution:</p>
+
+<ul>
+  <li><code class="language-plaintext highlighter-rouge">read_memory</code> - Read contents from guest memory</li>
+  <li><code class="language-plaintext highlighter-rouge">write_memory</code> - Write data to guest memory</li>
+  <li><code class="language-plaintext highlighter-rouge">zero_memory</code> - Initialize memory regions with zeros</li>
+  <li><code class="language-plaintext highlighter-rouge">protect_memory</code> - Mark memory as read-only</li>
+</ul>
+
+<p>These functions are useful for setting up test cases and inspecting execution results.</p>
+
+<p>Sources: <a href="https://github.com/paritytech/polkavm/blob/910adbda/tools/spectool/src/main.rs#L347-L355">tools/spectool/src/main.rs347-355</a> <a href="https://github.com/paritytech/polkavm/blob/910adbda/tools/spectool/src/main.rs#L398-L401">tools/spectool/src/main.rs398-401</a></p>
+
+<h2 id="correctness-testing">Correctness Testing</h2>
+
+<p>PolkaVM employs various strategies to ensure correctness:</p>
+
+<h3 id="backend-consistency-testing">Backend Consistency Testing</h3>
+
+<p>The fuzzing infrastructure includes a cross-backend verification mode that:</p>
+
+<ol>
+  <li>Executes the same program in both interpreter and compiler backends</li>
+  <li>Compares final state (registers, memory, program counter)</li>
+  <li>Verifies consistent interrupt behavior</li>
+  <li>Reports any discrepancies as bugs</li>
+</ol>
+
+<p>This ensures that both execution backends implement the same semantics.</p>
+
+<p><img class="mermaid" src="https://mermaid.ink/svg/eyJjb2RlIjoiJSUtXG5mbG93Y2hhcnQgVERcbnN1YmdyYXBoIFZlcmlmaWNhdGlvbiBQb2ludHNcbkFbUmVnaXN0ZXJzXVxuQltQcm9ncmFtIENvdW50ZXJdXG5DW0ludGVycnVwdCBLaW5kXVxuWltNZW1vcnkgU3RhdGVdXG5lbmRcbkRbVGVzdCBQcm9ncmFtXS0tPkVbRXhlY3V0ZSB3aXRoIEludGVycHJldGVyXVxuRC0tPkZbRXhlY3V0ZSB3aXRoIENvbXBpbGVyXVxuRS0tPkd7Q29tcGFyZSBSZXN1bHRzfVxuRi0tPkdcbkctLT58TWF0Y2h8SFtQYXNzXVxuRy0tPnxNaXNtYXRjaHxJW0ZhaWxdXG4lJS0iLCJtZXJtYWlkIjpudWxsfQ" /></p>
+
+<p>Sources: <a href="https://github.com/paritytech/polkavm/blob/910adbda/fuzz/fuzz_targets/fuzz_polkavm.rs#L584-L601">fuzz/fuzz_targets/fuzz_polkavm.rs584-601</a></p>
+
+<h3 id="risc-v-tests">RISC-V Tests</h3>
+
+<p>PolkaVM includes tests that verify compatibility with standard RISC-V test suites. These tests are included in the test case generation process:</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>// Extract RISC-V tests from the built-in test suite for line in include_str!("../../../crates/polkavm/src/tests_riscv.rs").lines() {  let prefix = "riscv_test!(riscv_unoptimized_rv64";  if !line.starts_with(prefix) {  continue;     }
+ // Process test... }
+</code></pre></div></div>
+
+<p>These tests help ensure conformance to the RISC-V specification.</p>
+
+<p>Sources: <a href="https://github.com/paritytech/polkavm/blob/910adbda/tools/spectool/src/main.rs#L209-L251">tools/spectool/src/main.rs209-251</a></p>
+
+<h2 id="testing-workflow">Testing Workflow</h2>
+
+<p>Here’s an overview of the recommended testing workflow for PolkaVM development:</p>
+
+<ol>
+  <li><strong>Unit Tests</strong>: Run the standard Rust test suite with <code class="language-plaintext highlighter-rouge">cargo test</code></li>
+  <li><strong>Spec Tests</strong>: Generate and run specification tests with <code class="language-plaintext highlighter-rouge">spectool generate</code> and <code class="language-plaintext highlighter-rouge">spectool test</code></li>
+  <li><strong>Fuzzing</strong>: Run fuzzing targets to find edge cases and bugs</li>
+  <li><strong>Cross-VM Testing</strong>: Compare results with other RISC-V VMs using <code class="language-plaintext highlighter-rouge">benchtool</code></li>
+</ol>
+
+<p>For continuous testing during development, consider setting up automated test pipelines that include all these components.</p>]]></content><author><name>Joe</name></author><category term="Technics" /><category term="PolkaVM" /><category term="Testing" /><category term="Debugging" /><summary type="html"><![CDATA[This article describes the testing and debugging infrastructure for PolkaVM, including automated test case generation, fuzzing capabilities, and tools for debugging VM execution. For information about benchmarking performance, see Tools and Utilities.]]></summary></entry><entry><title type="html">Level Up Your PolkaVM Game! 🛠️ The Essential Command-Line Tools You NEED to Know.</title><link href="/technics/2025/05/28/Tools-and-Utilities.html" rel="alternate" type="text/html" title="Level Up Your PolkaVM Game! 🛠️ The Essential Command-Line Tools You NEED to Know." /><published>2025-05-28T00:00:00+00:00</published><updated>2025-05-28T00:00:00+00:00</updated><id>/technics/2025/05/28/Tools-and-Utilities</id><content type="html" xml:base="/technics/2025/05/28/Tools-and-Utilities.html"><![CDATA[<p>This article documents the command-line tools and utilities provided by the PolkaVM project to help developers work with PolkaVM programs. These tools facilitate the compilation, disassembly, analysis, benchmarking, and testing of PolkaVM applications.</p>
+
+<h2 id="overview">Overview</h2>
+
+<p>PolkaVM provides three main command-line utilities:</p>
+
+<ol>
+  <li><strong>polkatool</strong> - A utility for working with PolkaVM programs (linking, disassembling, assembling)</li>
+  <li><strong>benchtool</strong> - A benchmarking tool for comparing PolkaVM with other virtual machines</li>
+  <li><strong>spectool</strong> - A test case generation and execution tool for verifying VM behavior</li>
+</ol>
+
+<p>These tools complement each other in the development workflow and testing pipeline for PolkaVM applications.</p>
+
+<p><img class="mermaid" src="https://mermaid.ink/svg/eyJjb2RlIjoiJSUtXG5mbG93Y2hhcnQgVERcbnN1YmdyYXBoIERldmVsb3BtZW50IFdvcmtmbG93XG5BW0VMRiBCaW5hcnkvQXNzZW1ibHldLS0-Qltwb2xrYXRvb2xdXG5CLS0-Q1tQb2xrYVZNIFByb2dyYW0gQmxvYl1cbkRbYmVuY2h0b29sXVxuRVtzcGVjdG9vbF1cbkZbXCJwb2xrYXRvb2wgKGRpc2Fzc2VtYmxlKVwiXVxuR1tQZXJmb3JtYW5jZSBNZXRyaWNzXVxuSFtUZXN0IFZhbGlkYXRpb25dXG5JW0h1bWFuLXJlYWRhYmxlIEFzc2VtYmx5XVxuZW5kXG5DLS0-RFxuQy0tPkVcbkMtLT5GXG5ELS0-R1xuRS0tPkhcbkYtLT5JXG4lJS0iLCJtZXJtYWlkIjpudWxsfQ" /></p>
+
+<h2 id="polkatool">polkatool</h2>
+
+<p><code class="language-plaintext highlighter-rouge">polkatool</code> is a versatile command-line utility for working with PolkaVM program blobs. It serves as a bridge between different program representations, allowing developers to convert ELF binaries to PolkaVM blobs, disassemble blobs into human-readable assembly, assemble text into blobs, and analyze blob statistics.</p>
+
+<h3 id="commands">Commands</h3>
+
+<p><code class="language-plaintext highlighter-rouge">polkatool</code> supports the following subcommands:</p>
+
+<table>
+  <thead>
+    <tr>
+      <th>Command</th>
+      <th>Description</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">link</code></td>
+      <td>Links a given ELF file into a <code class="language-plaintext highlighter-rouge">.polkavm</code> program blob</td>
+    </tr>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">disassemble</code></td>
+      <td>Disassembles a <code class="language-plaintext highlighter-rouge">.polkavm</code> blob into human-readable assembly</td>
+    </tr>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">assemble</code></td>
+      <td>Assembles a <code class="language-plaintext highlighter-rouge">.polkavm</code> blob from human-readable assembly</td>
+    </tr>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">stats</code></td>
+      <td>Calculates various statistics for given program blobs</td>
+    </tr>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">get-target-json-path</code></td>
+      <td>Writes a path to a JSON target file for rustc to stdout</td>
+    </tr>
+  </tbody>
+</table>
+
+<p><img class="mermaid" src="https://mermaid.ink/svg/eyJjb2RlIjoiJSUtXG5mbG93Y2hhcnQgVERcbnN1YmdyYXBoIHBvbGthdG9vbCBDb21tYW5kc1xuQVtFTEYgQmluYXJ5XS0tPkJbbGlua11cbkItLT5DW1BvbGthVk0gUHJvZ3JhbSBCbG9iXVxuRFtBc3NlbWJseSBTb3VyY2VdLS0-RVthc3NlbWJsZV1cbkUtLT5DXG5DLS0-Rltpc2Fzc2VtYmxlXVxuRi0tPkdbSHVtYW4tcmVhZGFibGUgQXNzZW1ibHldXG5DLS0-SFtzdGF0c11cbkgtLT5JW0luc3RydWN0aW9uIFN0YXRpc3RpY3NdXG5KW2dldC10YXJnZXQtanNvbi1wYXRoXS0tPktbVGFyZ2V0IEpTT04gUGF0aF1cbmVuZFxuJSUtIiwibWVybWFpZCI6bnVsbH0" /></p>
+
+<h3 id="link-command">Link Command</h3>
+
+<p>The <code class="language-plaintext highlighter-rouge">link</code> command converts an ELF binary into a PolkaVM program blob. It offers several options to control the linking process:</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>polkatool link [OPTIONS] &lt;input&gt; -o &lt;output&gt;
+
+</code></pre></div></div>
+
+<p>Options:</p>
+
+<ul>
+  <li><code class="language-plaintext highlighter-rouge">-o, --output &lt;PATH&gt;</code>: The output file path (required)</li>
+  <li><code class="language-plaintext highlighter-rouge">-s, --strip</code>: Remove debug information</li>
+  <li><code class="language-plaintext highlighter-rouge">--disable-optimizations</code>: Disable optimizations</li>
+  <li><code class="language-plaintext highlighter-rouge">--run-only-if-newer</code>: Only run if the output doesn’t exist or the input is newer</li>
+  <li><code class="language-plaintext highlighter-rouge">--min-stack-size &lt;SIZE&gt;</code>: Set the minimum stack size</li>
+</ul>
+
+<p>Under the hood, the link command uses <code class="language-plaintext highlighter-rouge">polkavm_linker::program_from_elf()</code> to perform the conversion.</p>
+
+<p>Sources: <a href="https://github.com/paritytech/polkavm/blob/910adbda/tools/polkatool/src/main.rs#L137-L181">tools/polkatool/src/main.rs137-181</a></p>
+
+<h3 id="disassemble-command">Disassemble Command</h3>
+
+<p>The <code class="language-plaintext highlighter-rouge">disassemble</code> command converts a PolkaVM program blob into human-readable assembly:</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>polkatool disassemble [OPTIONS] &lt;input&gt; [-o &lt;output&gt;]
+
+</code></pre></div></div>
+
+<p>Options:</p>
+
+<ul>
+  <li><code class="language-plaintext highlighter-rouge">-o, --output &lt;PATH&gt;</code>: The output file path (optional, defaults to stdout)</li>
+  <li><code class="language-plaintext highlighter-rouge">-f, --format &lt;FORMAT&gt;</code>: Disassembly format (Guest, GuestAndNative, Native, DiffFriendly)</li>
+  <li><code class="language-plaintext highlighter-rouge">--display-gas</code>: Show gas cost information</li>
+  <li><code class="language-plaintext highlighter-rouge">--show-raw-bytes</code>: Show raw instruction bytes</li>
+</ul>
+
+<p>The disassembler can display code in different formats, including guest assembly, native machine code, or a combination of both.</p>
+
+<p>Sources: <a href="https://github.com/paritytech/polkavm/blob/910adbda/tools/polkatool/src/main.rs#L232-L265">tools/polkatool/src/main.rs232-265</a> <a href="https://github.com/paritytech/polkavm/blob/910adbda/crates/polkavm-disassembler/src/lib.rs#L5-L11">crates/polkavm-disassembler/src/lib.rs5-11</a></p>
+
+<h3 id="assemble-command">Assemble Command</h3>
+
+<p>The <code class="language-plaintext highlighter-rouge">assemble</code> command creates a PolkaVM program blob from human-readable assembly:</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>polkatool assemble &lt;input&gt; -o &lt;output&gt;
+
+</code></pre></div></div>
+
+<p>Options:</p>
+
+<ul>
+  <li><code class="language-plaintext highlighter-rouge">-o, --output &lt;PATH&gt;</code>: The output file path (required)</li>
+</ul>
+
+<p>The assembler takes a text file with PolkaVM assembly instructions and converts it into a binary program blob.</p>
+
+<p>Sources: <a href="https://github.com/paritytech/polkavm/blob/910adbda/tools/polkatool/src/main.rs#L267-L286">tools/polkatool/src/main.rs267-286</a> <a href="https://github.com/paritytech/polkavm/blob/910adbda/crates/polkavm-common/src/assembler.rs#L166-L938">crates/polkavm-common/src/assembler.rs166-938</a></p>
+
+<h3 id="stats-command">Stats Command</h3>
+
+<p>The <code class="language-plaintext highlighter-rouge">stats</code> command analyzes one or more program blobs and provides statistics about instruction usage:</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>polkatool stats &lt;inputs&gt;...
+
+</code></pre></div></div>
+
+<p>This command counts the occurrences of each instruction type and displays a sorted list of instructions by frequency.</p>
+
+<p>Sources: <a href="https://github.com/paritytech/polkavm/blob/910adbda/tools/polkatool/src/main.rs#L201-L230">tools/polkatool/src/main.rs201-230</a></p>
+
+<h2 id="benchtool">benchtool</h2>
+
+<p><code class="language-plaintext highlighter-rouge">benchtool</code> is a comprehensive benchmarking utility for comparing the performance of PolkaVM against other virtual machines. It supports various benchmarking methodologies and can generate detailed performance metrics.</p>
+
+<h3 id="benchmark-types">Benchmark Types</h3>
+
+<p><code class="language-plaintext highlighter-rouge">benchtool</code> supports several types of benchmarks:</p>
+
+<table>
+  <thead>
+    <tr>
+      <th>Type</th>
+      <th>Description</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">runtime</code></td>
+      <td>Measures execution performance of a program (hot path)</td>
+    </tr>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">compilation</code></td>
+      <td>Measures the time needed to compile a program</td>
+    </tr>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">oneshot</code></td>
+      <td>Measures the end-to-end performance (compilation + execution)</td>
+    </tr>
+  </tbody>
+</table>
+
+<h3 id="backends">Backends</h3>
+
+<p><code class="language-plaintext highlighter-rouge">benchtool</code> can benchmark PolkaVM against multiple virtual machine implementations:</p>
+
+<p><img class="mermaid" src="https://mermaid.ink/svg/eyJjb2RlIjoiJSUtXG5mbG93Y2hhcnQgVERcbnN1YmdyYXBoIGJlbmNodG9vbCBCYWNrZW5kc1xuQVtCYWNrZW5kS2luZF0tLT5CW1BvbGthVk0gVmFyaWFudHNdXG5BLS0-Q1tXZWJBc3NlbWJseSBFbmdpbmVzXVxuQS0tPkRbT3RoZXIgVk1zXVxuQi0tPkVbUG9sa2FWTV9Db21waWxlcjMyX05vR2FzXVxuQi0tPkZbUG9sa2FWTV9Db21waWxlcjMyX0FzeW5jR2FzXVxuQi0tPkdbUG9sa2FWTV9Db21waWxlcjMyX1N5bmNHYXNdXG5CLS0-SFtQb2xrYVZNX0NvbXBpbGVyNjRfTm9HYXNdXG5CLS0-SVtQb2xrYVZNX0NvbXBpbGVyNjRfQXN5bmNHYXNdXG5CLS0-SltQb2xrYVZNX0NvbXBpbGVyNjRfU3luY0dhc11cbkItLT5LW1BvbGthVk1fSW50ZXJwcmV0ZXIzMl1cbkItLT5MW1BvbGthVk1fSW50ZXJwcmV0ZXI2NF1cbkMtLT5NW1dhc210aW1lX0NyYW5lbGlmXVxuQy0tPk5bV2FzbWVyXVxuQy0tPk9bV2FaZXJvXVxuQy0tPlBbUHZmRXhlY3V0b3JdXG5DLS0-UVtXYXNtM11cbkMtLT5SW1dhc21pXVxuRC0tPlNbQ2tidm1dXG5ELS0-VFtTb2xhbmFSYnBmXVxuRC0tPlVbTmF0aXZlXVxuZW5kXG4lJS0iLCJtZXJtYWlkIjpudWxsfQ" /></p>
+
+<h3 id="commands-1">Commands</h3>
+
+<p><code class="language-plaintext highlighter-rouge">benchtool</code> provides several subcommands:</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>benchtool &lt;SUBCOMMAND&gt;
+
+</code></pre></div></div>
+
+<p>Subcommands:</p>
+
+<ul>
+  <li><code class="language-plaintext highlighter-rouge">criterion</code>: Runs benchmarks using the Criterion framework</li>
+  <li><code class="language-plaintext highlighter-rouge">benchmark</code>: Runs benchmarks directly</li>
+  <li><code class="language-plaintext highlighter-rouge">perf</code>: Runs the Linux <code class="language-plaintext highlighter-rouge">perf</code> tool for profiling a specific benchmark</li>
+  <li><code class="language-plaintext highlighter-rouge">bench-memset</code>: Benchmarks PolkaVM’s memset implementation</li>
+</ul>
+
+<h3 id="benchmark-command">Benchmark Command</h3>
+
+<p>The <code class="language-plaintext highlighter-rouge">benchmark</code> command runs benchmarks and reports performance metrics:</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>benchtool benchmark [OPTIONS] [filter]
+
+</code></pre></div></div>
+
+<p>Options:</p>
+
+<ul>
+  <li><code class="language-plaintext highlighter-rouge">-i, --iteration-limit &lt;N&gt;</code>: Number of iterations to run</li>
+  <li><code class="language-plaintext highlighter-rouge">--forever</code>: Run benchmarks continuously</li>
+  <li><code class="language-plaintext highlighter-rouge">--aslr</code>: Run with Address Space Layout Randomization enabled</li>
+</ul>
+
+<p>Sources: <a href="https://github.com/paritytech/polkavm/blob/910adbda/tools/benchtool/src/main.rs#L408-L632">tools/benchtool/src/main.rs408-632</a></p>
+
+<h3 id="perf-command">Perf Command</h3>
+
+<p>The <code class="language-plaintext highlighter-rouge">perf</code> command (Linux only) runs the Linux <code class="language-plaintext highlighter-rouge">perf</code> tool to profile a benchmark:</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>benchtool perf [OPTIONS] &lt;command&gt; [perf_args]...
+
+</code></pre></div></div>
+
+<p>Options:</p>
+
+<ul>
+  <li><code class="language-plaintext highlighter-rouge">-b, --benchmark &lt;NAME&gt;</code>: The benchmark to run</li>
+  <li><code class="language-plaintext highlighter-rouge">-t, --time-limit &lt;SECONDS&gt;</code>: The time limit for profiling</li>
+  <li><code class="language-plaintext highlighter-rouge">-i, --iteration-limit &lt;N&gt;</code>: Number of iterations to run</li>
+</ul>
+
+<p>This command is useful for in-depth performance analysis and identifying hotspots in the code.</p>
+
+<p>Sources: <a href="https://github.com/paritytech/polkavm/blob/910adbda/tools/benchtool/src/main.rs#L634-L723">tools/benchtool/src/main.rs634-723</a></p>
+
+<h3 id="backend-architecture">Backend Architecture</h3>
+
+<p><code class="language-plaintext highlighter-rouge">benchtool</code> uses a trait-based architecture to support multiple VM backends:</p>
+
+<p><img class="mermaid" src="https://mermaid.ink/svg/eyJjb2RlIjoiJSUtXG5jbGFzc0RpYWdyYW1cbmNsYXNzIEJhY2tlbmR7XG48PHRyYWl0Pj5cbituYW1lKCktPnN0clxuK2NyZWF0ZShhcmdzOiBDcmVhdGVBcmdzKS0-RW5naW5lXG4rbG9hZChwYXRoOiBQYXRoKS0-QmxvYlxuK2NvbXBpbGUoZW5naW5lOiBFbmdpbmUsIGJsb2I6IEJsb2IpLT5Nb2R1bGVcbitzcGF3bihlbmdpbmU6IEVuZ2luZSwgbW9kdWxlOiBNb2R1bGUpLT5JbnN0YW5jZVxuK2luaXRpYWxpemUoaW5zdGFuY2U6IEluc3RhbmNlKVxuK3J1bihpbnN0YW5jZTogSW5zdGFuY2UpXG4rcGlkKGluc3RhbmNlOiBJbnN0YW5jZSktPk9wdGlvbjx1MzI-XG4raXNfc2xvdygpLT5ib29sXG4raXNfY29tcGlsZWQoKS0-Ym9vbFxufVxuY2xhc3MgQmFja2VuZEtpbmR7XG48PGVudW0-PlxuK1BvbGthVk1fQ29tcGlsZXIzMl9Ob0dhc1xuK1BvbGthVk1fQ29tcGlsZXIzMl9Bc3luY0dhc1xuK1BvbGthVk1fQ29tcGlsZXIzMl9TeW5jR2FzXG4rUG9sa2FWTV9Db21waWxlcjY0X05vR2FzXG4rUG9sa2FWTV9Db21waWxlcjY0X0FzeW5jR2FzXG4rUG9sa2FWTV9Db21waWxlcjY0X1N5bmNHYXNcbitQb2xrYVZNX0ludGVycHJldGVyMzJcbitQb2xrYVZNX0ludGVycHJldGVyNjRcbitXYXNtdGltZV9DcmFuZWxpZnRcbitXYXNtZXJcbisuLi5cbn1cbkJhY2tlbmQgPHwuLiBCYWNrZW5kS2luZFxuJSUtIiwibWVybWFpZCI6bnVsbH0" /></p>
+
+<p>For each backend, <code class="language-plaintext highlighter-rouge">benchtool</code> implements a consistent interface that allows it to create an engine, load a program, compile it, spawn an instance, and execute it. This design makes it easy to add new backends and ensures fair comparisons between different VMs.</p>
+
+<p>Sources: <a href="https://github.com/paritytech/polkavm/blob/910adbda/tools/benchtool/src/backend.rs#L14-L29">tools/benchtool/src/backend.rs14-29</a> <a href="https://github.com/paritytech/polkavm/blob/910adbda/tools/benchtool/src/backend.rs#L233-L299">tools/benchtool/src/backend.rs233-299</a></p>
+
+<h2 id="spectool">spectool</h2>
+
+<p><code class="language-plaintext highlighter-rouge">spectool</code> is a utility for generating and executing test cases for PolkaVM. It helps validate the correctness of the VM by creating test programs and verifying their execution results.</p>
+
+<h3 id="commands-2">Commands</h3>
+
+<p><code class="language-plaintext highlighter-rouge">spectool</code> supports two main subcommands:</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>spectool &lt;SUBCOMMAND&gt;
+
+</code></pre></div></div>
+
+<p>Subcommands:</p>
+
+<ul>
+  <li><code class="language-plaintext highlighter-rouge">generate</code>: Generates test cases</li>
+  <li><code class="language-plaintext highlighter-rouge">test</code>: Runs test cases</li>
+</ul>
+
+<h3 id="generate-command">Generate Command</h3>
+
+<p>The <code class="language-plaintext highlighter-rouge">generate</code> command creates test cases based on either RISC-V test programs or custom assembly files:</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>spectool generate
+
+</code></pre></div></div>
+
+<p>This command:</p>
+
+<ol>
+  <li>Locates test source files in the <code class="language-plaintext highlighter-rouge">spec/src</code> directory</li>
+  <li>Assembles each test program into a PolkaVM blob</li>
+  <li>Executes the program to determine its expected behavior</li>
+  <li>Generates JSON test case files in the <code class="language-plaintext highlighter-rouge">spec/output/programs</code> directory</li>
+  <li>Creates a human-readable index of test cases in <code class="language-plaintext highlighter-rouge">spec/output/TESTCASES.md</code></li>
+</ol>
+
+<p>Sources: <a href="https://github.com/paritytech/polkavm/blob/910adbda/tools/spectool/src/main.rs#L137-L608">tools/spectool/src/main.rs137-608</a></p>
+
+<h3 id="test-case-format">Test Case Format</h3>
+
+<p>Test cases follow a well-defined schema, described in both JSON Schema and ASN.1 formats:</p>
+
+<p><img class="mermaid" src="https://mermaid.ink/svg/eyJjb2RlIjoiJSUtXG5jbGFzc0RpYWdyYW1cbmNsYXNzIFRlc3RjYXNle1xuK25hbWU6IHN0cmluZ1xuK2luaXRpYWxfcmVnczogdTY0WzEzXVxuK2luaXRpYWxfcGM6IHUzMlxuK2luaXRpYWxfcGFnZV9tYXA6IFBhZ2VbXVxuK2luaXRpYWxfbWVtb3J5OiBNZW1vcnlDaHVua1tdXG4raW5pdGlhbF9nYXM6IGk2NFxuK3Byb2dyYW06IHU4W11cbitleHBlY3RlZF9zdGF0dXM6IHN0cmluZ1xuK2V4cGVjdGVkX3JlZ3M6IHU2NFtdXG4rZXhwZWN0ZWRfcGM6IHUzMlxuK2V4cGVjdGVkX21lbW9yeTogTWVtb3J5Q2h1bmtbXVxuK2V4cGVjdGVkX2dhczogaTY0XG4rZXhwZWN0ZWRfcGFnZV9mYXVsdF9hZGRyZXNzPzogdTMyXG59XG5jbGFzcyBQYWdle1xuK2FkZHJlc3M6IHUzMlxuK2xlbmd0aDogdTMyXG4raXNfd3JpdGFibGU6IGJvb2xlYW5cbn1cbiUlLVxuY2xhc3MgTWVtb3J5Q2h1bmsge1xuK2FkZHJlc3M6IHUzMlxuK2NvbnRlbnRzOiB1OFtdXG59XG4lJS1cblRlc3RjYXNlIC0tPiBQYWdlOmNvbnRhaW5zXG5UZXN0Y2FzZSAtLT4gTWVtb3J5Q2h1bms6Y29udGFpbnNcbiUlLSIsIm1lcm1haWQiOm51bGx9" /></p>
+
+<p>Each test case specifies:</p>
+
+<ul>
+  <li>Initial state (registers, program counter, memory, gas)</li>
+  <li>Program to execute</li>
+  <li>Expected final state</li>
+  <li>Expected termination status</li>
+</ul>
+
+<p>The test case format is designed to be comprehensive and enable thorough testing of all VM features.</p>
+
+<p>Sources: <a href="https://github.com/paritytech/polkavm/blob/910adbda/tools/spectool/spec/schema.json#L1-L98">tools/spectool/spec/schema.json1-98</a> <a href="https://github.com/paritytech/polkavm/blob/910adbda/tools/spectool/spec/schema.asn#L1-L87">tools/spectool/spec/schema.asn1-87</a></p>
+
+<h2 id="integration-of-tools-in-development-workflow">Integration of Tools in Development Workflow</h2>
+
+<p>These tools form a comprehensive ecosystem for working with PolkaVM programs. A typical development workflow might look like:</p>
+
+<p><img class="mermaid" src="https://mermaid.ink/svg/eyJjb2RlIjoiJSUtXG5mbG93Y2hhcnQgVERcbkFbXCJTb3VyY2UgQ29kZSAoUnVzdC9DKVwiXSAtLT58Q29tcGlsZSB3aXRoIFJJU0MtViB0YXJnZXR8IEJbUklTQy1WIEVMRiBCaW5hcnldXG5CIC0tPnxwb2xrYXRvb2wgbGlua3xDW1BvbGthVk0gUHJvZ3JhbSBCbG9iXVxuQyAtLT58YmVuY2h0b29sfCBEW1BlcmZvcm1hbmNlIE1ldHJpY3NdXG5DIC0tPnxwb2xrYXRvb2wgZGlzYXNzZW1ibGV8IEVbSHVtYW4tcmVhZGFibGUgQXNzZW1ibHldXG5DIC0tPnxzcGVjdG9vbHwgRltUZXN0IENvdmVyYWdlICYgVmFsaWRhdGlvbl1cbkUgLS0-R1tNYW51YWwgQW5hbHlzaXMgJiBEZWJ1Z2dpbmddXG5HLS0-QVxuRC0tPnxPcHRpbWl6YXRpb258QVxuRi0tPnxCdWcgRml4ZXN8QVxuJSUtIiwibWVybWFpZCI6bnVsbH0" /></p>
+
+<h3 id="example-debugging-a-polkavm-program">Example: Debugging a PolkaVM Program</h3>
+
+<ol>
+  <li>Compile a program to RISC-V ELF</li>
+  <li>Use <code class="language-plaintext highlighter-rouge">polkatool link</code> to create a PolkaVM blob</li>
+  <li>Use <code class="language-plaintext highlighter-rouge">polkatool disassemble</code> to analyze the program</li>
+  <li>Identify and fix issues in the source code</li>
+  <li>Repeat until the program works correctly</li>
+</ol>
+
+<h3 id="example-benchmarking-performance">Example: Benchmarking Performance</h3>
+
+<ol>
+  <li>Compile a program to PolkaVM, WebAssembly, and native formats</li>
+  <li>Use <code class="language-plaintext highlighter-rouge">benchtool</code> to measure performance across different VMs</li>
+  <li>Analyze results to identify performance bottlenecks</li>
+  <li>Optimize the code and repeat</li>
+</ol>
+
+<h3 id="example-validating-vm-behavior">Example: Validating VM Behavior</h3>
+
+<ol>
+  <li>Create test cases using custom assembly or RISC-V test programs</li>
+  <li>Use <code class="language-plaintext highlighter-rouge">spectool generate</code> to create formal test cases</li>
+  <li>Use the test cases to verify VM correctness across implementations</li>
+</ol>
+
+<h2 id="summary">Summary</h2>
+
+<p>The PolkaVM tools and utilities provide a comprehensive set of capabilities for working with PolkaVM programs:</p>
+
+<table>
+  <thead>
+    <tr>
+      <th>Tool</th>
+      <th>Primary Purpose</th>
+      <th>Key Features</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">polkatool</code></td>
+      <td>Program manipulation</td>
+      <td>Linking, disassembly, assembly, analysis</td>
+    </tr>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">benchtool</code></td>
+      <td>Performance testing</td>
+      <td>Cross-VM benchmarking, profiling, comparison</td>
+    </tr>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">spectool</code></td>
+      <td>Correctness testing</td>
+      <td>Test case generation, execution validation</td>
+    </tr>
+  </tbody>
+</table>
+
+<p>Together, these tools enable developers to build, analyze, optimize, and validate PolkaVM applications effectively.</p>
+
+<p>Sources: <a href="https://github.com/paritytech/polkavm/blob/910adbda/tools/polkatool/src/main.rs#L1-L288">tools/polkatool/src/main.rs1-288</a> <a href="https://github.com/paritytech/polkavm/blob/910adbda/tools/benchtool/src/main.rs#L1-L767">tools/benchtool/src/main.rs1-767</a> <a href="https://github.com/paritytech/polkavm/blob/910adbda/tools/spectool/src/main.rs#L1-L613">tools/spectool/src/main.rs1-613</a></p>]]></content><author><name>Joe</name></author><category term="Technics" /><category term="PolkaVM" /><category term="Tools" /><summary type="html"><![CDATA[This article documents the command-line tools and utilities provided by the PolkaVM project to help developers work with PolkaVM programs. These tools facilitate the compilation, disassembly, analysis, benchmarking, and testing of PolkaVM applications.]]></summary></entry><entry><title type="html">From Raw Syscalls to Safe Sandboxes:The PolkaVM Integration Story 📖</title><link href="/technics/2025/05/27/System-Integration.html" rel="alternate" type="text/html" title="From Raw Syscalls to Safe Sandboxes:The PolkaVM Integration Story 📖" /><published>2025-05-27T00:00:00+00:00</published><updated>2025-05-27T00:00:00+00:00</updated><id>/technics/2025/05/27/System-Integration</id><content type="html" xml:base="/technics/2025/05/27/System-Integration.html"><![CDATA[<p>This article describes how PolkaVM integrates with host operating systems, focusing on sandboxing, isolation mechanisms, and system call interfaces. It covers the architecture of the sandboxing system, the communication between the host and sandbox processes, and platform-specific implementations.</p>
+
+<p>For information about how to execute guest programs within PolkaVM, see <a href="">Execution Flow</a>.</p>
+
+<h2 id="host-and-sandbox-process-architecture">Host and Sandbox Process Architecture</h2>
+
+<p>PolkaVM uses a multi-process architecture to provide strong isolation between guest code and the host system. This approach provides stronger security guarantees than in-process isolation techniques.</p>
+
+<p><img class="mermaid" src="https://mermaid.ink/svg/eyJjb2RlIjoiJSUtXG5mbG93Y2hhcnQgVERcbnN1YmdyYXBoIEhvc3QgUHJvY2Vzc1xuQVtFbmdpbmVdIC0tPkJbTW9kdWxlXVxuQiAtLT4gQ1tSYXdJbnN0YW5jZV1cbkRbU2FuZGJveCBHbG9iYWwgU3RhdGVdXG5lbmRcbiUlLVxuc3ViZ3JhcGggQ29tbXVuaWNhdGlvblxuRVtcInVzZXJmYXVsdGZkIChMaW51eClcIl1cbkZbU2hhcmVkIE1lbW9yeV1cbkdbRnV0ZXhlc11cbmVuZFxuSFtTYW5kYm94XVxuJSUtXG5zdWJncmFwaCBcIlNhbmRib3ggUHJvY2VzcyAoSXNvbGF0ZWQgRW52aXJvbm1lbnQpXCJcbklbWnlnb3RlIFByb2Nlc3NdXG5KW0d1ZXN0IFByb2dyYW1dXG5LW1NpZ25hbCBIYW5kbGVyc11cbmVuZFxuJSUtXG5zdWJncmFwaCBTZWN1cml0eSBCb3VuZGFyaWVcbkxbU2VjY29tcCBGaWx0ZXJzXVxuTVtMaW51eCBOYW1lc3BhY2VzXVxuZW5kXG4lJS1cbkMtLT5IXG5DPC0tPkVcbkM8LS0-RlxuQzwtLT5HXG4lJS1cbkgtLT5JXG5JPC0tPkVcbkk8LS0-RlxuSTwtLT5HXG5JLS0-TFxuSS0tPk1cbkktLT5KXG5LLS0-R1xuSi0tPktcbiUlLSIsIm1lcm1haWQiOm51bGx9" /></p>
+
+<p>Sources:</p>
+
+<ul>
+  <li><a href="https://github.com/paritytech/polkavm/blob/910adbda/crates/polkavm/src/sandbox/linux.rs#L36-L41">crates/polkavm/src/sandbox/linux.rs36-41</a></li>
+  <li><a href="https://github.com/paritytech/polkavm/blob/910adbda/crates/polkavm/src/sandbox/linux.rs#L96-L180">crates/polkavm/src/sandbox/linux.rs96-180</a></li>
+  <li><a href="https://github.com/paritytech/polkavm/blob/910adbda/crates/polkavm-zygote/src/main.rs#L274-L278">crates/polkavm-zygote/src/main.rs274-278</a></li>
+</ul>
+
+<h2 id="linux-specific-implementation">Linux-specific Implementation</h2>
+
+<p>PolkaVM provides a specialized Linux sandbox implementation that leverages various Linux-specific features to provide strong isolation and security guarantees.</p>
+
+<h3 id="zygote-process">Zygote Process</h3>
+
+<p>The zygote process is a pre-initialized template process that is forked to create new sandbox instances quickly. This approach is similar to what Android uses for launching applications.</p>
+
+<p><img class="mermaid" src="https://mermaid.ink/svg/eyJjb2RlIjoiJSUtXG5zZXF1ZW5jZURpYWdyYW1cbnBhcnRpY2lwYW50IEEgYXMgSG9zdCBQcm9ncmFtXG5wYXJ0aWNpcGFudCBCIGFzIEdsb2JhbFN0YXRlXG5wYXJ0aWNpcGFudCBDIGFzIFp5Z290ZSBQcm9jZXNzXG5wYXJ0aWNpcGFudCBEIGFzIFNhbmRib3ggUHJvY2Vzc1xucGFydGljaXBhbnQgRSBhcyBHdWVzdCBDb2RlXG5BLT4-QjogbmV3KGNvbmZpZylcbkItPj5COiBwcmVwYXJlX3p5Z290ZSgpXG5CLT4-QjogcHJlcGFyZV92bWN0eCgpXG5Ob3RlIG92ZXIgQjogQ3JlYXRlZCBtZW1mZCBjb250YWluaW5nIHp5Z290ZSBiaW5hcnlcbkEtPj5COiBzcGF3bl9zYW5kYm94KClcbkItPj5DOiBjbG9uZSgpIHdpdGggbmFtZXNwYWNlc1xuTm90ZSBvdmVyIEM6IFByb2Nlc3MgY3JlYXRlZCB3aXRoIGlzb2xhdGVkIG5hbWVzcGFjZXNcbkMtPj5DOiBjaGlsZF9tYWluKClcbkMtPj5DOiBpbml0aWFsaXplKClcbkMtPj5DOiBzZXR1cCBzaWduYWwgaGFuZGxlcnNcbkMtPj5DOiBzZXR1cCBtZW1vcnkgcHJvdGVjdGlvblxuQy0-PkM6IHNldHVwIHNlY2NvbXAgZmlsdGVyc1xuTm90ZSBvdmVyIEM6IE5vdyBpbml0aWFsaXplZCBhbmQgd2FpdGluZyBmb3IgY29tbWFuZHNcbkMtPj5EOiBleGVjdmVhdCh6eWdvdGVfYmluYXJ5KVxuTm90ZSBvdmVyIEQ6IEJlY29tZXMgZnVsbHkgaXNvbGF0ZWQgc2FuZGJveFxuJSUtXG5BLT4-RDogbG9hZF9tb2R1bGUoKVxuRC0-PkQ6IG1hcCBndWVzdCBjb2RlL21lbW9yeVxuQS0-PkQ6IHJ1bigpXG5ELT4-RTogZXhlY3V0ZVxuRS0tPj5EOiBpbnRlcnJ1cHQgKHRyYXAvZWNhbGwvcGFnZSBmYXVsdClcbkQtLT4-QTogbm90aWZ5IHZpYSBmdXRleFxuQS0-PkQ6IGhhbmRsZSBpbnRlcnJ1cHRcbiUlLSIsIm1lcm1haWQiOm51bGx9" /></p>
+
+<p>Sources:</p>
+
+<ul>
+  <li><a href="https://github.com/paritytech/polkavm/blob/910adbda/crates/polkavm/src/sandbox/linux.rs#L456-L458">crates/polkavm/src/sandbox/linux.rs456-458</a></li>
+  <li><a href="https://github.com/paritytech/polkavm/blob/910adbda/crates/polkavm/src/sandbox/linux.rs#L644-L672">crates/polkavm/src/sandbox/linux.rs644-672</a></li>
+  <li><a href="https://github.com/paritytech/polkavm/blob/910adbda/crates/polkavm-zygote/src/main.rs#L274-L278">crates/polkavm-zygote/src/main.rs274-278</a></li>
+</ul>
+
+<h3 id="sandbox-creation-process">Sandbox Creation Process</h3>
+
+<p>The Linux sandbox implementation uses a multi-step process to create a secure, isolated environment:</p>
+
+<ol>
+  <li><strong>Prepare Zygote</strong>: The host creates a memory file descriptor (memfd) containing the zygote binary</li>
+  <li><strong>Clone Process</strong>: A new process is created with isolated namespaces</li>
+  <li><strong>Initialize Child</strong>: The child process initializes its environment:
+    <ul>
+      <li>Sets up signal handlers</li>
+      <li>Maps shared memory regions</li>
+      <li>Prepares memory protection</li>
+      <li>Configures seccomp filters</li>
+    </ul>
+  </li>
+  <li><strong>Execute Zygote</strong>: The child process executes the zygote binary</li>
+  <li><strong>Load Module</strong>: The host loads a module into the sandbox</li>
+  <li><strong>Execute Code</strong>: The sandbox executes the guest code</li>
+</ol>
+
+<p>Sources:</p>
+
+<ul>
+  <li><a href="https://github.com/paritytech/polkavm/blob/910adbda/crates/polkavm/src/sandbox/linux.rs#L739-L895">crates/polkavm/src/sandbox/linux.rs739-895</a></li>
+  <li><a href="https://github.com/paritytech/polkavm/blob/910adbda/crates/polkavm-zygote/src/main.rs#L450-L710">crates/polkavm-zygote/src/main.rs450-710</a></li>
+</ul>
+
+<h3 id="linux-security-mechanisms">Linux Security Mechanisms</h3>
+
+<p>PolkaVM leverages several Linux-specific security mechanisms:</p>
+
+<h4 id="namespaces-isolation">Namespaces Isolation</h4>
+
+<p><img class="mermaid" src="https://mermaid.ink/svg/eyJjb2RlIjoiJSUtXG5mbG93Y2hhcnQgVERcbkFbTGludXggU2FuZGJveF1cbnN1YmdyYXBoIENvbW11bmljYXRpb25cbkJbQ0xPTkVfTkVXVVNFUiBJc29sYXRlcyB1c2VyL2dyb3VwIElEc11cbkNbQ0xPTkVfTkVXTlMgSXNvbGF0ZXMgZmlsZXN5c3RlbXNdXG5EW0NMT05FX05FV1VUUyBJc29sYXRlcyBob3N0bmFtZV1cbkVbQ0xPTkVfTkVXSVBDIElzb2xhdGVzIElQQ11cbkZbQ0xPTkVfTkVXTkVUIElzb2xhdGVzIG5ldHdvcmtpbmddXG5HW0NMT05FX05FV1BJRCBJc29sYXRlcyBwcm9jZXNzIElEc11cbkhbQ0xPTkVfTkVXQ0dST1VQIElzb2xhdGVzIGNncm91cHNdXG5lbmRcbkEtLT5CXG5BLS0-Q1xuQS0tPkRcbkEtLT5FXG5BLS0-RlxuQS0tPkdcbkEtLT5IXG4lJS0iLCJtZXJtYWlkIjpudWxsfQ" /></p>
+
+<p>Sources:</p>
+
+<ul>
+  <li><a href="https://github.com/paritytech/polkavm/blob/910adbda/crates/polkavm/src/sandbox/linux.rs#L47-L53">crates/polkavm/src/sandbox/linux.rs47-53</a></li>
+  <li><a href="https://github.com/paritytech/polkavm/blob/910adbda/crates/polkavm/src/sandbox/linux.rs#L151-L171">crates/polkavm/src/sandbox/linux.rs151-171</a></li>
+</ul>
+
+<h4 id="resource-limits">Resource Limits</h4>
+
+<p>The sandbox implements tight resource limits:</p>
+
+<table>
+  <thead>
+    <tr>
+      <th>Resource</th>
+      <th>Limit</th>
+      <th>Purpose</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>RLIMIT_DATA</td>
+      <td>8 GB</td>
+      <td>Maximum data segment size</td>
+    </tr>
+    <tr>
+      <td>RLIMIT_STACK</td>
+      <td>16 KB</td>
+      <td>Maximum stack size</td>
+    </tr>
+    <tr>
+      <td>RLIMIT_NPROC</td>
+      <td>1</td>
+      <td>Prevent process creation</td>
+    </tr>
+    <tr>
+      <td>RLIMIT_FSIZE</td>
+      <td>0</td>
+      <td>Prevent file creation</td>
+    </tr>
+    <tr>
+      <td>RLIMIT_LOCKS</td>
+      <td>0</td>
+      <td>Prevent file locks</td>
+    </tr>
+    <tr>
+      <td>RLIMIT_MEMLOCK</td>
+      <td>0</td>
+      <td>Prevent memory locking</td>
+    </tr>
+    <tr>
+      <td>RLIMIT_MSGQUEUE</td>
+      <td>0</td>
+      <td>Prevent message queue usage</td>
+    </tr>
+  </tbody>
+</table>
+
+<p>Sources:</p>
+
+<ul>
+  <li><a href="https://github.com/paritytech/polkavm/blob/910adbda/crates/polkavm/src/sandbox/linux.rs#L857-L878">crates/polkavm/src/sandbox/linux.rs857-878</a></li>
+</ul>
+
+<h4 id="seccomp-filtering">Seccomp Filtering</h4>
+
+<p>The sandbox uses Linux’s secure computing (seccomp) mode to restrict which system calls can be executed by the sandboxed process, providing an additional layer of security.</p>
+
+<p>Sources:</p>
+
+<ul>
+  <li><a href="https://github.com/paritytech/polkavm/blob/910adbda/crates/polkavm-zygote/src/main.rs#L1090-L1120">crates/polkavm-zygote/src/main.rs1090-1120</a></li>
+</ul>
+
+<h3 id="memory-management">Memory Management</h3>
+
+<p>Memory management is a critical aspect of system integration in PolkaVM:</p>
+
+<p><img class="mermaid" src="https://mermaid.ink/svg/eyJjb2RlIjoiJSUtXG5mbG93Y2hhcnQgVERcbnN1YmdyYXBoIE1lbW9yeSBBcmNoaXRlY3R1cmVcbkFbVk0gTWVtb3J5IFNwYWNlXVxuQltTaGFyZWQgTWVtb3J5IFZNX0FERFJfU0hBUkVEX01FTU9SWV1cbkNbQ29kZSBTZWN0aW9uIFZNX0FERFJfTkFUSVZFX0NPREVdXG5EW0p1bXAgVGFibGUgVk1fQUREUl9KVU1QX1RBQkxFXVxuRVtTaWduYWwgU3RhY2sgVk1fQUREUl9TSUdTVEFDS11cbkZbVk0gQ29udGV4dCBWTV9BRERSX1ZNQ1RYXVxuZW5kXG5zdWJncmFwaCBEeW5hbWljIFBhZ2luZ1xuR1t1c2VyZmF1bHRmZF1cbkhbUGFnZSBGYXVsdCBIYW5kbGVyXVxuSVtPbi1kZW1hbmQgUGFnZSBBbGxvY2F0aW9uXVxuZW5kXG5zdWJncmFwaCBNZW1vcnkgUHJvdGVjdGlvblxuSltSZWFkLW9ubHkgTWVtb3J5XVxuS1tSZWFkLXdyaXRlIE1lbW9yeV1cbkxbRXhlY3V0YWJsZSBNZW1vcnldXG5NW0d1YXJkIFBhZ2VzXVxuZW5kXG5BLS0-QlxuQS0tPkNcbkEtLT5EXG5BLS0-RVxuQS0tPkZcbiUlLVxuQS0tPkdcbkctLT5IXG5ILS0-SVxuJSUtXG5BLS0-SlxuQS0tPktcbkEtLT5MXG5BLS0-TVxuJSUtIiwibWVybWFpZCI6bnVsbH0" /></p>
+
+<p>Sources:</p>
+
+<ul>
+  <li><a href="https://github.com/paritytech/polkavm/blob/910adbda/crates/polkavm-common/src/zygote.rs#L86-L137">crates/polkavm-common/src/zygote.rs86-137</a></li>
+  <li><a href="https://github.com/paritytech/polkavm/blob/910adbda/crates/polkavm/src/sandbox/linux.rs#L97-L127">crates/polkavm/src/sandbox/linux.rs97-127</a></li>
+  <li><a href="https://github.com/paritytech/polkavm/blob/910adbda/crates/polkavm-zygote/src/main.rs#L542-L592">crates/polkavm-zygote/src/main.rs542-592</a></li>
+</ul>
+
+<h3 id="communication-channels">Communication Channels</h3>
+
+<p>PolkaVM uses several mechanisms for communication between the host and sandbox processes:</p>
+
+<ol>
+  <li><strong>Shared Memory</strong>: Used to transfer data and state between processes</li>
+  <li><strong>Futexes</strong>: Used for synchronization and notification</li>
+  <li><strong>userfaultfd</strong>: Used for dynamic paging and memory management</li>
+  <li><strong>File Descriptors</strong>: Used for various I/O operations</li>
+</ol>
+
+<p>Futexes (Fast User-space Mutexes) are particularly important for signaling between the host and sandbox:</p>
+
+<table>
+  <thead>
+    <tr>
+      <th>Futex State</th>
+      <th>Meaning</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>VMCTX_FUTEX_IDLE</td>
+      <td>Sandbox is idle, waiting for commands</td>
+    </tr>
+    <tr>
+      <td>VMCTX_FUTEX_BUSY</td>
+      <td>Sandbox is busy executing code</td>
+    </tr>
+    <tr>
+      <td>VMCTX_FUTEX_GUEST_TRAP</td>
+      <td>Guest code triggered a trap</td>
+    </tr>
+    <tr>
+      <td>VMCTX_FUTEX_GUEST_ECALLI</td>
+      <td>Guest code made a host call</td>
+    </tr>
+    <tr>
+      <td>VMCTX_FUTEX_GUEST_NOT_ENOUGH_GAS</td>
+      <td>Guest code ran out of gas</td>
+    </tr>
+    <tr>
+      <td>VMCTX_FUTEX_GUEST_PAGEFAULT</td>
+      <td>Guest code triggered a page fault</td>
+    </tr>
+    <tr>
+      <td>VMCTX_FUTEX_GUEST_SIGNAL</td>
+      <td>Guest code received a signal</td>
+    </tr>
+  </tbody>
+</table>
+
+<p>Sources:</p>
+
+<ul>
+  <li><a href="https://github.com/paritytech/polkavm/blob/910adbda/crates/polkavm-common/src/zygote.rs#L10-L15">crates/polkavm-common/src/zygote.rs10-15</a></li>
+  <li><a href="https://github.com/paritytech/polkavm/blob/910adbda/crates/polkavm/src/sandbox/linux.rs#L1072-L1082">crates/polkavm/src/sandbox/linux.rs1072-1082</a></li>
+  <li><a href="https://github.com/paritytech/polkavm/blob/910adbda/crates/polkavm-zygote/src/main.rs#L555-L556">crates/polkavm-zygote/src/main.rs555-556</a></li>
+</ul>
+
+<h2 id="generic-sandbox-implementation">Generic Sandbox Implementation</h2>
+
+<p>PolkaVM also provides a generic sandbox implementation that works across different platforms, though with fewer security guarantees than the Linux-specific implementation.</p>
+
+<p><img class="mermaid" src="https://mermaid.ink/svg/eyJjb2RlIjoiJSUtXG5mbG93Y2hhcnQgVERcbnN1YmdyYXBoIENyb3NzLVBsYXRmb3JtIEFic3RyYWN0aW9uXG5BW1NhbmRib3ggVHJhaXRdXG5CW1NhbmRib3hDb25maWcgVHJhaXRdXG5lbmRcbkNbTGludXggU2FuZGJveF1cbkRbR2VuZXJpYyBTYW5kYm94XVxuRVtMaW51eCBTYW5kYm94Q29uZmlnXVxuRltHZW5lcmljIFNhbmRib3hDb25maWddXG5zdWJncmFwaCBHZW5lcmljIEltcGxlbWVudGF0aW9uXG5HW1BPU0lYIEFQSXNdXG5IW1NpZ25hbCBIYW5kbGVyc11cbklbTWVtb3J5IFByb3RlY3Rpb25dXG5lbmRcbiUlLVxuQS0tPkNcbkEtLT5EXG4lJS1cbkItLT5FXG5CLS0-RlxuJSUtXG5ELS0-R1xuRC0tPkhcbkQtLT5JXG4lJS0iLCJtZXJtYWlkIjpudWxsfQ" /></p>
+
+<p>The generic sandbox implementation uses standard POSIX APIs for process management, signal handling, and memory protection. It provides a similar interface to the Linux sandbox but with platform-independent mechanisms.</p>
+
+<p>Sources:</p>
+
+<ul>
+  <li><a href="https://github.com/paritytech/polkavm/blob/910adbda/crates/polkavm/src/sandbox.rs#L65-L137">crates/polkavm/src/sandbox.rs65-137</a></li>
+  <li><a href="https://github.com/paritytech/polkavm/blob/910adbda/crates/polkavm/src/sandbox/generic.rs#L59-L139">crates/polkavm/src/sandbox/generic.rs59-139</a></li>
+</ul>
+
+<h2 id="io_uring-integration">IO_URING Integration</h2>
+
+<p>On Linux, PolkaVM integrates with io_uring for efficient asynchronous I/O operations:</p>
+
+<p><img class="mermaid" src="https://mermaid.ink/svg/eyJjb2RlIjoiJSUtXG5mbG93Y2hhcnQgVERcbnN1YmdyYXBoIElPX1VSSU5HIEludGVncmF0aW9uXG5BW0lvVXJpbmcgU3RydWN0dXJlXVxuQltpb191cmluZ19zZXR1cF1cbkNbaW9fdXJpbmdfZW50ZXJdXG5EW1N1Ym1pc3Npb24gUXVldWUgRW50cmllc11cbkVbQ29tcGxldGlvbiBRdWV1ZSBFbnRyaWVzXVxuZW5kXG4lJS1cbnN1YmdyYXBoIE9wZXJhdGlvbnNcbkZbQXN5bmNocm9ub3VzIEkvT11cbkdbVGltZW91dHNdXG5IW05ldHdvcmsgT3BlcmF0aW9uc11cbklbRmlsZSBPcGVyYXRpb25zXVxuZW5kXG4lJS1cbkEtLT5CXG5BLS0-Q1xuQS0tPkRcbkEtLT5FXG5BLS0-RlxuQS0tPkdcbkEtLT5IXG5BLS0-SVxuJSUtIiwibWVybWFpZCI6bnVsbH0" /></p>
+
+<p>The io_uring interface provides high-performance asynchronous I/O operations with minimal overhead. PolkaVM wraps this functionality in a safe Rust interface.</p>
+
+<p>Sources:</p>
+
+<ul>
+  <li><a href="https://github.com/paritytech/polkavm/blob/910adbda/crates/polkavm-linux-raw/src/io_uring.rs#L5-L23">crates/polkavm-linux-raw/src/io_uring.rs5-23</a></li>
+  <li><a href="https://github.com/paritytech/polkavm/blob/910adbda/crates/polkavm-linux-raw/src/io_uring.rs#L28-L93">crates/polkavm-linux-raw/src/io_uring.rs28-93</a></li>
+  <li><a href="https://github.com/paritytech/polkavm/blob/910adbda/crates/polkavm-linux-raw/src/lib.rs#L38-L38">crates/polkavm-linux-raw/src/lib.rs38</a></li>
+</ul>
+
+<h2 id="raw-system-call-interface">Raw System Call Interface</h2>
+
+<p>PolkaVM provides a raw system call interface for Linux, avoiding dependencies on libc for better control and portability:</p>
+
+<p><img class="mermaid" src="https://mermaid.ink/svg/eyJjb2RlIjoiJSUtXG5mbG93Y2hhcnQgVERcbnN1YmdyYXBoIExpbnV4IFJhdyBJbnRlcmZhY2VcbkFbUmF3IFN5c3RlbSBDYWxsc11cbkJbRXJyb3IgSGFuZGxpbmddXG5DW1N5c2NhbGwgTWFjcm9zXVxuZW5kXG5EW1wiUHJvY2VzcyBNYW5hZ2VtZW50KGNsb25lLCBmb3JrLCBleGVjKVwiXVxuRVtcIk1lbW9yeSBNYW5hZ2VtZW50KG1tYXAsIG11bm1hcCwgbXByb3RlY3QpXCJdXG5GW1wiRmlsZSBPcGVyYXRpb25zKG9wZW4sIHJlYWQsIHdyaXRlKVwiXVxuR1tcIlNpZ25hbCBIYW5kbGluZyhzaWdhY3Rpb24sIHNpZ25hbClcIl1cbkhbXCJTeW5jaHJvbml6YXRpb24oZnV0ZXgsIGlvX3VyaW5nKVwiXVxuSVtFcnJubyBWYWx1ZXNdXG5KW0Vycm9yIEZvcm1hdHRpbmddXG5LW1N5c2NhbGwgSW52b2NhdGlvbl1cbkxbUmVhZG9ubHkgU3lzY2FsbHNdXG4lJS1cbkEtLT5EXG5BLS0-RVxuQS0tPkZcbkEtLT5HXG5BLS0-SFxuQi0tPklcbkItLT5KXG5DLS0-S1xuQy0tPkxcbiUlLSIsIm1lcm1haWQiOm51bGx9" /></p>
+
+<p>This raw system call interface is used throughout the Linux sandbox implementation to interact directly with the kernel without relying on external libraries.</p>
+
+<p>Sources:</p>
+
+<ul>
+  <li><a href="https://github.com/paritytech/polkavm/blob/910adbda/crates/polkavm-linux-raw/src/lib.rs#L44-L611">crates/polkavm-linux-raw/src/lib.rs44-611</a></li>
+  <li><a href="https://github.com/paritytech/polkavm/blob/910adbda/crates/polkavm-linux-raw/src/syscall.rs">crates/polkavm-linux-raw/src/syscall.rs</a> (inferred from imports)</li>
+</ul>
+
+<h2 id="platform-support-matrix">Platform Support Matrix</h2>
+
+<p>While PolkaVM aims to be cross-platform, the level of support varies by platform:</p>
+
+<table>
+  <thead>
+    <tr>
+      <th>Feature</th>
+      <th>Linux</th>
+      <th>Other Platforms</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Full Sandboxing</td>
+      <td>✅ (with namespaces, seccomp)</td>
+      <td>⚠️ (limited isolation)</td>
+    </tr>
+    <tr>
+      <td>Dynamic Paging</td>
+      <td>✅ (with userfaultfd)</td>
+      <td>❌ (not available)</td>
+    </tr>
+    <tr>
+      <td>Memory Protection</td>
+      <td>✅</td>
+      <td>✅</td>
+    </tr>
+    <tr>
+      <td>Signal Handling</td>
+      <td>✅</td>
+      <td>✅</td>
+    </tr>
+    <tr>
+      <td>IO_URING</td>
+      <td>✅ (Linux 5.1+)</td>
+      <td>❌ (not available)</td>
+    </tr>
+    <tr>
+      <td>System Call Filtering</td>
+      <td>✅ (with seccomp)</td>
+      <td>❌ (not available)</td>
+    </tr>
+    <tr>
+      <td>Resource Limits</td>
+      <td>✅</td>
+      <td>⚠️ (platform dependent)</td>
+    </tr>
+  </tbody>
+</table>
+
+<p>Sources:</p>
+
+<ul>
+  <li><a href="https://github.com/paritytech/polkavm/blob/910adbda/crates/polkavm/src/sandbox.rs#L224-L263">crates/polkavm/src/sandbox.rs224-263</a></li>
+  <li><a href="https://github.com/paritytech/polkavm/blob/910adbda/crates/polkavm/src/sandbox/linux.rs#L97-L127">crates/polkavm/src/sandbox/linux.rs97-127</a></li>
+</ul>
+
+<h2 id="integration-requirements">Integration Requirements</h2>
+
+<p>To fully utilize PolkaVM’s Linux-specific features, certain kernel requirements must be met:</p>
+
+<ol>
+  <li><strong>Kernel Version</strong>: Linux 6.8+ is recommended for full userfaultfd support</li>
+  <li><strong>Kernel Configuration</strong>:
+    <ul>
+      <li><code class="language-plaintext highlighter-rouge">CONFIG_USERFAULTFD</code> enabled</li>
+      <li><code class="language-plaintext highlighter-rouge">vm.unprivileged_userfaultfd=1</code> sysctl setting</li>
+      <li>Unprivileged user namespaces enabled (<code class="language-plaintext highlighter-rouge">kernel.apparmor_restrict_unprivileged_userns=0</code>)</li>
+    </ul>
+  </li>
+</ol>
+
+<p>For generic sandbox support, standard POSIX compliance is sufficient.</p>
+
+<p>Sources:</p>
+
+<ul>
+  <li><a href="https://github.com/paritytech/polkavm/blob/910adbda/crates/polkavm/src/sandbox/linux.rs#L97-L148">crates/polkavm/src/sandbox/linux.rs97-148</a></li>
+  <li><a href="https://github.com/paritytech/polkavm/blob/910adbda/crates/polkavm/src/sandbox/linux.rs#L160-L165">crates/polkavm/src/sandbox/linux.rs160-165</a></li>
+</ul>
+
+<h2 id="summary">Summary</h2>
+
+<p>PolkaVM’s system integration layer provides a robust foundation for secure and efficient execution of WebAssembly modules. The Linux-specific implementation leverages advanced features of the Linux kernel to provide strong isolation and security guarantees, while the generic implementation offers cross-platform compatibility with a more limited security model.</p>
+
+<p>The combination of process isolation, memory protection, signal handling, and efficient I/O operations creates a comprehensive system integration approach that balances security, performance, and flexibility.</p>]]></content><author><name>Joe</name></author><category term="Technics" /><category term="PolkaVM" /><category term="SystemIntegration" /><summary type="html"><![CDATA[This article describes how PolkaVM integrates with host operating systems, focusing on sandboxing, isolation mechanisms, and system call interfaces. It covers the architecture of the sandboxing system, the communication between the host and sandbox processes, and platform-specific implementations.]]></summary></entry><entry><title type="html">Beyond WASM:The Future is RISC-V with PolkaVM Guest Programs ✨</title><link href="/technics/2025/05/26/Guest-Programs.html" rel="alternate" type="text/html" title="Beyond WASM:The Future is RISC-V with PolkaVM Guest Programs ✨" /><published>2025-05-26T00:00:00+00:00</published><updated>2025-05-26T00:00:00+00:00</updated><id>/technics/2025/05/26/Guest-Programs</id><content type="html" xml:base="/technics/2025/05/26/Guest-Programs.html"><![CDATA[<p>This document explains how to develop programs that run inside the PolkaVM virtual machine. It covers the development environment, build process, and the Application Binary Interface (ABI) that allows guest programs to interact with the host system. For details on how the VM executes these programs, see <a href="https://iurdao.github.io/technics/2025/05/24/Inside-PolkaVM-Unveiling-the-Core-VM-Engine.html">Core VM Engine</a> and for in-depth details on exports and imports, see <a href="">ABI and Exports/Imports</a>.</p>
+
+<h2 id="overview-of-guest-programs">Overview of Guest Programs</h2>
+
+<p>Guest programs in PolkaVM are applications that run within the sandboxed virtual machine environment. These programs are written in languages like Rust that can compile to RISC-V architecture, and are then transformed into a format that PolkaVM can execute.</p>
+
+<p>The key characteristics of PolkaVM guest programs include:</p>
+
+<ol>
+  <li><strong>RISC-V Based</strong>: Guest programs target the RISC-V architecture, specifically using custom target configurations provided by PolkaVM.</li>
+  <li><strong>No Standard Library</strong>: Programs run in a <code class="language-plaintext highlighter-rouge">no_std</code> environment as they don’t have access to an operating system.</li>
+  <li><strong>Import/Export System</strong>: Communication with the host happens through a well-defined function import/export system.</li>
+  <li><strong>Memory Constraints</strong>: Programs operate within a confined memory space with specialized allocation mechanisms.</li>
+</ol>
+
+<p><img class="mermaid" src="https://mermaid.ink/svg/eyJjb2RlIjoiJSUtXG5mbG93Y2hhcnQgVERcbnN1YmdyYXBoIEhvc3QgRW52aXJvbm1lbnRcbkFbRW5naW5lXSAtLT5CW01vZHVsZV1cbkIgLS0-IENbUmF3SW5zdGFuY2VdXG5DIC0tPkRbU2FuZGJveF1cbkVbSG9zdCBGdW5jdGlvbnNdXG5lbmRcbiUlLVxuc3ViZ3JhcGggR3Vlc3QgUHJvZ3JhbVxuRltHdWVzdCBDb2RlXS0tPnxVc2Vyc3xHW0d1ZXN0IE1lbW9yeV1cbkYtLT58Q2FsbHN8SFtJbXBvcnRlZCBGdW5jdGlvbnNdXG5GLS0-fEltcGxlbWVudHN8SVtFeHBvcnRlZCBGdW5jdGlvbnNdXG5lbmRcbiUlLVxuRC0tPnxFeGVjdXRlc3xGXG5FLS0-fFByb3ZpZGVzfEhcbkktLT58RXhwb3Nlc3xDXG4lJS0iLCJtZXJtYWlkIjpudWxsfQ" /></p>
+
+<p>Sources: <a href="https://github.com/paritytech/polkavm/blob/910adbda/crates/polkavm-derive-impl/src/export.rs">crates/polkavm-derive-impl/src/export.rs</a> <a href="https://github.com/paritytech/polkavm/blob/910adbda/crates/polkavm-derive-impl/src/import.rs">crates/polkavm-derive-impl/src/import.rs</a></p>
+
+<h2 id="development-environment-setup">Development Environment Setup</h2>
+
+<p>To develop guest programs for PolkaVM, you need to set up a development environment that can compile for the RISC-V architecture. The system uses custom target configurations for RISC-V with specific extensions enabled.</p>
+
+<h3 id="required-components">Required Components</h3>
+
+<ol>
+  <li><strong>Rust Toolchain</strong>: A recent version of Rust with support for custom targets</li>
+  <li><strong>RISC-V Target</strong>: The <code class="language-plaintext highlighter-rouge">riscv32emac-unknown-none-polkavm</code> target (for 32-bit programs) or <code class="language-plaintext highlighter-rouge">riscv64emac-unknown-none-polkavm</code> target (for 64-bit programs)</li>
+  <li><strong>Build Tools</strong>: The <code class="language-plaintext highlighter-rouge">polkatool</code> utility for linking and processing the compiled binaries</li>
+</ol>
+
+<p>The cargo configuration for guest programs is typically set to use the 32-bit RISC-V target by default:</p>
+
+<div class="language-rust highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="p">[</span><span class="n">build</span><span class="p">]</span>
+<span class="n">target</span> <span class="o">=</span> <span class="s">"../crates/polkavm-linker/riscv32emac-unknown-none-polkavm.json"</span>
+
+<span class="p">[</span><span class="n">unstable</span><span class="p">]</span>
+<span class="n">build</span><span class="o">-</span><span class="n">std</span> <span class="o">=</span> <span class="p">[</span><span class="s">"core"</span><span class="p">,</span> <span class="s">"alloc"</span><span class="p">]</span>
+
+</code></pre></div></div>
+
+<p>Sources: <a href="https://github.com/paritytech/polkavm/blob/910adbda/guest-programs/.cargo/config.toml">guest-programs/.cargo/config.toml</a> <a href="https://github.com/paritytech/polkavm/blob/910adbda/guest-programs/build-benchmarks.sh#L66-L94">guest-programs/build-benchmarks.sh66-94</a></p>
+
+<h2 id="building-guest-programs">Building Guest Programs</h2>
+
+<p>Building guest programs for PolkaVM involves a multi-step process:</p>
+
+<ol>
+  <li>Compile the Rust code to a RISC-V binary</li>
+  <li>Use <code class="language-plaintext highlighter-rouge">polkatool</code> to link and convert the binary to PolkaVM’s program blob format</li>
+</ol>
+
+<p>The repository includes helper scripts like <code class="language-plaintext highlighter-rouge">build-examples.sh</code> and <code class="language-plaintext highlighter-rouge">build-benchmarks.sh</code> that automate this process.</p>
+
+<p><img class="mermaid" src="https://mermaid.ink/svg/eyJjb2RlIjoiJSUtXG5mbG93Y2hhcnQgVERcbnN1YmdyYXBoIEJ1aWxkIE9wdGlvbnNcbkFbMzItYml0IFRhcmdldF1cbkJbNjQtYml0IFRhcmdldF1cbkNbbm9fc3RkIEVudmlyb25tZW50XVxuRFtTYW5kYmJ1aWxkLXN0ZD1jb3JlLGFsbG9jb3hdXG5lbmRcbkEtLT58UmVxdWlyZWQgQ29uZmlndXJhdGlvbnxFXG5CLS0-fFJlcXVpcmVkIENvbmZpZ3VyYXRpb258RVxuQy0tPnxSZXF1aXJlZCBDb25maWd1cmF0aW9ufEVcbkQtLT58UmVxdWlyZWQgQ29uZmlndXJhdGlvbnxFXG4lJS1cbkVbXCJSdXN0IFNvdXJjZSAoLnJzKVwiXS0tPkZbXCJjYXJnbyBidWlsZFxuLS10YXJnZXQgcmlzY3YzMmVtYWMtdW5rbm93bi1ub25lLXBvbGthdm1cIl1cbiUlLVxuRi0tPkdbXCJSSVNDLVYgQmluYXJ5ICguZWxmKVwiXVxuRy0tPnxwb2xrYXRvb2wgbGlua3xIW1wiUG9sa2FWTSBQcm9ncmFtICgucG9sa2F2bSlcIl1cbiUlLSIsIm1lcm1haWQiOm51bGx9" /></p>
+
+<h3 id="example-build-command-sequence">Example Build Command Sequence</h3>
+
+<p>For a typical guest program, the build process looks like this:</p>
+
+<div class="language-rust highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="cs"># Compile to RISC-V binary</span>
+<span class="n">cargo</span> <span class="n">build</span> <span class="o">-</span><span class="n">Z</span> <span class="n">build</span><span class="o">-</span><span class="n">std</span><span class="o">=</span><span class="n">core</span><span class="p">,</span><span class="n">alloc</span> <span class="o">--</span><span class="n">target</span> <span class="n">riscv32emac</span><span class="o">-</span><span class="n">unknown</span><span class="o">-</span><span class="n">none</span><span class="o">-</span><span class="n">polkavm</span> <span class="o">--</span><span class="n">release</span> <span class="o">--</span><span class="n">bin</span> <span class="n">my</span><span class="o">-</span><span class="n">program</span>
+
+<span class="cs"># Link and convert to PolkaVM format</span>
+<span class="n">polkatool</span> <span class="n">link</span> <span class="n">path</span><span class="o">/</span><span class="n">to</span><span class="o">/</span><span class="n">my</span><span class="o">-</span><span class="n">program</span> <span class="o">-</span><span class="n">o</span> <span class="n">my</span><span class="o">-</span><span class="n">program</span><span class="py">.polkavm</span>
+
+</code></pre></div></div>
+
+<p>Sources: <a href="https://github.com/paritytech/polkavm/blob/910adbda/guest-programs/build-examples.sh#L12-L30">guest-programs/build-examples.sh12-30</a> <a href="https://github.com/paritytech/polkavm/blob/910adbda/guest-programs/build-benchmarks.sh#L96-L133">guest-programs/build-benchmarks.sh96-133</a></p>
+
+<h2 id="application-binary-interface-abi">Application Binary Interface (ABI)</h2>
+
+<p>PolkaVM uses a well-defined Application Binary Interface (ABI) for communication between the guest program and the host. This ABI consists of:</p>
+
+<ol>
+  <li><strong>Exports</strong>: Functions implemented in the guest program that can be called by the host</li>
+  <li><strong>Imports</strong>: Host functions that can be called by the guest program</li>
+</ol>
+
+<p>The ABI is implemented using Rust procedural macros provided by the <code class="language-plaintext highlighter-rouge">polkavm-derive</code> crate.</p>
+
+<p><img class="mermaid" src="https://mermaid.ink/svg/eyJjb2RlIjoiJSUtXG5mbG93Y2hhcnQgTFJcbnN1YmdyYXBoIEd1ZXN0IFByb2dyYW1cbkFbXCIjW3BvbGthdm1fZXhwb3J0XCJdIC0tPnxQcm9jZXNzZXN8QltFeHBvcnRlZCBGdW5jdGlvbl1cbkNbXCIjW3BvbGthdm1faW1wb3J0XVwiXSAtLT58UHJvY2Vzc2VzfERbSW1wb3J0ZWQgRnVuY3Rpb25dXG5FW0d1ZXN0IENvZGVdLS0-fFVzZXN8RFxuRS0tPnxEZWZpbmVzfEJcbmVuZFxuJSUtXG5zdWJncmFwaCBIb3N0IFN5c3RlbVxuRltIb3N0IEZ1bmN0aW9uXS0tPnxSZWdpc3RlcnN8R1tWTSBJbnN0YW5jZV1cbkctLT58RXhlY3V0ZXN8SFtDYWxsIEV4cG9ydGVkIEZ1bmN0aW9uXVxuZW5kXG4lJS1cbkYtLT58SW1wbGVtZW50c3xEXG5CLS0-fEV4cG9zZXMgdG8gSG9zdHxHXG5ILS0-fEludm9rZXN8QlxuJSUtIiwibWVybWFpZCI6bnVsbH0" /></p>
+
+<h3 id="exporting-functions-to-the-host">Exporting Functions to the Host</h3>
+
+<p>To make a function in your guest program callable from the host, use the <code class="language-plaintext highlighter-rouge">#[polkavm_export]</code> attribute macro:</p>
+
+<div class="language-rust highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nd">#[polkavm_export]</span>
+<span class="k">fn</span> <span class="nf">add</span><span class="p">(</span><span class="n">a</span><span class="p">:</span> <span class="nb">u32</span><span class="p">,</span> <span class="n">b</span><span class="p">:</span> <span class="nb">u32</span><span class="p">)</span> <span class="k">-&gt;</span> <span class="nb">u32</span> <span class="p">{</span>
+    <span class="n">a</span> <span class="o">+</span> <span class="n">b</span>
+<span class="p">}</span>
+</code></pre></div></div>
+
+<p>Behind the scenes, this macro generates:</p>
+
+<ol>
+  <li>A trampoline function that handles the ABI conversion</li>
+  <li>Metadata about the exported function (name, arguments, return type)</li>
+  <li>Special ELF sections that the PolkaVM linker uses to identify exports</li>
+</ol>
+
+<p>The export system supports up to 6 function arguments due to the RISC-V register usage convention implemented in the ABI.</p>
+
+<p>Sources: <a href="https://github.com/paritytech/polkavm/blob/910adbda/crates/polkavm-derive-impl/src/export.rs#L75-L229">crates/polkavm-derive-impl/src/export.rs75-229</a></p>
+
+<h3 id="importing-host-functions">Importing Host Functions</h3>
+
+<p>To call functions implemented by the host from your guest program, use the <code class="language-plaintext highlighter-rouge">#[polkavm_import]</code> attribute with an <code class="language-plaintext highlighter-rouge">extern "C"</code> block:</p>
+
+<div class="language-rust highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nd">#[polkavm_import]</span>
+<span class="k">extern</span> <span class="s">"C"</span> <span class="p">{</span>
+    <span class="k">fn</span> <span class="nf">host_log</span><span class="p">(</span><span class="n">message</span><span class="p">:</span> <span class="o">&amp;</span><span class="nb">str</span><span class="p">);</span>     
+    <span class="nd">#[polkavm_import(index</span> <span class="nd">=</span> <span class="mi">1</span><span class="nd">)]</span>
+    <span class="k">fn</span> <span class="nf">host_get_timestamp</span><span class="p">()</span> <span class="k">-&gt;</span> <span class="nb">u64</span><span class="p">;</span> 
+<span class="p">}</span>
+</code></pre></div></div>
+
+<p>Each imported function can have an optional numeric index for efficient resolution, or it will use the function name as a string symbol by default.</p>
+
+<p>Sources: <a href="https://github.com/paritytech/polkavm/blob/910adbda/crates/polkavm-derive-impl/src/import.rs#L160-L386">crates/polkavm-derive-impl/src/import.rs160-386</a> <a href="https://github.com/paritytech/polkavm/blob/910adbda/crates/polkavm-derive-impl/src/abi_support_impl/common_private.rs#L164-L351">crates/polkavm-derive-impl/src/abi_support_impl/common_private.rs164-351</a></p>
+
+<h2 id="memory-management">Memory Management</h2>
+
+<p>PolkaVM guest programs operate within a confined memory space. The VM provides special primitives for memory management:</p>
+
+<ol>
+  <li><strong><code class="language-plaintext highlighter-rouge">sbrk</code></strong>: A function to expand the program’s heap</li>
+  <li><strong><code class="language-plaintext highlighter-rouge">LeakingAllocator</code></strong>: A basic memory allocator that doesn’t support deallocation</li>
+  <li><strong><code class="language-plaintext highlighter-rouge">memset</code></strong>: A hardware-accelerated memory set function</li>
+  <li><strong><code class="language-plaintext highlighter-rouge">min_stack_size</code></strong>: A macro to set the minimum stack size for the program</li>
+</ol>
+
+<p>Example usage of these memory management primitives:</p>
+
+<div class="language-rust highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1">// Increase heap size by 1024 bytes </span>
+<span class="k">let</span> <span class="n">new_heap_end</span> <span class="o">=</span> <span class="nn">polkavm_derive</span><span class="p">::</span><span class="nf">sbrk</span><span class="p">(</span><span class="mi">1024</span><span class="p">);</span> 
+<span class="k">if</span> <span class="n">new_heap_end</span><span class="nf">.is_null</span><span class="p">()</span> <span class="p">{</span>
+<span class="c1">// Handle allocation failure</span>
+<span class="p">}</span>
+
+<span class="c1">// Define a global allocator</span>
+<span class="nd">#[global_allocator]</span>
+<span class="k">static</span> <span class="n">ALLOCATOR</span><span class="p">:</span> <span class="nn">polkavm_derive</span><span class="p">::</span><span class="n">LeakingAllocator</span> <span class="o">=</span> <span class="nn">polkavm_derive</span><span class="p">::</span><span class="n">LeakingAllocator</span><span class="p">;</span> 
+<span class="c1">// Set minimum stack size</span>
+<span class="nn">polkavm_derive</span><span class="p">::</span><span class="nd">min_stack_size!</span><span class="p">(</span><span class="mi">8192</span><span class="p">);</span>
+</code></pre></div></div>
+
+<p>Sources: <a href="https://github.com/paritytech/polkavm/blob/910adbda/crates/polkavm-derive/src/lib.rs#L12-L107">crates/polkavm-derive/src/lib.rs12-107</a></p>
+
+<h2 id="creating-a-basic-guest-program">Creating a Basic Guest Program</h2>
+
+<p>Here’s the basic structure of a minimal PolkaVM guest program:</p>
+
+<div class="language-rust highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nd">#![no_std]</span>
+<span class="nd">#![no_main]</span> 
+<span class="k">use</span> <span class="nn">polkavm_derive</span><span class="p">::{</span><span class="n">polkavm_export</span><span class="p">,</span> <span class="n">polkavm_import</span><span class="p">};</span> 
+<span class="c1">// Define host functions that the guest can call</span>
+<span class="nd">#[polkavm_import]</span>
+<span class="k">extern</span> <span class="s">"C"</span> <span class="p">{</span>
+    <span class="k">fn</span> <span class="nf">host_print</span><span class="p">(</span><span class="n">message</span><span class="p">:</span> <span class="o">&amp;</span><span class="nb">str</span><span class="p">);</span> 
+<span class="p">}</span>
+
+<span class="c1">// Export a function to be called by the host</span>
+<span class="nd">#[polkavm_export]</span>
+<span class="k">fn</span> <span class="nf">hello_world</span><span class="p">()</span> <span class="p">{</span>
+    <span class="k">unsafe</span> <span class="p">{</span>
+        <span class="nf">host_print</span><span class="p">(</span><span class="s">"Hello from PolkaVM!"</span><span class="p">);</span>
+    <span class="p">}</span> 
+<span class="p">}</span>
+
+<span class="c1">// Required for panic handling in no_std environment</span>
+<span class="nd">#[panic_handler]</span>
+<span class="k">fn</span> <span class="nf">panic</span><span class="p">(</span><span class="n">_info</span><span class="p">:</span> <span class="o">&amp;</span><span class="nn">core</span><span class="p">::</span><span class="nn">panic</span><span class="p">::</span><span class="n">PanicInfo</span><span class="p">)</span> <span class="k">-&gt;</span> <span class="o">!</span> <span class="p">{</span>
+    <span class="k">loop</span> <span class="p">{}</span>
+<span class="p">}</span>
+</code></pre></div></div>
+
+<p>The program must be compiled with:</p>
+
+<ul>
+  <li>The <code class="language-plaintext highlighter-rouge">no_std</code> attribute because it runs without an operating system</li>
+  <li>The <code class="language-plaintext highlighter-rouge">no_main</code> attribute because the entry point is defined by the host calling an exported function</li>
+</ul>
+
+<p>When building such a program, the scripts from the repository will automatically handle the proper compilation steps and linking.</p>
+
+<p>Sources: <a href="https://github.com/paritytech/polkavm/blob/910adbda/guest-programs/test-blob/src/main.rs#L1-L4">guest-programs/test-blob/src/main.rs1-4</a> <a href="https://github.com/paritytech/polkavm/blob/910adbda/guest-programs/build-examples.sh#L32-L32">guest-programs/build-examples.sh32</a></p>
+
+<h2 id="benchmark-programs">Benchmark Programs</h2>
+
+<p>PolkaVM includes a set of benchmark programs used to evaluate the performance of the VM:</p>
+
+<ul>
+  <li><code class="language-plaintext highlighter-rouge">bench-minimal</code>: A minimal program for basic overhead testing</li>
+  <li><code class="language-plaintext highlighter-rouge">bench-pinky</code>: A more complex example with various features</li>
+  <li><code class="language-plaintext highlighter-rouge">bench-prime-sieve</code>: A CPU-intensive prime number calculation</li>
+  <li><code class="language-plaintext highlighter-rouge">bench-memset</code>: Memory operations benchmark</li>
+</ul>
+
+<p>These benchmarks can be built for multiple targets to compare performance:</p>
+
+<table>
+  <thead>
+    <tr>
+      <th>Target</th>
+      <th>Description</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>polkavm (32-bit)</td>
+      <td>Default target for PolkaVM</td>
+    </tr>
+    <tr>
+      <td>polkavm (64-bit)</td>
+      <td>64-bit version of PolkaVM target</td>
+    </tr>
+    <tr>
+      <td>wasm32</td>
+      <td>WebAssembly target for comparison</td>
+    </tr>
+    <tr>
+      <td>native x86_64</td>
+      <td>Native Linux x86_64 compilation</td>
+    </tr>
+    <tr>
+      <td>native i686</td>
+      <td>Native Linux x86 (32-bit) compilation</td>
+    </tr>
+    <tr>
+      <td>CKB VM</td>
+      <td>Another RISC-V based VM</td>
+    </tr>
+    <tr>
+      <td>Solana eBPF</td>
+      <td>Solana’s BPF virtual machine</td>
+    </tr>
+  </tbody>
+</table>
+
+<p>Sources: <a href="https://github.com/paritytech/polkavm/blob/910adbda/guest-programs/build-benchmarks.sh#L135-L139">guest-programs/build-benchmarks.sh135-139</a> <a href="https://github.com/paritytech/polkavm/blob/910adbda/guest-programs/build-benchmarks.sh#L9-L61">guest-programs/build-benchmarks.sh9-61</a></p>
+
+<h2 id="conclusion">Conclusion</h2>
+
+<p>PolkaVM guest programs are RISC-V-based applications that run within the PolkaVM sandboxed environment. They use a specialized ABI system to communicate with the host, with exports (functions accessible to the host) and imports (host functions accessible to the guest). Guest programs have constrained memory management and operate in a <code class="language-plaintext highlighter-rouge">no_std</code> environment.</p>
+
+<p>Development requires Rust with the RISC-V target configuration, and the build process involves compiling to RISC-V and then using <code class="language-plaintext highlighter-rouge">polkatool</code> to convert to the PolkaVM format. The PolkaVM repository provides various examples and benchmarks that demonstrate how to write effective guest programs.</p>
+
+<p>For more details on specific ABI features and advanced usage patterns, see <a href="">ABI and Exports/Imports</a> and <a href="">Building Guest Programs</a>.</p>]]></content><author><name>Joe</name></author><category term="Technics" /><category term="PolkaVM" /><category term="GuestPrograms" /><summary type="html"><![CDATA[This document explains how to develop programs that run inside the PolkaVM virtual machine. It covers the development environment, build process, and the Application Binary Interface (ABI) that allows guest programs to interact with the host system. For details on how the VM executes these programs, see Core VM Engine and for in-depth details on exports and imports, see ABI and Exports/Imports.]]></summary></entry><entry><title type="html">Level Up Your Understanding of PolkaVM:The DOOM Edition ⬆️</title><link href="/technics/2025/05/26/PolkaVM-DOOM-Analysis.html" rel="alternate" type="text/html" title="Level Up Your Understanding of PolkaVM:The DOOM Edition ⬆️" /><published>2025-05-26T00:00:00+00:00</published><updated>2025-05-26T00:00:00+00:00</updated><id>/technics/2025/05/26/PolkaVM-DOOM-Analysis</id><content type="html" xml:base="/technics/2025/05/26/PolkaVM-DOOM-Analysis.html"><![CDATA[<h2 id="project-overview">Project Overview</h2>
+
+<p>PolkaVM DOOM is an example project that ports the classic game DOOM to run on the PolkaVM virtual machine. This project showcases PolkaVM’s ability to run complex game programs.</p>
+
+<h2 id="directory-structure">Directory Structure</h2>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>
+/examples/doom/
+├── Cargo.toml          # Project configuration and dependencies
+├── README.md           # Project documentation
+├── roms/               # Game ROM files directory
+│   ├── README.md       # ROM file description
+│   ├── doom-wad-shareware-license.txt  # DOOM WAD file license
+│   ├── doom.polkavm    # PolkaVM binary of the DOOM engine
+│   ├── doom1.wad       # DOOM game data file
+│   └── relink.sh       # Script to relink the DOOM program
+└── src/                # Source code directory
+    ├── keys.rs         # Key mappings and handling
+    ├── main.rs         # Main program entry point
+    └── vm.rs           # Virtual machine implementation
+
+</code></pre></div></div>
+
+<h2 id="core-component-analysis">Core Component Analysis</h2>
+<h3 id="1-project-configuration-cargotoml">1. Project Configuration (Cargo.toml)</h3>
+
+<p>The project depends on:</p>
+
+<ul>
+  <li><code class="language-plaintext highlighter-rouge">polkavm</code>: PolkaVM virtual machine core library</li>
+  <li><code class="language-plaintext highlighter-rouge">sdl2</code>: Used for graphics display and input handling</li>
+  <li><code class="language-plaintext highlighter-rouge">env_logger</code>: For logging</li>
+</ul>
+
+<h3 id="2-rom-files">2. ROM Files</h3>
+
+<ul>
+  <li><code class="language-plaintext highlighter-rouge">doom1.wad</code>: DOOM game’s shareware WAD file, containing game data</li>
+  <li><code class="language-plaintext highlighter-rouge">doom.polkavm</code>: DOOM engine binary compiled for PolkaVM format</li>
+  <li><code class="language-plaintext highlighter-rouge">relink.sh</code>: Script used to relink from ELF file to generate PolkaVM binary</li>
+</ul>
+
+<h3 id="3-source-code-structure">3. Source Code Structure</h3>
+
+<ul>
+  <li><strong>main.rs (Main Program)</strong>
+Main functions:
+    <ul>
+      <li>Initializes SDL2 environment (video, audio, event handling)</li>
+      <li>Loads DOOM program and ROM files</li>
+      <li>Creates the game window and rendering context</li>
+      <li>Handles user input (keyboard and mouse events)</li>
+      <li>Implements the main game loop (rendering frames, handling audio)</li>
+    </ul>
+  </li>
+  <li><strong>vm.rs (Virtual Machine Implementation)</strong>
+Main functions:
+    <ul>
+      <li>Defines the <code class="language-plaintext highlighter-rouge">Vm</code> struct, encapsulating the PolkaVM instance</li>
+      <li>Implements the interaction interface with the DOOM program</li>
+      <li>Provides external functions for the DOOM program to call:
+        <ul>
+          <li><code class="language-plaintext highlighter-rouge">ext_output_video</code>: Handles video output</li>
+          <li><code class="language-plaintext highlighter-rouge">ext_output_audio</code>: Handles audio output</li>
+          <li><code class="language-plaintext highlighter-rouge">ext_rom_size</code> and <code class="language-plaintext highlighter-rouge">ext_rom_read</code>: Provides ROM access</li>
+          <li><code class="language-plaintext highlighter-rouge">ext_stdout</code>: Standard output redirection</li>
+        </ul>
+      </li>
+      <li>Manages game state and resources</li>
+    </ul>
+  </li>
+  <li><strong>keys.rs (Key Handling)</strong>
+Main functions:
+    <ul>
+      <li>Defines the key constants used by DOOM</li>
+      <li>Provides mapping functions from SDL2 keys to DOOM keys</li>
+    </ul>
+  </li>
+</ul>
+
+<h2 id="execution-flow">Execution Flow</h2>
+
+<ol>
+  <li>The program loads the DOOM engine (<code class="language-plaintext highlighter-rouge">doom.polkavm</code>) and game data (<code class="language-plaintext highlighter-rouge">doom1.wad</code>) upon startup.</li>
+  <li>It initializes the SDL2 environment and PolkaVM virtual machine.</li>
+  <li>A game window and audio queue are created.</li>
+  <li>The program enters the main loop:
+    <ul>
+      <li>Processes user input events</li>
+      <li>Runs the virtual machine to execute a frame of game logic</li>
+      <li>Renders the game scene</li>
+      <li>Handles audio output</li>
+    </ul>
+  </li>
+</ol>
+
+<p><img class="mermaid" src="https://mermaid.ink/svg/eyJjb2RlIjoic2VxdWVuY2VEaWFncmFtXG5wYXJ0aWNpcGFudCBVc2VyIGFzIFVzZXJcbnBhcnRpY2lwYW50IE1haW4gYXMgTWFpbiBQcm9ncmFtKG1haW4ucnMpXG5wYXJ0aWNpcGFudCBWTSBhcyBWaXJ0dWFsIE1hY2hpbmUodm0ucnMpXG5wYXJ0aWNpcGFudCBTREwgYXMgU0RMMiBTeXN0ZW1cbnBhcnRpY2lwYW50IERPT00gYXMgRE9PTSBFbmdpbmUoZG9vbS5wb2xrYXZtKVxuJSUtXG5NYWluLT4-TWFpbjogSW5pdGlhbGl6ZSBlbnZpcm9ubWVudCBsb2dnaW5nXG5NYWluLT4-TWFpbjogUGFyc2UgY29tbWFuZCBsaW5lIGFyZ3VtZW50c1xuTWFpbi0-Pk1haW46IExvYWQgRE9PTSBwcm9ncmFtIGFuZCBST00gZmlsZXNcbk1haW4tPj5WTTogQ3JlYXRlIHZpcnR1YWwgbWFjaGluZSBpbnN0YW5jZSAoZnJvbV9ibG9iKVxuVk0tPj5WTTogU2V0IGV4dGVybmFsIGZ1bmN0aW9uIGludGVyZmFjZVxuTWFpbi0-PlZNOiBJbml0aWFsaXplIHZpcnR1YWwgbWFjaGluZSAoaW5pdGlhbGl6ZSlcblZNLT4-RE9PTTogUGFzcyBST00gZGF0YVxuJSUtXG5NYWluLT4-U0RMOiBJbml0aWFsaXplIFNETDIgKHZpZGVvLCBhdWRpbywgZXZlbnRzKVxuU0RMLS0-Pk1haW46IFJldHVybiBTREwgY29udGV4dFxuTWFpbi0-PlNETDogQ3JlYXRlIHdpbmRvdyBhbmQgcmVuZGVyZXJcbk1haW4tPj5TREw6IFNldCBhdWRpbyBxdWV1ZVxuTWFpbi0-PlZNOiBTZXQgYXVkaW8gY2FsbGJhY2sgKHNldF9vbl9hdWRpb19mcmFtZSlcbiUlLVxubG9vcCBHYW1lIE1haW4gTG9vcFxuU0RMLT4-TWFpbjogUGFzcyB1c2VyIGlucHV0IGV2ZW50c1xuYWx0IEtleSBwcmVzcyBldmVudFxuTWFpbi0-PlZNOiBTZW5kIGtleSBzdGF0ZSAob25fa2V5Y2hhbmdlKVxuVk0tPj5ET09NOiBQYXNzIGtleSBzdGF0ZVxuZW5kXG4lJS1cbk1haW4tPj5WTTogUnVuIG9uZSBmcmFtZSAocnVuX2Zvcl9hX2ZyYW1lKVxuVk0tPj5ET09NOiBFeGVjdXRlIGdhbWUgbG9naWNcbkRPT00tPj5WTTogQ2FsbCBleHRfb3V0cHV0X3ZpZGVvIHRvIG91dHB1dCB0aGUgc2NyZWVuXG5ET09NLT4-Vk06IENhbGwgZXh0X291dHB1dF9hdWRpbyB0byBvdXRwdXQgc291bmRcblZNLS0-Pk1haW46IFJldHVybiBmcmFtZSBkYXRhXG4lJS1cbk1haW4tPj5TREw6IFVwZGF0ZSB0ZXh0dXJlXG5NYWluLT4-U0RMOiBSZW5kZXIgc2NlbmVcbk1haW4tPj5TREw6IFByZXNlbnQgc2NlbmVcbmVuZFxuJSUtXG5Vc2VyLT4-TWFpbjogRXhpdCBldmVudFxuTWFpbi0-Pk1haW46IEVuZCBwcm9ncmFtIiwibWVybWFpZCI6bnVsbH0" /></p>
+
+<h2 id="special-notes">Special Notes</h2>
+
+<ol>
+  <li>The project supports different operating systems, but it will use interpreter mode on non-Linux/macOS systems, which is slower.</li>
+  <li>The DOOM engine source code is hosted in a separate repository: <a href="https://github.com/koute/polkadoom">https://github.com/koute/polkadoom</a></li>
+  <li>The PolkaVM binary file can be regenerated from the ELF file via the <code class="language-plaintext highlighter-rouge">relink.sh</code> script.</li>
+</ol>
+
+<p>This project is a good demonstration of PolkaVM’s capabilities, proving that it can run complex game programs while providing good cross-platform compatibility.</p>]]></content><author><name>Joe</name></author><category term="Technics" /><category term="PolkaVM" /><category term="GuestPrograms" /><category term="DOOM" /><summary type="html"><![CDATA[Project Overview]]></summary></entry><entry><title type="html">Unveiling PolkaVM’s Secrets:How Programs Really Work ⚙️</title><link href="/technics/2025/05/25/Unveiling-PolkaVMs-Secrets-How-Programs-Really-Work.html" rel="alternate" type="text/html" title="Unveiling PolkaVM’s Secrets:How Programs Really Work ⚙️" /><published>2025-05-25T00:00:00+00:00</published><updated>2025-05-25T00:00:00+00:00</updated><id>/technics/2025/05/25/Unveiling-PolkaVMs-Secrets-How-Programs-Really-Work</id><content type="html" xml:base="/technics/2025/05/25/Unveiling-PolkaVMs-Secrets-How-Programs-Really-Work.html"><![CDATA[<p>This article describes how executable programs are represented in PolkaVM, covering the structure, encoding, and transformation of programs. We focuse on the internal representation of compiled code, not the process of compilation itself here. For information about the compilation pipeline, see <a href="">Compilation Pipeline</a>.</p>
+
+<h2 id="overview">Overview</h2>
+
+<p>PolkaVM represents programs using a custom binary format called <code class="language-plaintext highlighter-rouge">ProgramBlob</code>. This format encapsulates all necessary components for program execution: code, data, jump tables, and symbols. Programs originate from either ELF binaries (compiled from languages like Rust) or from assembly source.</p>
+
+<p><img class="mermaid" src="https://mermaid.ink/svg/eyJjb2RlIjoiJSUtXG5mbG93Y2hhcnQgVERcbnN1YmdyYXBoIFByb2dyYW0gU291cmNlc1xuQVtFTEYgQmluYXJ5XVxuQltBc3NlbWJseSBTb3VyY2VdXG5lbmRcbnN1YmdyYXBoIFRyYW5zZm9ybWF0aW9uXG5DW1BvbGthVk0gTGlua2VyXVxuRFtBc3NlbWJsZXJdXG5lbmRcbnN1YmdyYXBoIFByb2dyYW0gUmVwcmVzZW50YXRpb25cbkVbUHJvZ3JhbUJsb2JdXG5GW0NvZGUgU2VjdGlvbl1cbkdbUmVhZC1vbmx5IERhdGFdXG5IW1JlYWQtd3JpdGUgRGF0YV1cbklbSnVtcCBUYWJsZV1cbkpbSW5zdHJ1Y3Rpb24gQml0bWFza11cbktbSW1wb3J0L0V4cG9ydCBTeW1ib2xzXVxuZW5kXG4lJS1cbkEtLT5DXG5CLS0-RFxuQy0tPkVcbkQtLT5FXG5FLS0-RlxuRS0tPkdcbkUtLT5IXG5FLS0-SVxuRS0tPkpcbkUtLT5LXG4lJS0iLCJtZXJtYWlkIjpudWxsfQ" /></p>
+
+<p>Sources:</p>
+
+<ul>
+  <li><a href="https://github.com/paritytech/polkavm/blob/910adbda/crates/polkavm-linker/src/program_from_elf.rs">crates/polkavm-linker/src/program_from_elf.rs</a></li>
+  <li><a href="https://github.com/paritytech/polkavm/blob/910adbda/crates/polkavm-common/src/program.rs">crates/polkavm-common/src/program.rs</a></li>
+  <li><a href="https://github.com/paritytech/polkavm/blob/910adbda/crates/polkavm-common/src/writer.rs">crates/polkavm-common/src/writer.rs</a></li>
+</ul>
+
+<h2 id="programblob-format">ProgramBlob Format</h2>
+
+<p>The <code class="language-plaintext highlighter-rouge">ProgramBlob</code> is the core representation of a program in PolkaVM. It’s a binary format that contains all the information needed to execute a program.</p>
+
+<h3 id="key-components">Key Components</h3>
+
+<table>
+  <thead>
+    <tr>
+      <th>Component</th>
+      <th>Description</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Magic+Version Header</td>
+      <td>Identifies the blob as a PolkaVM program and its version</td>
+    </tr>
+    <tr>
+      <td>Memory Config</td>
+      <td>Defines memory layout parameters (page size, section sizes)</td>
+    </tr>
+    <tr>
+      <td>Code Section</td>
+      <td>Contains the executable instructions</td>
+    </tr>
+    <tr>
+      <td>Read-only Data</td>
+      <td>Constant data that doesn’t change during execution</td>
+    </tr>
+    <tr>
+      <td>Read-write Data</td>
+      <td>Data that can be modified during program execution</td>
+    </tr>
+    <tr>
+      <td>Jump Table</td>
+      <td>Maps basic block indices to instruction offsets</td>
+    </tr>
+    <tr>
+      <td>Bitmask</td>
+      <td>Bitfield that marks instruction boundaries</td>
+    </tr>
+    <tr>
+      <td>Import/Export Symbols</td>
+      <td>Symbols for interfacing with external code</td>
+    </tr>
+  </tbody>
+</table>
+
+<h3 id="program-header-structure">Program Header Structure</h3>
+
+<p>The blob starts with a header that contains:</p>
+
+<ul>
+  <li>Magic identifier “PVM\0” (4 bytes)</li>
+  <li>Size of the entire blob (variable-length encoding)</li>
+  <li>Memory configuration data</li>
+</ul>
+
+<h3 id="building-programblobs">Building ProgramBlobs</h3>
+
+<p>The <code class="language-plaintext highlighter-rouge">ProgramBlobBuilder</code> class handles the construction of program blobs, managing the serialization of all components into the final binary format.</p>
+
+<p><img class="mermaid" src="https://mermaid.ink/svg/eyJjb2RlIjoiJSUtXG5jbGFzc0RpYWdyYW1cbmNsYXNzIFByb2dyYW1CbG9iQnVpbGRlcntcbi1pc182NDogYm9vbFxuLXJvX2RhdGFfc2l6ZTogdTMyXG4tcndfZGF0YV9zaXplOiB1MzJcbi1zdGFja19zaXplOiB1MzItcm9fZGF0YTogVmVjfnU4flxuLXJ3X2RhdGE6IFZlY351OH5cbi1pbXBvcnRzOiBWZWN-UHJvZ3JhbVN5bWJvbH5cbi1jb2RlOiBWZWN-SW5zdHJ1Y3Rpb25-XG4tanVtcF90YWJsZTogVmVjfnUzMn5cbituZXcoKVxuK25ld182NGJpdCgpXG4rc2V0X3JvX2RhdGFfc2l6ZShzaXplOiB1MzIpXG4rc2V0X3J3X2RhdGFfc2l6ZShzaXplOiB1MzIpXG4rc2V0X3N0YWNrX3NpemUoc2l6ZTogdTMyKVxuK3NldF9jb2RlKGNvZGU6ICZbSW5zdHJ1Y3Rpb25dLCBqdW1wX3RhYmxlOiAmW3UzMl0pXG4rYnVpbGQoKS0-IFByb2dyYW1CbG9iXG59XG5jbGFzcyBQcm9ncmFtQmxvYntcbitjb2RlKCktPiAmW3U4XVxuK3JvX2RhdGEoKS0-ICZbdThdXG4rcndfZGF0YSgpLT4gJlt1OF1cbitiaXRtYXNrKCktPiAmW3U4XVxuK2p1bXBfdGFibGUoKS0-ICZbdThdXG4ranVtcF90YWJsZV9lbnRyeV9jb3VudCgpLT4gdTMyXG4rbWVtb3J5X21hcCgpLT4gJk1lbW9yeU1hcFxufVxuJSUtXG5Qcm9ncmFtQmxvYkJ1aWxkZXIgLi4-UHJvZ3JhbUJsb2I6YnVpbGRzXG4lJS0iLCJtZXJtYWlkIjpudWxsfQ" /></p>
+
+<p>Sources:</p>
+
+<ul>
+  <li><a href="https://github.com/paritytech/polkavm/blob/910adbda/crates/polkavm-common/src/writer.rs#L84-L168">crates/polkavm-common/src/writer.rs84-168</a></li>
+  <li><a href="https://github.com/paritytech/polkavm/blob/910adbda/crates/polkavm-common/src/writer.rs#L157-L340">crates/polkavm-common/src/writer.rs157-340</a></li>
+</ul>
+
+<h2 id="code-representation">Code Representation</h2>
+
+<h3 id="instruction-encoding">Instruction Encoding</h3>
+
+<p>PolkaVM uses a variable-length instruction encoding scheme. Each instruction starts with an opcode byte, followed by variable-length operands. This compact representation balances code density with execution efficiency.</p>
+
+<p>Key characteristics:</p>
+
+<ul>
+  <li>Variable-length instructions (1 to 17 bytes)</li>
+  <li>First byte is always the opcode</li>
+  <li>Operands use variable-length encoding for integers</li>
+  <li>Register operands are encoded efficiently</li>
+  <li>Relative jumps use offset-based encoding</li>
+</ul>
+
+<h3 id="instruction-bitmask">Instruction Bitmask</h3>
+
+<p>To efficiently identify instruction boundaries without full decoding, PolkaVM uses a bitmask:</p>
+
+<ul>
+  <li>A bit is set (1) for the first byte of each instruction</li>
+  <li>Continuation bytes are marked with 0</li>
+  <li>Allows quick jumping to instruction boundaries</li>
+</ul>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>Code:    [Instr1][Instr2  ][Instr3][Instr4    ]
+Bitmask: 1      1         1      1            
+         ^      ^         ^      ^
+         |      |         |      |
+         Start  Start     Start  Start
+
+</code></pre></div></div>
+
+<h3 id="jump-table">Jump Table</h3>
+
+<p>The jump table maps basic block indices to their positions in the code section:</p>
+
+<ul>
+  <li>Enables efficient control flow transfers (jumps, branches)</li>
+  <li>Abstracts away the actual instruction offsets</li>
+  <li>Contains entries of variable size depending on offset magnitude</li>
+</ul>
+
+<p><img class="mermaid" src="https://mermaid.ink/svg/eyJjb2RlIjoiJSUtXG5mbG93Y2hhcnQgTFJcbkFbSnVtcCBUYWJsZV0tLT4gQltFbnRyeSAwOiBPZmZzZXQgdG8gQmxvY2sgMF1cbkIgLi4tPiBDW0Jsb2NrIDAgSW5zdHJ1Y3Rpb25zXVxuQSAtLT4gRFtFbnRyeSAxOiBPZmZzZXQgdG8gQmxvY2sgMV1cbkQgLi4tPiBFW0Jsb2NrIDEgSW5zdHJ1Y3Rpb25zXVxuQSAtLT4gRltFbnRyeSAyOiBPZmZzZXQgdG8gQmxvY2sgMl1cbkYgLi4tPiBHW0Jsb2NrIDIgSW5zdHJ1Y3Rpb25zXVxuSFtDb2RlIFNlY3Rpb25dIC0tPiBDXG5IW0NvZGUgU2VjdGlvbl0gLS0-IEVcbkhbQ29kZSBTZWN0aW9uXSAtLT4gR1xuJSUtIiwibWVybWFpZCI6bnVsbH0" /></p>
+
+<p>Sources:</p>
+
+<ul>
+  <li><a href="https://github.com/paritytech/polkavm/blob/910adbda/crates/polkavm-common/src/program.rs#L187-L349">crates/polkavm-common/src/program.rs187-349</a></li>
+  <li><a href="https://github.com/paritytech/polkavm/blob/910adbda/crates/polkavm-common/src/program.rs#L351-L445">crates/polkavm-common/src/program.rs351-445</a></li>
+  <li><a href="https://github.com/paritytech/polkavm/blob/910adbda/crates/polkavm-common/src/writer.rs#L293-L320">crates/polkavm-common/src/writer.rs293-320</a></li>
+</ul>
+
+<h2 id="register-representation">Register Representation</h2>
+
+<p>PolkaVM uses a fixed set of registers that map to RISC-V registers. These are encoded efficiently in instructions.</p>
+
+<h3 id="register-set">Register Set</h3>
+
+<table>
+  <thead>
+    <tr>
+      <th>PolkaVM Register</th>
+      <th>RISC-V ABI Name</th>
+      <th>Description</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">RA</code></td>
+      <td>ra</td>
+      <td>Return address</td>
+    </tr>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">SP</code></td>
+      <td>sp</td>
+      <td>Stack pointer</td>
+    </tr>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">T0</code>-<code class="language-plaintext highlighter-rouge">T2</code></td>
+      <td>t0-t2</td>
+      <td>Temporary registers</td>
+    </tr>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">S0</code>-<code class="language-plaintext highlighter-rouge">S1</code></td>
+      <td>s0-s1</td>
+      <td>Saved registers</td>
+    </tr>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">A0</code>-<code class="language-plaintext highlighter-rouge">A5</code></td>
+      <td>a0-a5</td>
+      <td>Argument/return registers</td>
+    </tr>
+  </tbody>
+</table>
+
+<p><img class="mermaid" src="https://mermaid.ink/svg/eyJjb2RlIjoiJSUtXG5jbGFzc0RpYWdyYW1cbmNsYXNzIFJhd1JlZ3tcbi12YWx1ZTogdTMyXG4rZ2V0KCkgLT4gUmVnXG4rcmF3X3VucGFyc2VkKCkgLT4gdTMyXG59XG5jbGFzcyBSZWd7XG48PGVudW1lcmF0aW9uPj5cblJBXG5TUFxuVDBcblQxXG5UMlxuUzBcblMxXG5BMFxuQTFcbkEyXG5BM1xuQTRcbkE1XG4rdG9fdXNpemUoKS0-dXNpemVcbit0b191MzIoKS0-dTMyXG4rbmFtZSgpLT5zdHJcbn1cblJhd1JlZyAtLT4gUmVnOnJlcHJlc2VudHNcbiUlLSIsIm1lcm1haWQiOm51bGx9" /></p>
+
+<p>Sources:</p>
+
+<ul>
+  <li><a href="https://github.com/paritytech/polkavm/blob/910adbda/crates/polkavm-common/src/program.rs#L8-L169">crates/polkavm-common/src/program.rs8-169</a></li>
+  <li><a href="https://github.com/paritytech/polkavm/blob/910adbda/crates/polkavm-linker/src/program_from_elf.rs#L22-L152">crates/polkavm-linker/src/program_from_elf.rs22-152</a></li>
+</ul>
+
+<h2 id="memory-layout">Memory Layout</h2>
+
+<p>The memory layout for PolkaVM programs follows a specific structure to ensure proper isolation and efficient access.</p>
+
+<p><img class="mermaid" src="https://mermaid.ink/svg/eyJjb2RlIjoiJSUtXG5mbG93Y2hhcnQgVERcbiUlLVxuQVtcIlZNX0FERFJFU1NfU1BBQ0VfQk9UVE9NICgweDEwMDAwKVwiXSAtLT4gQltSZWFkLW9ubHkgRGF0YSBTZWN0aW9uXVxuQiAtLT4gQ1tSZWFkLXdyaXRlIERhdGEgU2VjdGlvbl1cbkMgLS0-IERbXCJIZWFwIChncm93cyB1cHdhcmQpXCJdXG4lJS1cbkVbXCJBdXhpbGlhcnkgRGF0YVwiXVxuRSAtLT5GW1wiU3RhY2sgKGdyb3dzIGRvd253YXJkKVwiXVxuRi0tPkdbVk1fQUREUkVTU19TUEFDRV9UT1BdXG4lJS0iLCJtZXJtYWlkIjpudWxsfQ" /></p>
+
+<h3 id="memory-sections">Memory Sections</h3>
+
+<table>
+  <thead>
+    <tr>
+      <th>Section</th>
+      <th>Description</th>
+      <th>Access</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Read-only Data</td>
+      <td>Constants, string literals, etc.</td>
+      <td>Read-only</td>
+    </tr>
+    <tr>
+      <td>Read-write Data</td>
+      <td>Global variables, mutable data</td>
+      <td>Read-write</td>
+    </tr>
+    <tr>
+      <td>Stack</td>
+      <td>Local variables, call frames</td>
+      <td>Read-write</td>
+    </tr>
+    <tr>
+      <td>Heap</td>
+      <td>Dynamically allocated memory</td>
+      <td>Read-write</td>
+    </tr>
+    <tr>
+      <td>Auxiliary Data</td>
+      <td>Implementation-specific data</td>
+      <td>Implementation-defined</td>
+    </tr>
+  </tbody>
+</table>
+
+<h3 id="memory-map-builder">Memory Map Builder</h3>
+
+<p>The <code class="language-plaintext highlighter-rouge">MemoryMapBuilder</code> class handles the calculation of memory layout based on program requirements:</p>
+
+<ul>
+  <li>Ensures proper alignment of sections</li>
+  <li>Handles page size requirements</li>
+  <li>Calculates maximum heap size based on available address space</li>
+</ul>
+
+<p><img class="mermaid" src="https://mermaid.ink/svg/eyJjb2RlIjoiJSUtXG5jbGFzc0RpYWdyYW1cbmNsYXNzIE1lbW9yeU1hcEJ1aWxkZXJ7XG4tcGFnZV9zaXplOiB1MzJcbi1yb19kYXRhX3NpemU6IHUzMlxuLXJ3X2RhdGFfc2l6ZTogdTMyXG4tc3RhY2tfc2l6ZTogdTMyXG4tYXV4X2RhdGFfc2l6ZTogdTMyXG4rbmV3KHBhZ2Vfc2l6ZTogdTMyKVxuK3JvX2RhdGFfc2l6ZSh2YWx1ZTogdTMyKVxuK3J3X2RhdGFfc2l6ZSh2YWx1ZTogdTMyKVxuK3N0YWNrX3NpemUodmFsdWU6IHUzMilcbithdXhfZGF0YV9zaXplKHZhbHVlOiB1MzIpXG4rYnVpbGQoKS0-IE1lbW9yeU1hcFxufVxuY2xhc3MgTWVtb3J5TWFwe1xuLXBhZ2Vfc2l6ZTogdTMyXG4tcm9fZGF0YV9zaXplOiB1MzJcbi1yd19kYXRhX2FkZHJlc3M6IHUzMlxuLXJ3X2RhdGFfc2l6ZTogdTMyXG4tc3RhY2tfYWRkcmVzc19oaWdoOiB1MzJcbi1zdGFja19zaXplOiB1MzJcbi1hdXhfZGF0YV9hZGRyZXNzOiB1MzJcbi1hdXhfZGF0YV9zaXplOiB1MzJcbi1oZWFwX2Jhc2U6IHUzMlxuLW1heF9oZWFwX3NpemU6IHUzMlxuK3JvX2RhdGFfYWRkcmVzcygpLT4gdTMyXG4rcm9fZGF0YV9yYW5nZSgpLT4gUmFuZ2Vcbityd19kYXRhX2FkZHJlc3MoKS0-IHUzMlxuK3J3X2RhdGFfcmFuZ2UoKS0-IFJhbmdlXG4rc3RhY2tfYWRkcmVzc19sb3coKS0-IHUzMlxuK3N0YWNrX3JhbmdlKCktPiBSYW5nZVxuK2hlYXBfYmFzZSgpLT4gdTMyXG59XG5NZW1vcnlNYXBCdWlsZGVyIC4uPiBNZW1vcnlNYXA6YnVpbGRzXG4lJS0iLCJtZXJtYWlkIjpudWxsfQ" /></p>
+
+<p>Sources:</p>
+
+<ul>
+  <li><a href="https://github.com/paritytech/polkavm/blob/910adbda/crates/polkavm-common/src/abi.rs#L1-L333">crates/polkavm-common/src/abi.rs1-333</a></li>
+  <li><a href="https://github.com/paritytech/polkavm/blob/910adbda/crates/polkavm-common/src/abi.rs#L41-L172">crates/polkavm-common/src/abi.rs41-172</a></li>
+  <li><a href="https://github.com/paritytech/polkavm/blob/910adbda/crates/polkavm-common/src/abi.rs#L176-L283">crates/polkavm-common/src/abi.rs176-283</a></li>
+</ul>
+
+<h2 id="program-transformation-process">Program Transformation Process</h2>
+
+<p>The process of transforming source programs (ELF binaries or assembly) into the PolkaVM representation involves several steps.</p>
+
+<h3 id="elf-to-programblob-conversion">ELF to ProgramBlob Conversion</h3>
+
+<p><img class="mermaid" src="https://mermaid.ink/svg/eyJjb2RlIjoiJSUtXG5mbG93Y2hhcnQgVERcbkFbRUxGIEJpbmFyeV0gLS0-QltFTEYgUGFyc2VyXVxuQiAtLT4gQ1tTZWN0aW9uIEV4dHJhY3Rvcl1cbkMgLS0-IERbQ29kZSBTZWN0aW9uc11cbkMgLS0-IEVbRGF0YSBTZWN0aW9uc11cbkMgLS0-IEZbRGVidWcgSW5mb3JtYXRpb25dXG5EIC0tPiBHW1JJU0MtViBJbnN0cnVjdGlvbiBEZWNvZGVyXVxuRyAtLT4gSFtJbnRlcm1lZGlhdGUgUmVwcmVzZW50YXRpb25dXG5IIC0tPiBJW1BvbGthVk0gQ29kZSBHZW5lcmF0b3JdXG5FIC0tPiBKW0RhdGEgUHJvY2Vzc29yXVxuSiAtLT4gS1tQcm9ncmFtQmxvYkJ1aWxkZXJdXG5GIC0tPiBMW1N5bWJvbCBQcm9jZXNzb3JdXG5JIC0tPiBLXG5MIC0tPiBLXG5LIC0tPiBNW1Byb2dyYW1CbG9iXVxuJSUtIiwibWVybWFpZCI6bnVsbH0" /></p>
+
+<ol>
+  <li>Parse the ELF file to extract sections and symbols</li>
+  <li>Process code sections by converting RISC-V instructions to PolkaVM instructions</li>
+  <li>Handle relocations and symbol references</li>
+  <li>Place data sections in appropriate locations</li>
+  <li>Generate the jump table and bitmask</li>
+  <li>Construct the final ProgramBlob</li>
+</ol>
+
+<h3 id="assembly-to-programblob-conversion">Assembly to ProgramBlob Conversion</h3>
+
+<p>Assembly is parsed directly into PolkaVM instructions, which are then assembled into a ProgramBlob. This provides a more direct route for creating PolkaVM programs.</p>
+
+<p>Sources:</p>
+
+<ul>
+  <li><a href="https://github.com/paritytech/polkavm/blob/910adbda/crates/polkavm-linker/src/program_from_elf.rs">crates/polkavm-linker/src/program_from_elf.rs</a></li>
+  <li><a href="https://github.com/paritytech/polkavm/blob/910adbda/crates/polkavm-linker/src/elf.rs">crates/polkavm-linker/src/elf.rs</a></li>
+  <li><a href="https://github.com/paritytech/polkavm/blob/910adbda/crates/polkavm-common/src/writer.rs">crates/polkavm-common/src/writer.rs</a></li>
+</ul>
+
+<h2 id="instruction-visitor-pattern">Instruction Visitor Pattern</h2>
+
+<p>PolkaVM uses the Visitor pattern to process instructions. The <code class="language-plaintext highlighter-rouge">OpcodeVisitor</code> trait defines an interface for traversing and operating on instructions:</p>
+
+<p><img class="mermaid" src="https://mermaid.ink/svg/eyJjb2RlIjoiJSUtXG5jbGFzc0RpYWdyYW1cbmNsYXNzIE9wY29kZVZpc2l0b3J7XG48PHRyYWl0Pj5cbitTdGF0ZTogVHlwZVxuK1JldHVyblR5OiBUeXBlXG4rSW5zdHJ1Y3Rpb25TZXQ6IEluc3RydWN0aW9uU2V0XG4raW5zdHJ1Y3Rpb25fc2V0KCktPiBJbnN0cnVjdGlvblNldFxuK2Rpc3BhdGNoKHN0YXRlOiAmbXV0IFN0YXRlLCBvcGNvZGU6IHVzaXplLCBjaHVuazogdTEyOCwgb2Zmc2V0OiB1MzIsIHNraXA6IHUzMiktPiBSZXR1cm5UeVxufVxuY2xhc3MgSW5zdHJ1Y3Rpb25TZXR7XG48PHRyYWl0Pj5cbitvcGNvZGVfZnJvbV91OChieXRlOiB1OCktPiBPcHRpb248T3Bjb2RlPlxufVxuY2xhc3MgT3Bjb2Rle1xuPDxlbnVtZXJhdGlvbj4-XG4rZnJvbV91OF9hbnkoYnl0ZTogdTgpLT4gT3B0aW9uPE9wY29kZT5cbitjYW5fZmFsbHRocm91Z2goKS0-IGJvb2xcbn1cbk9wY29kZVZpc2l0b3IgLS0-IEluc3RydWN0aW9uU2V0OnVzZXNcbkluc3RydWN0aW9uU2V0IC0tPiBPcGNvZGU6Y3JlYXRlc1xuJSUtIiwibWVybWFpZCI6bnVsbH0" /></p>
+
+<p>This pattern enables:</p>
+
+<ul>
+  <li>Efficient instruction traversal</li>
+  <li>Different operations (execution, disassembly, analysis) sharing the same traversal mechanism</li>
+  <li>Separation of instruction decoding from operation</li>
+</ul>
+
+<p>Sources:</p>
+
+<ul>
+  <li><a href="https://github.com/paritytech/polkavm/blob/910adbda/crates/polkavm-common/src/program.rs#L742-L840">crates/polkavm-common/src/program.rs742-840</a></li>
+  <li><a href="https://github.com/paritytech/polkavm/blob/910adbda/crates/polkavm-common/src/program.rs#L326-L349">crates/polkavm-common/src/program.rs326-349</a></li>
+</ul>
+
+<h2 id="symbol-handling">Symbol Handling</h2>
+
+<p>PolkaVM programs can import and export symbols for interaction with host functions and to expose functionality.</p>
+
+<h3 id="import-symbols">Import Symbols</h3>
+
+<p>Imports represent external functions that the program can call:</p>
+
+<ul>
+  <li>Each import has a unique name</li>
+  <li>Host environments provide implementations for these functions</li>
+  <li>Calls to imports are handled via special <code class="language-plaintext highlighter-rouge">ecalli</code> instructions</li>
+</ul>
+
+<h3 id="export-symbols">Export Symbols</h3>
+
+<p>Exports are functions within the program that can be called from outside:</p>
+
+<ul>
+  <li>Each export has a name and a target (basic block index)</li>
+  <li>The main entry point of a program is typically an export</li>
+  <li>External code can invoke exports by name</li>
+</ul>
+
+<p><img class="mermaid" src="https://mermaid.ink/svg/eyJjb2RlIjoiJSUtXG5mbG93Y2hhcnQgTFJcbnN1YmdyYXBoIFBvbGthVk0gUHJvZ3JhbVxuQVtJbXBvcnQgVGFibGVdXG5CW0V4cG9ydCBUYWJsZV1cbkNbQ29kZV1cbiUlLVxuZW5kXG4lJS1cbnN1YmdyYXBoIEhvc3QgRW52aXJvbm1lbnRcbkRbaG9zdF9mdW5jdGlvbl8xXVxuRVtob3N0X2Z1bmN0aW9uXzJdXG4lJS1cbmVuZFxuQS0tPkRcbkEtLT5FXG5FIC4uLT58Y2FsbHN8QlxuQi0tPkNcbiUlLSIsIm1lcm1haWQiOm51bGx9" /></p>
+
+<p>Sources:</p>
+
+<ul>
+  <li><a href="https://github.com/paritytech/polkavm/blob/910adbda/crates/polkavm-common/src/writer.rs#L138-L149">crates/polkavm-common/src/writer.rs138-149</a></li>
+  <li><a href="https://github.com/paritytech/polkavm/blob/910adbda/crates/polkavm-linker/src/program_from_elf.rs">crates/polkavm-linker/src/program_from_elf.rs</a></li>
+</ul>
+
+<h2 id="variable-length-integer-encoding">Variable-Length Integer Encoding</h2>
+
+<p>PolkaVM uses variable-length encoding for integer values to save space in instructions. Two main encoding schemes are used:</p>
+
+<h3 id="varint-encoding">Varint Encoding</h3>
+
+<p>Used for general-purpose variable-length integers:</p>
+
+<ul>
+  <li>Small values use fewer bytes</li>
+  <li>First byte contains size information and part of the value</li>
+  <li>Can encode 32-bit values in 1-5 bytes</li>
+</ul>
+
+<h3 id="simple-varint-encoding">Simple Varint Encoding</h3>
+
+<p>Used for instruction operands:</p>
+
+<ul>
+  <li>Optimized for the common case of small values</li>
+  <li>Number of bytes determined by the instruction’s “skip” value</li>
+  <li>Efficiently handles sign extension</li>
+</ul>
+
+<p><img class="mermaid" src="https://mermaid.ink/svg/eyJjb2RlIjoiJSUtXG5mbG93Y2hhcnQgVERcbkFbMzItYml0IHZhbHVlXSAtLT5CW1ZhcmludCBFbmNvZGVyXVxuQiAtLT4gQ1tcIlZhcmlhYmxlLWxlbmd0aCBlbmNvZGVkIHZhbHVlICgxLTUgYnl0ZXMpXCJdXG5DIC0tPkRbVmFyaW50IERlY29kZXJdXG5EIC0tPkVbT3JpZ2luYWwgMzItYml0IHZhbHVlXVxuJSUtIiwibWVybWFpZCI6bnVsbH0" /></p>
+
+<p>Sources:</p>
+
+<ul>
+  <li><a href="https://github.com/paritytech/polkavm/blob/910adbda/crates/polkavm-common/src/varint.rs#L1-L215">crates/polkavm-common/src/varint.rs1-215</a></li>
+  <li><a href="https://github.com/paritytech/polkavm/blob/910adbda/crates/polkavm-common/src/program.rs#L446-L521">crates/polkavm-common/src/program.rs446-521</a></li>
+</ul>
+
+<h2 id="conclusion">Conclusion</h2>
+
+<p>The program representation in PolkaVM is designed to efficiently store and execute programs. The <code class="language-plaintext highlighter-rouge">ProgramBlob</code> format encapsulates all necessary components (code, data, jump table, etc.) in a compact binary representation. The variable-length instruction encoding and efficient memory layout ensure that programs can be executed with minimal overhead.</p>
+
+<p>This representation is a core part of the PolkaVM system, bridging the gap between source programs (ELF binaries or assembly) and the execution engine. Understanding this representation is essential for working with the PolkaVM ecosystem.</p>]]></content><author><name>Joe</name></author><category term="Technics" /><category term="PolkaVM" /><category term="ProgramRepresentation" /><category term="ProgramBlob" /><summary type="html"><![CDATA[This article describes how executable programs are represented in PolkaVM, covering the structure, encoding, and transformation of programs. We focuse on the internal representation of compiled code, not the process of compilation itself here. For information about the compilation pipeline, see Compilation Pipeline.]]></summary></entry><entry><title type="html">Inside PolkaVM - Unveiling the Core VM Engine</title><link href="/technics/2025/05/24/Inside-PolkaVM-Unveiling-the-Core-VM-Engine.html" rel="alternate" type="text/html" title="Inside PolkaVM - Unveiling the Core VM Engine" /><published>2025-05-24T00:00:00+00:00</published><updated>2025-05-24T00:00:00+00:00</updated><id>/technics/2025/05/24/Inside-PolkaVM-Unveiling-the-Core-VM-Engine</id><content type="html" xml:base="/technics/2025/05/24/Inside-PolkaVM-Unveiling-the-Core-VM-Engine.html"><![CDATA[<p>The Core VM Engine is the central execution system of PolkaVM, responsible for loading, compiling, and running guest programs in a secure and efficient manner. It provides the foundation for program execution, memory management, sandboxing, and interaction between host and guest code. For information about program representation, see <a href="">Program Representation</a>, and for the sandboxing system, see <a href="https://iurdao.github.io/technics/2025/05/24/Sandboxing.html">Sandboxing</a>.</p>
+
+<h2 id="architecture-overview">Architecture Overview</h2>
+
+<p>The Core VM Engine consists of several key components that work together to enable secure and efficient execution of programs.</p>
+
+<p><img class="mermaid" src="https://mermaid.ink/svg/eyJjb2RlIjoiZmxvd2NoYXJ0IFREXG5BW0VuZ2luZV0gLS0-IEJbTW9kdWxlXVxuQiAtLT4gQ1tSYXcgSW5zdGFuY2VdXG5DIC0tPiBEW0JhY2tlbmRdXG5EIC0tPiBFW0ludGVycHJldGVyIEJhY2tlbmRdXG5EIC0tPiBGW0NvbXBpbGVyIEJhY2tlbmRdXG5GIC0tPiBHW0FyY2hpdGVjdHVyZS1zcGVjaWZpYyBjb2RlIGdlbmVyYXRpb24gXVxuQSAtLT4gSFtDb25maWd1cmF0aW9uXVxuQSAtLT4gSVtTYW5kYm94IGltcGxlbWVudGF0aW9uXVxuSSAtLT4gSltMaW51eCBTYW5kYm94XVxuSSAtLT4gS1tHZW5lcmljIFNhbmRib3hdIiwibWVybWFpZCI6bnVsbH0" /></p>
+
+<p>Sources: <a href="https://github.com/paritytech/polkavm/blob/910adbda/crates/polkavm/src/api.rs#L96-L234">crates/polkavm/src/api.rs96-234</a> <a href="https://github.com/paritytech/polkavm/blob/910adbda/crates/polkavm/src/api.rs#L962-L2044">crates/polkavm/src/api.rs962-2044</a> <a href="https://github.com/paritytech/polkavm/blob/910adbda/crates/polkavm/src/lib.rs#L1-L172">crates/polkavm/src/lib.rs1-172</a></p>
+
+<h2 id="key-components">Key Components</h2>
+
+<h3 id="engine">Engine</h3>
+
+<p>The <code class="language-plaintext highlighter-rouge">Engine</code> is the main entry point for using PolkaVM. It holds global state and configuration, and is responsible for creating new modules and managing sandbox workers.</p>
+
+<p><img class="mermaid" src="https://mermaid.ink/svg/eyJjb2RlIjoiY2xhc3NEaWFncmFtXG5FbmdpbmUgLS0-IEJhY2tlbmRLaW5kXG5FbmdpbmUgLS0-IFNhbmRib3hLaW5kXG5FbmdpbmUgLS0-IEVuZ2luZVN0YXRlXG4lJS1cbmNsYXNzIEVuZ2luZSB7XG4rc2VsZWN0ZWRfYmFja2VuZDogQmFja2VuZEtpbmRcbiUlLVxuK3NlbGVjdGVkX3NhbmRib3g6IE9wdGlvbn5TYW5kYm94S2luZH5cbiUlLVxuK2ludGVycHJldGVyX2VuYWJsZWQ6IGJvb2xcbiUlLVxuK2Nyb3NzY2hlY2s6IGJvb2xcbiUlLVxuK3N0YXRlOiBBcmN-RW5naW5lU3RhdGV-XG4lJS1cbithbGxvd19keW5hbWljX3BhZ2luZzogYm9vbFxuJSUtXG4rYWxsb3dfZXhwZXJpbWVudGFsOiBib29sXG4lJS1cbituZXcoY29uZmlnOiAmQ29uZmlnKSAtPiBSZXN1bHR-RW5naW5lLCBFcnJvcn5cbiUlLVxuK2JhY2tlbmTvvIjvvIkgLT4gQmFja2VuZEtpbmRcbiUlLVxuK2lkbGVfd29ya2VyX3BpZHPvvIjvvIkgLT4gVmVjfnUzMn5cbn1cbiUlLVxuY2xhc3MgQmFja2VuZEtpbmQge1xuPDxlbnVtZXJhdGlvbj4-XG5Db21waWxlclxuSW50ZXJwcmV0ZXJcbn1cbiUlLVxuY2xhc3MgU2FuZGJveEtpbmQge1xuPDxlbnVtZXJhdGlvbj4-XG5MaW51eFxuR2VuZXJpY1xufVxuJSUtXG5jbGFzcyBFbmdpbmVTdGF0ZSB7XG4lJS1cbitzYW5kYm94aW5nX2VuYWJsZWQ6IGJvb2xcbiUlLVxuK3NhbmRib3hfZ2xvYmFsOiBPcHRpb25-R2xvYmFsU3RhdGVLaW5kflxuJSUtXG4rc2FuZGJveF9jYWNoZTogT3B0aW9ufldvcmtlckNhY2hlS2luZH5cbiUlLVxuK2NvbXBpbGVyX2NhY2hlOiBDb21waWxlckNhY2hlXG4lJS1cbittb2R1bGVfY2FjaGU6IE1vZHVsZUNhY2hlXG59IiwibWVybWFpZCI6bnVsbH0" /></p>
+
+<p>Sources: <a href="https://github.com/paritytech/polkavm/blob/910adbda/crates/polkavm/src/api.rs#L96-L234">crates/polkavm/src/api.rs96-234</a> <a href="https://github.com/paritytech/polkavm/blob/910adbda/crates/polkavm/src/config.rs#L7-L49">crates/polkavm/src/config.rs7-49</a> <a href="https://github.com/paritytech/polkavm/blob/910adbda/crates/polkavm/src/config.rs#L51-L85">crates/polkavm/src/config.rs51-85</a></p>
+
+<h3 id="module">Module</h3>
+
+<p>A <code class="language-plaintext highlighter-rouge">Module</code> represents a compiled program that can be instantiated for execution. It contains the program code, memory layout, and metadata about exports and imports.</p>
+
+<p><img class="mermaid" src="https://mermaid.ink/svg/eyJjb2RlIjoiY2xhc3NEaWFncmFtXG5jbGFzcyBNb2R1bGUge1xuJSUtXG4rYmxvYu-8iO-8iSAmUHJvZ3JhbUJsb2JcbiUlLVxuK21lbW9yeV9tYXDvvIjvvIkgJk1lbW9yeU1hcFxuJSUtXG4rZGVmYXVsdF9zcO-8iO-8iSBSZWdWYWx1ZVxuJSUtXG4rZXhwb3J0c--8iO-8iSBJdGVyYXRvcn5Qcm9ncmFtRXhwb3J0flxuJSUtXG4raW1wb3J0c--8iO-8iSBJbXBvcnRzXG4lJS1cbitpc182NF9iaXTvvIjvvIkgYm9vbFxuJSUtXG4rbmV3KGVuZ2luZTogJkVuZ2luZSwgY29uZmlnOiAmTW9kdWxlQ29uZmlnLCBieXRlczogQXJjQnl0ZXMpIC0-IFJlc3VsdH5Nb2R1bGUsIEVycm9yflxuJSUtXG4rZnJvbV9ibG9iKGVuZ2luZTogJkVuZ2luZSwgY29uZmlnOiAmTW9kdWxlQ29uZmlnLCBibG9iOiBQcm9ncmFtQmxvYikgLT4gUmVzdWx0fk1vZHVsZSwgRXJyb3J-XG4lJS1cbitpbnN0YW50aWF0Ze-8iO-8iS0-IFJlc3VsdH5SYXdJbnN0YW5jZSwgRXJyb3J-XG59XG4lJS1cbmNsYXNzIE1vZHVsZVByaXZhdGUge1xuK2VuZ2luZV9zdGF0ZTogT3B0aW9ufkFyY35FbmdpbmVTdGF0ZX5-XG4lJS1cbitjcm9zc2NoZWNrOiBib29sXG4lJS1cbitibG9iOiBQcm9ncmFtQmxvYlxuJSUtXG4rY29tcGlsZWRfbW9kdWxlOiBDb21waWxlZE1vZHVsZUtpbmRcbiUlLVxuK2ludGVycHJldGVkX21vZHVsZTogT3B0aW9ufkludGVycHJldGVkTW9kdWxlflxuJSUtXG4rbWVtb3J5X21hcDogTWVtb3J5TWFwXG4lJS1cbitnYXNfbWV0ZXJpbmc6IE9wdGlvbn5HYXNNZXRlcmluZ0tpbmR-XG4lJS1cbitpc19zdHJpY3Q6IGJvb2xcbiUlLVxuK3N0ZXBfdHJhY2luZzogYm9vbFxuJSUtXG4rZHluYW1pY19wYWdpbmc6IGJvb2xcbiUlLVxuK3BhZ2Vfc2l6ZV9tYXNrOiB1MzJcbiUlLVxuK3BhZ2Vfc2hpZnQ6IHUzMlxuJSUtXG4raW5zdHJ1Y3Rpb25fc2V0OiBSdW50aW1lSW5zdHJ1Y3Rpb25TZXRcbiUlLVxuK2Nvc3RfbW9kZWw6IENvc3RNb2RlbFJlZlxufVxuJSUtXG5Nb2R1bGUgLS0-IE1vZHVsZVByaXZhdGUiLCJtZXJtYWlkIjpudWxsfQ" /></p>
+
+<p>Sources: <a href="https://github.com/paritytech/polkavm/blob/910adbda/crates/polkavm/src/api.rs#L258-L780">crates/polkavm/src/api.rs258-780</a> <a href="https://github.com/paritytech/polkavm/blob/910adbda/crates/polkavm/src/api.rs#L386-L655">crates/polkavm/src/api.rs386-655</a></p>
+
+<h3 id="rawinstance">RawInstance</h3>
+
+<p>A <code class="language-plaintext highlighter-rouge">RawInstance</code> is an instantiated module that can be executed. It holds the execution state including registers, memory, and a pointer to the current instruction.</p>
+
+<p><img class="mermaid" src="https://mermaid.ink/svg/eyJjb2RlIjoiJSUtXG5jbGFzc0RpYWdyYW1cbmNsYXNzIFJhd0luc3RhbmNlIHtcbiUlLVxuK21vZHVsZTogTW9kdWxlXG4lJS1cbitiYWNrZW5kOiBJbnN0YW5jZUJhY2tlbmRcbiUlLVxuK2Nyb3NzY2hlY2tfaW5zdGFuY2U6IE9wdGlvbn5Cb3h-SW50ZXJwcmV0ZWRJbnN0YW5jZX5-XG4lJS1cbittb2R1bGUoJnNlbGYpIC0-ICZNb2R1bGVcbiUlLVxuK2lzXzY0X2JpdCgmc2VsZikgLT4gYm9vbFxuJSUtXG4rcnVuKCZtdXQgc2VsZikgLT4gUmVzdWx0fkludGVycnVwdEtpbmTvvIxFcnJvciB-XG4lJS1cbityZWcoJnNlbGYsIHJlZzogUmVnKSAtPiBSZWdWYWx1ZVxuJSUtXG4rc2V0X3JlZygmbXV0IHNlbGYsIHJlZzogUmVnLCB2YWx1ZTogUmVnVmFsdWUpXG4lJS1cbitzZXRfZ2FzKCZtdXQgc2VsZiwgZ2FzOiBHYXMpXG4lJS1cbitwcm9ncmFtX2NvdW50ZXIoJnNlbGYpIC0-IE9wdGlvbn5Qcm9ncmFtQ291bnRlcn5cbiUlLVxuK25leHRfcHJvZ3JhbV9jb3VudGVyKCZzZWxmKSAtPiBPcHRpb25-UHJvZ3JhbUNvdW50ZXJ-XG4lJS1cbitzZXRfbmV4dF9wcm9ncmFtX2NvdW50ZXIoJm11dCBzZWxmLCBwYzogUHJvZ3JhbUNvdW50ZXIpXG4lJS1cbitjbGVhcl9yZWdzKCZtdXQgc2VsZilcbiUlLVxuK3NldF9hY2Nlc3NpYmxlX2F1eF9zaXplKCZtdXQgc2VsZiwgc2l6ZTogdTMyKSAtPiBSZXN1bHR-77yI77yJ77yMRXJyb3J-XG4lJS1cbityZXNldF9tZW1vcnkoJm11dCBzZWxmKSAtPiBSZXN1bHR-77yI77yJLCBFcnJvcn5cbiUlLVxuK2lzX21lbW9yeV9hY2Nlc3NpYmxlKCZzZWxmLCBhZGRyZXNzOiB1MzIsIHNpemU6IHUzMiwgaXNfd3JpdGFibGU6IGJvb2wpIC0-IGJvb2xcbiUlLVxuK3JlYWRfbWVtb3J5X2ludG9-J3NsaWNlLCBCfigmc2VsZiwgYWRkcmVzczogdTMyLCBidWZmZXI6ICYnc2xpY2UgbXV0IEIpIC0-IFJlc3VsdH4mJ3NsaWNlIG11dCBbdThdLCBNZW1vcnlBY2Nlc3NFcnJvcn5cbiUlLVxuK3dyaXRlX21lbW9yeSgmbXV0IHNlbGYsIGFkZHJlc3M6IHUzMiwgZGF0YTogJlt1OF0pIC0-IFJlc3VsdH7vvIjvvIksIE1lbW9yeUFjY2Vzc0Vycm9yflxuJSUtXG4rcmVhZF9tZW1vcnkoJnNlbGYsIGFkZHJlc3M6IHUzMiwgbGVuZ3RoOiB1MzIpIC0-IFJlc3VsdH5WZWN-dTh-LCBNZW1vcnlBY2Nlc3NFcnJvcn5cbiUlLVxuK3plcm9fbWVtb3J5KCZtdXQgc2VsZiwgYWRkcmVzczogdTMyLCBsZW5ndGg6IHUzMikgLT4gUmVzdWx0fu-8iO-8iSwgTWVtb3J5QWNjZXNzRXJyb3J-XG4lJS1cbitwcm90ZWN0X21lbW9yeSgmbXV0IHNlbGYsIGFkZHJlc3M6IHUzMiwgbGVuZ3RoOiB1MzIpIC0-IFJlc3VsdH7vvIjvvIksIE1lbW9yeUFjY2Vzc0Vycm9yflxuJSUtXG4rZnJlZV9wYWdlcygmbXV0IHNlbGYsIGFkZHJlc3M6IHUzMiwgbGVuZ3RoOiB1MzIpIC0-IFJlc3VsdH7vvIjvvIksIEVycm9yflxuJSUtXG4raGVhcF9zaXplKCZzZWxmKSAtPiB1MzJcbiUlLVxuK3NicmsoJm11dCBzZWxmLCBzaXplOiB1MzIpIC0-IFJlc3VsdH4gT3B0aW9ufnUzMn4sIEVycm9yIH5cbiUlLVxuK3ByZXBhcmVfY2FsbF91bnR5cGVkKCZtdXQgc2VsZiwgcGM6IFByb2dyYW1Db3VudGVyLCBhcmdzOiAmW1JlZ1ZhbHVlXSlcbiUlLVxuK3ByZXBhcmVfY2FsbF90eXBlZH5GbkFyZ3N-KCZtdXQgc2VsZiwgcGM6IFByb2dyYW1Db3VudGVyLCBhcmdzOiBGbkFyZ3MpXG4lJS1cbitnZXRfcmVzdWx0X3R5cGVkfkZuUmVzdWx0figmc2VsZikgLT4gRm5SZXN1bHRcbiUlLVxuK3BpZCgmc2VsZikgLT4gT3B0aW9ufnUzMn5cbiUlLVxuK25leHRfbmF0aXZlX3Byb2dyYW1fY291bnRlcigmc2VsZikgLT4gT3B0aW9ufnVzaXplflxuJSUtXG4rcmVhZF91OChhZGRyZXNzOiB1MzIpIDogLT4gUmVzdWx0fnU4LCBNZW1vcnlBY2Nlc3NFcnJvcn5cbiUlLVxuK3JlYWRfdTE2KGFkZHJlc3M6IHUzMikgOiAtPiBSZXN1bHR-dTE2LCBNZW1vcnlBY2Nlc3NFcnJvcn5cbiUlLVxuK3JlYWRfdTMyKGFkZHJlc3M6IHUzMikgOiAtPiBSZXN1bHR-dTMyLCBNZW1vcnlBY2Nlc3NFcnJvcn5cbiUlLVxuK3JlYWRfdTY0KGFkZHJlc3M6IHUzMikgOiAtPiBSZXN1bHR-dTY0LCBNZW1vcnlBY2Nlc3NFcnJvcn5cbiUlLVxuK3dyaXRlX3U4KGFkZHJlc3M6IHUzMiwgdmFsdWU6IHU4KSAtPiBSZXN1bHR-77yI77yJLCBNZW1vcnlBY2Nlc3NFcnJvcn5cbiUlLVxuK3dyaXRlX3UxNihhZGRyZXNzOiB1MzIsIHZhbHVlOiB1MTYpIC0-IFJlc3VsdH7vvIjvvIksIE1lbW9yeUFjY2Vzc0Vycm9yflxuJSUtXG4rd3JpdGVfdTMyKGFkZHJlc3M6IHUzMiwgdmFsdWU6IHUzMikgLT4gUmVzdWx0fu-8iO-8iSwgTWVtb3J5QWNjZXNzRXJyb3J-XG4lJS1cbit3cml0ZV91NjQoYWRkcmVzczogdTMyLCB2YWx1ZTogdTY0KSAtPiBSZXN1bHR-77yI77yJLCBNZW1vcnlBY2Nlc3NFcnJvcn5cbn1cbiUlLVxuY2xhc3MgSW5zdGFuY2VCYWNrZW5ke1xufn5lbnVtZXJhdGlvfn5cbm9tcGlsZWRMaW51eChTYW5kYm94SW5zdGFuY2V-U2FuZGJveExpbnV4filcbiUlLVxuQ29tcGlsZWRHZW5lcmljKFNhbmRib3hJbnN0YW5jZX5TYW5kYm94R2VuZXJpY34pXG4lJS1cbkludGVycHJldGVkKEludGVycHJldGVkSW5zdGFuY2UpXG59XG4lJS1cblJhd0luc3RhbmNlIC0tPiBJbnN0YW5jZUJhY2tlbmRcbiUlLSIsIm1lcm1haWQiOm51bGx9" /></p>
+
+<p>Sources: <a href="https://github.com/paritytech/polkavm/blob/910adbda/crates/polkavm/src/api.rs#L962-L2044">crates/polkavm/src/api.rs962-2044</a> <a href="https://github.com/paritytech/polkavm/blob/910adbda/crates/polkavm/src/api.rs#L859-L873">crates/polkavm/src/api.rs859-873</a></p>
+
+<h2 id="execution-flow">Execution Flow</h2>
+
+<p>The execution flow of the Core VM Engine encompasses program loading, instantiation, and the execution cycle.</p>
+
+<p><img class="mermaid" src="https://mermaid.ink/svg/eyJjb2RlIjoiJSUtXG5zZXF1ZW5jZURpYWdyYW1cbnBhcnRpY2lwYW50IEEgYXMgSG9zdCBQcm9ncmFtXG5wYXJ0aWNpcGFudCBCIGFzIEVuZ2luZVxucGFydGljaXBhbnQgQyBhcyBNb2R1bGVcbnBhcnRpY2lwYW50IEQgYXMgUmF3SW5zdGFuY2VcbnBhcnRpY2lwYW50IEUgYXMgRXhlY3V0aW9uIEJhY2tlbmRcbkEtPj5COiBjcmVhdGUoY29uZmlnKVxuQS0-PkI6IG5ldyBtb2R1bGUoYmxvYilcbkItPj5DOiBmcm9tX2Jsb2IoZW5naW5lLCBjb25maWcsIGJsb2IpXG5DLS0-PkI6IE1vZHVsZVxuQi0tPj5BOiBNb2R1bGVcbkEtPj5DOiBpbnN0YW50aWF0ZSgpXG5DLT4-RDogbmV3KG1vZHVsZSlcbkMtPj5FOiBpbml0aWFsaXplXG5DLS0-PkE6IGluaXRpYWxpemVcbkEtPj5EOiBzZXRfcmVnKC4uLilcbkEtPj5EOiBydW4oKVxuRC0-PkU6IHJ1bigpXG5hbHQgTm9ybWFsIEV4ZWN1dGlvblxuRS0tPj5EOiBJbnRlcnJ1cHRLaW5kOjpGaW5pc2hlZFxuRC0tPj5BOiBJbnRlcnJ1cHRLaW5kOjpGaW5pc2hlZFxuZWxzZSBIb3N0IENhbGxcbkUtLT4-RDogSW50ZXJydXB0S2luZDo6RWNhbGxpKG4pXG5ELS0-PkE6IEludGVycnVwdEtpbmQ6OkVjYWxsaShuKVxuQS0-PkQ6IHNldF9yZWcoLi4uKVxuQS0-PkQ6IHJ1bigpXG5lbHNlIEVycm9yIENvbmRpdGlvblxuRS0tPj5EOiBJbnRlcnJ1cHRLaW5kOjpUcmFwL05vdEVub3VnaEdhcy9TZWdmYXVsdFxuRC0tPj5BOiBJbnRlcnJ1cHRLaW5kOjpUcmFwL05vdEVub3VnaEdhcy9TZWdmYXVsdFxuZW5kXG4lJS0iLCJtZXJtYWlkIjpudWxsfQ" /></p>
+
+<p>Sources: <a href="https://github.com/paritytech/polkavm/blob/910adbda/crates/polkavm/src/api.rs#L386-L655">crates/polkavm/src/api.rs386-655</a> <a href="https://github.com/paritytech/polkavm/blob/910adbda/crates/polkavm/src/api.rs#L962-L2044">crates/polkavm/src/api.rs962-2044</a> <a href="https://github.com/paritytech/polkavm/blob/910adbda/crates/polkavm/src/utils.rs#L103-L139">crates/polkavm/src/utils.rs103-139</a></p>
+
+<h3 id="instantiation-process">Instantiation Process</h3>
+
+<p>When a module is instantiated:</p>
+
+<ol>
+  <li>The engine selects the appropriate backend (Compiler or Interpreter)</li>
+  <li>If the Compiler backend is selected, the VM instructions are compiled to native code</li>
+  <li>If sandboxing is enabled, a sandbox environment is prepared</li>
+  <li>A RawInstance is created, linked to the appropriate backend</li>
+  <li>Memory is allocated according to the module’s memory map</li>
+</ol>
+
+<h3 id="execution-cycle">Execution Cycle</h3>
+
+<p>The execution cycle involves:</p>
+
+<ol>
+  <li>Setting up the initial state (registers, program counter)</li>
+  <li>Running the code via the selected backend</li>
+  <li>Handling interrupts that occur during execution</li>
+  <li>Returning control to the host when necessary (for host calls or on completion)</li>
+</ol>
+
+<h3 id="interrupt-types">Interrupt Types</h3>
+
+<p>The VM uses interrupts to handle various execution events:</p>
+
+<table>
+  <thead>
+    <tr>
+      <th>Interrupt Type</th>
+      <th>Description</th>
+      <th>Trigger</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Finished</td>
+      <td>Normal termination</td>
+      <td>Program jumps to <code class="language-plaintext highlighter-rouge">VM_ADDR_RETURN_TO_HOST</code></td>
+    </tr>
+    <tr>
+      <td>Trap</td>
+      <td>Abnormal termination</td>
+      <td>Invalid instruction, jump, or explicit trap</td>
+    </tr>
+    <tr>
+      <td>Ecalli</td>
+      <td>Host function call</td>
+      <td><code class="language-plaintext highlighter-rouge">ecalli</code> instruction executed</td>
+    </tr>
+    <tr>
+      <td>NotEnoughGas</td>
+      <td>Gas limit exceeded</td>
+      <td>Gas counter reaches zero</td>
+    </tr>
+    <tr>
+      <td>Segfault</td>
+      <td>Memory access violation</td>
+      <td>Accessing unmapped memory or writing to read-only memory</td>
+    </tr>
+    <tr>
+      <td>Step</td>
+      <td>Single step completed</td>
+      <td>Step tracing is enabled</td>
+    </tr>
+  </tbody>
+</table>
+
+<p>Sources: <a href="https://github.com/paritytech/polkavm/blob/910adbda/crates/polkavm/src/utils.rs#L103-L139">crates/polkavm/src/utils.rs103-139</a> <a href="https://github.com/paritytech/polkavm/blob/910adbda/crates/polkavm/src/tests.rs#L365-L375">crates/polkavm/src/tests.rs365-375</a></p>
+
+<h2 id="backends">Backends</h2>
+
+<p>The Core VM Engine supports two execution backends:</p>
+
+<h3 id="interpreter-backend">Interpreter Backend</h3>
+
+<p>The Interpreter backend executes instructions one by one, interpreting each instruction as it runs. It’s implemented in <code class="language-plaintext highlighter-rouge">InterpretedInstance</code>:</p>
+
+<p><img class="mermaid" src="https://mermaid.ink/svg/eyJjb2RlIjoiJSUtXG5jbGFzc0RpYWdyYW1cbmNsYXNzIEludGVycHJldGVkSW5zdGFuY2V7XG4rbW9kdWxlOiBNb2R1bGVcbitiYXNpY19tZW1vcnk6IEJhc2ljTWVtb3J5XG4rZHluYW1pY19tZW1vcnk6IER5bmFtaWNNZW1vcnlcbitwcm9ncmFtX2NvdW50ZXI6IFByb2dyYW1Db3VudGVyXG4rcHJvZ3JhbV9jb3VudGVyX3ZhbGlkOiBib29sXG4rbmV4dF9wcm9ncmFtX2NvdW50ZXI6IE9wdGlvbiB-UHJvZ3JhbUNvdW50ZXJ-XG4rbmV4dF9wcm9ncmFtX2NvdW50ZXJfY2hhbmdlZDogYm9vbFxuK2N5Y2xlX2NvdW50ZXI6IHU2NFxuK2dhczogaTY0XG4rcmVnczogW3U2NDsgUmVnOjpBTEwubGVuXVxuJSUtXG4rbmV3X2Zyb21fbW9kdWxlKG1vZHVsZTogTW9kdWxlLCBmb3JjZV9zdGVwX3RyYWNpbmc6IGJvb2wpIC0-IFNlbGZcbitydW4oKSAtPiBSZXN1bHQgfkludGVycnVwdEtpbmQsIEVycm9yflxuK3JlZyhyZWc6IFJlZykgLT4gUmVnVmFsdWVcbitzZXRfcmVnKHJlZzogUmVnLCB2YWx1ZTogUmVnVmFsdWUpXG59XG4lJS0iLCJtZXJtYWlkIjpudWxsfQ" /></p>
+
+<p>Sources: <a href="https://github.com/paritytech/polkavm/blob/910adbda/crates/polkavm/src/interpreter.rs#L397-L752">crates/polkavm/src/interpreter.rs397-752</a> <a href="https://github.com/paritytech/polkavm/blob/910adbda/crates/polkavm/src/interpreter.rs#L1-L20">crates/polkavm/src/interpreter.rs1-20</a></p>
+
+<h3 id="compiler-backend">Compiler Backend</h3>
+
+<p>The Compiler backend translates the VM instructions to native machine code, which is executed directly by the CPU. This provides better performance but is more complex and requires platform-specific optimizations:</p>
+
+<p><img class="mermaid" src="https://mermaid.ink/svg/eyJjb2RlIjoiJSUtXG5mbG93Y2hhcnQgVERcbiUlLVxuQVtQcm9ncmFtQmxvYl0gLS0-IEJbQ29tcGlsZXIgVmlzaXRvcl1cbkIgLS0-IENbR2FzIFZpc2l0b3JdXG5CIC0tPiBEW0FyY2hpdGVjdHVyZSBWaXNpdG9yXVxuQyAtLT4gRVtHYXMgTWV0ZXJpbmcgU3R1YnNdXG5EIC0tPiBGW05hdGl2ZSBNYWNoaW5lIENvZGVdXG5FIC0tPiBHW0NvbXBpbGVkIE1vZHVsZV1cbkYgLS0-IEdcbkcgLS0-IEhbU2FuZGJveCBFeGVjdXRpb25dXG4lJS0iLCJtZXJtYWlkIjpudWxsfQ" /></p>
+
+<p>Sources: <a href="https://github.com/paritytech/polkavm/blob/910adbda/crates/polkavm/src/api.rs#L237-L256">crates/polkavm/src/api.rs237-256</a> <a href="https://github.com/paritytech/polkavm/blob/910adbda/crates/polkavm/src/api.rs#L496-L575">crates/polkavm/src/api.rs496-575</a></p>
+
+<h2 id="memory-management">Memory Management</h2>
+
+<p>The VM has a well-defined memory layout to ensure security and proper isolation:</p>
+
+<p><img class="mermaid" src="https://mermaid.ink/svg/eyJjb2RlIjoiJSUtXG5mbG93Y2hhcnQgTFJcbiUlLVxuQVtWTSBNZW1vcnkgU3BhY2VdIC0tPiBCW0d1YXJkIFBhZ2VzXVxuQSAtLT4gQ1tDb2RlIFNlY3Rpb25dXG5BIC0tPiBEW1JlYWQtT25seSBEYXRhIFNlY3Rpb25dXG5BIC0tPiBFW1JlYWQtV3JpdGUgRGF0YSBTZWN0aW9uXVxuQSAtLT4gRltTdGFjayBSZWdpb25dXG5BIC0tPiBHW0F1eGlsaWFyeSBEYXRhIFJlZ2lvbl1cbkEgLS0-IEhbXCJIZWFwICh2aWEgc2JyaylcIl1cbiUlLSIsIm1lcm1haWQiOm51bGx9" /></p>
+
+<p>The memory layout is configured by the <code class="language-plaintext highlighter-rouge">MemoryMap</code> which defines the address ranges for each section:</p>
+
+<table>
+  <thead>
+    <tr>
+      <th>Section</th>
+      <th>Purpose</th>
+      <th>Access</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Code Section</td>
+      <td>Contains executable instructions</td>
+      <td>Read-only</td>
+    </tr>
+    <tr>
+      <td>Read-Only Data</td>
+      <td>Constants and immutable data</td>
+      <td>Read-only</td>
+    </tr>
+    <tr>
+      <td>Read-Write Data</td>
+      <td>Global variables and mutable data</td>
+      <td>Read-write</td>
+    </tr>
+    <tr>
+      <td>Stack</td>
+      <td>Function calls and local variables</td>
+      <td>Read-write</td>
+    </tr>
+    <tr>
+      <td>Auxiliary Data</td>
+      <td>Host-configurable data region</td>
+      <td>Read-write (from host)</td>
+    </tr>
+    <tr>
+      <td>Heap</td>
+      <td>Dynamically allocated memory</td>
+      <td>Read-write</td>
+    </tr>
+  </tbody>
+</table>
+
+<p>Sources: <a href="https://github.com/paritytech/polkavm/blob/910adbda/crates/polkavm/src/api.rs#L594-L623">crates/polkavm/src/api.rs594-623</a> <a href="https://github.com/paritytech/polkavm/blob/910adbda/crates/polkavm/src/interpreter.rs#L79-L133">crates/polkavm/src/interpreter.rs79-133</a></p>
+
+<h3 id="dynamic-paging">Dynamic Paging</h3>
+
+<p>When enabled, dynamic paging allows memory to be mapped on-demand:</p>
+
+<ol>
+  <li>Pages are only allocated when accessed</li>
+  <li>Attempting to access an unmapped page triggers a <code class="language-plaintext highlighter-rouge">Segfault</code> interrupt</li>
+  <li>The host can map new pages or protect pages as needed</li>
+  <li>Useful for memory-efficient execution of large programs</li>
+</ol>
+
+<p>Sources: <a href="https://github.com/paritytech/polkavm/blob/910adbda/crates/polkavm/src/interpreter.rs#L250-L282">crates/polkavm/src/interpreter.rs250-282</a> <a href="https://github.com/paritytech/polkavm/blob/910adbda/crates/polkavm/src/config.rs#L458-L471">crates/polkavm/src/config.rs458-471</a></p>
+
+<h2 id="configuration">Configuration</h2>
+
+<h3 id="engine-configuration">Engine Configuration</h3>
+
+<p>The <code class="language-plaintext highlighter-rouge">Config</code> struct controls engine-level settings:</p>
+
+<table>
+  <thead>
+    <tr>
+      <th>Setting</th>
+      <th>Description</th>
+      <th>Default</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">backend</code></td>
+      <td>Execution backend (Compiler/Interpreter)</td>
+      <td>Best available</td>
+    </tr>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">sandbox</code></td>
+      <td>Sandbox implementation (Linux/Generic)</td>
+      <td>Best available</td>
+    </tr>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">crosscheck</code></td>
+      <td>Enable execution cross-checking</td>
+      <td>false</td>
+    </tr>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">allow_experimental</code></td>
+      <td>Enable experimental features</td>
+      <td>false</td>
+    </tr>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">allow_dynamic_paging</code></td>
+      <td>Enable dynamic paging</td>
+      <td>false</td>
+    </tr>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">worker_count</code></td>
+      <td>Number of worker sandboxes</td>
+      <td>2</td>
+    </tr>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">cache_enabled</code></td>
+      <td>Enable module caching</td>
+      <td>true (with module-cache feature)</td>
+    </tr>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">sandboxing_enabled</code></td>
+      <td>Enable security sandboxing</td>
+      <td>true</td>
+    </tr>
+  </tbody>
+</table>
+
+<p>Sources: <a href="https://github.com/paritytech/polkavm/blob/910adbda/crates/polkavm/src/config.rs#L100-L217">crates/polkavm/src/config.rs100-217</a> <a href="https://github.com/paritytech/polkavm/blob/910adbda/crates/polkavm/src/config.rs#L152-L366">crates/polkavm/src/config.rs152-366</a></p>
+
+<h3 id="module-configuration">Module Configuration</h3>
+
+<p>The <code class="language-plaintext highlighter-rouge">ModuleConfig</code> struct controls module-level settings:</p>
+
+<table>
+  <thead>
+    <tr>
+      <th>Setting</th>
+      <th>Description</th>
+      <th>Default</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">page_size</code></td>
+      <td>Memory page size</td>
+      <td>4096 (4K)</td>
+    </tr>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">gas_metering</code></td>
+      <td>Gas metering type (None/Sync/Async)</td>
+      <td>None</td>
+    </tr>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">is_strict</code></td>
+      <td>Enable strict mode for validation</td>
+      <td>false</td>
+    </tr>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">step_tracing</code></td>
+      <td>Enable instruction-by-instruction tracing</td>
+      <td>false</td>
+    </tr>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">dynamic_paging</code></td>
+      <td>Enable dynamic paging for this module</td>
+      <td>false</td>
+    </tr>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">aux_data_size</code></td>
+      <td>Size of auxiliary data region</td>
+      <td>0</td>
+    </tr>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">allow_sbrk</code></td>
+      <td>Allow dynamic heap allocation</td>
+      <td>true</td>
+    </tr>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">cost_model</code></td>
+      <td>Gas cost model</td>
+      <td>Naive cost model</td>
+    </tr>
+  </tbody>
+</table>
+
+<p>Sources: <a href="https://github.com/paritytech/polkavm/blob/910adbda/crates/polkavm/src/config.rs#L392-L583">crates/polkavm/src/config.rs392-583</a> <a href="https://github.com/paritytech/polkavm/blob/910adbda/crates/polkavm/src/config.rs#L413-L427">crates/polkavm/src/config.rs413-427</a></p>
+
+<h2 id="gas-metering">Gas Metering</h2>
+
+<p>Gas metering limits the computational resources a program can use:</p>
+
+<p><img class="mermaid" src="https://mermaid.ink/svg/eyJjb2RlIjoiJSUtXG5mbG93Y2hhcnQgVERcbiUlLVxuQVtNb2R1bGUgQ29uZmlndXJhdGlvbl0gLS0-IEJbR2FzIE1ldGVyaW5nIEtpbmRdXG5CIC0tPiBDW1N5bmNocm9ub3VzXVxuQiAtLT4gRFtBc3luY2hyb25vdXNdXG5DIC0tPiBFW0NoZWNrIGFmdGVyIGV2ZXJ5IGluc3RydWN0aW9uXVxuRCAtLT4gRltQZXJpb2RpYyBjaGVja2luZ11cbkUgLS0-IEdbSW50ZXJydXB0OiBOb3RFbm91Z2hHYXNdXG5GIC0tPiBHXG4lJS0iLCJtZXJtYWlkIjpudWxsfQ" /></p>
+
+<h3 id="gas-metering-types">Gas Metering Types</h3>
+
+<ul>
+  <li><strong>Synchronous</strong>: Checks gas after every instruction. Precise but higher overhead.</li>
+  <li><strong>Asynchronous</strong>: Checks gas periodically. Lower overhead but less precise timing of interruption.</li>
+</ul>
+
+<p>Sources: <a href="https://github.com/paritytech/polkavm/blob/910adbda/crates/polkavm/src/config.rs#L369-L385">crates/polkavm/src/config.rs369-385</a> <a href="https://github.com/paritytech/polkavm/blob/910adbda/crates/polkavm/src/api.rs#L361-L365">crates/polkavm/src/api.rs361-365</a></p>
+
+<h2 id="security-considerations">Security Considerations</h2>
+
+<h3 id="sandboxing">Sandboxing</h3>
+
+<p>The Core VM Engine provides security through sandboxing:</p>
+
+<ul>
+  <li><strong>Linux Sandbox</strong>: Uses Linux-specific security features (seccomp, namespaces)</li>
+  <li><strong>Generic Sandbox</strong>: Uses signal handlers for basic protection (less secure, considered experimental)</li>
+</ul>
+
+<h3 id="memory-protection">Memory Protection</h3>
+
+<p>Memory protection ensures that:</p>
+
+<ul>
+  <li>Code and read-only data cannot be modified</li>
+  <li>Out-of-bounds memory access is prevented</li>
+  <li>Stack overflows are caught</li>
+  <li>Guard pages isolate different memory regions</li>
+</ul>
+
+<p>Sources: <a href="https://github.com/paritytech/polkavm/blob/910adbda/crates/polkavm/src/api.rs#L153-L188">crates/polkavm/src/api.rs153-188</a> <a href="https://github.com/paritytech/polkavm/blob/910adbda/crates/polkavm/src/config.rs#L357-L366">crates/polkavm/src/config.rs357-366</a></p>
+
+<h2 id="error-handling">Error Handling</h2>
+
+<p>The VM uses a comprehensive error handling system:</p>
+
+<ol>
+  <li>The <code class="language-plaintext highlighter-rouge">Error</code> type encapsulates various error kinds</li>
+  <li>The <code class="language-plaintext highlighter-rouge">InterruptKind</code> enum represents different types of execution interrupts</li>
+  <li>The <code class="language-plaintext highlighter-rouge">MemoryAccessError</code> handles memory access failures</li>
+</ol>
+
+<p>Sources: <a href="https://github.com/paritytech/polkavm/blob/910adbda/crates/polkavm/src/error.rs#L19-L108">crates/polkavm/src/error.rs19-108</a> <a href="https://github.com/paritytech/polkavm/blob/910adbda/crates/polkavm/src/utils.rs#L103-L139">crates/polkavm/src/utils.rs103-139</a> <a href="https://github.com/paritytech/polkavm/blob/910adbda/crates/polkavm/src/api.rs#L876-L909">crates/polkavm/src/api.rs876-909</a></p>]]></content><author><name>Joe</name></author><category term="Technics" /><category term="CoreVM" /><category term="Engine" /><category term="JAM" /><category term="PolkaVM" /><summary type="html"><![CDATA[The Core VM Engine is the central execution system of PolkaVM, responsible for loading, compiling, and running guest programs in a secure and efficient manner. It provides the foundation for program execution, memory management, sandboxing, and interaction between host and guest code. For information about program representation, see Program Representation, and for the sandboxing system, see Sandboxing.]]></summary></entry><entry><title type="html">Isolate or Integrate? PolkaVM’s Sandboxing Choices Explained 🤔</title><link href="/technics/2025/05/24/Sandboxing.html" rel="alternate" type="text/html" title="Isolate or Integrate? PolkaVM’s Sandboxing Choices Explained 🤔" /><published>2025-05-24T00:00:00+00:00</published><updated>2025-05-24T00:00:00+00:00</updated><id>/technics/2025/05/24/Sandboxing</id><content type="html" xml:base="/technics/2025/05/24/Sandboxing.html"><![CDATA[<p>Sandboxing is a critical security feature in PolkaVM that isolates guest program execution from the host system. This isolation is essential for preventing malicious or erroneous code from affecting the host environment or accessing unauthorized resources. This document explains how PolkaVM implements sandboxing, the different sandbox implementations available, and the security mechanisms they employ.</p>
+
+<p>For information about how program code is executed within the sandbox, see <a href="https://iurdao.github.io/technics/2025/05/24/Inside-PolkaVM-Unveiling-the-Core-VM-Engine.html">Core VM Engine</a>.</p>
+
+<h2 id="architecture-overview">Architecture Overview</h2>
+
+<p>PolkaVM implements a trait-based architecture for sandboxing, with specialized implementations for different operating systems. The system is designed to be extensible while providing secure isolation guarantees.</p>
+
+<p><img class="mermaid" src="https://mermaid.ink/svg/eyJjb2RlIjoiJSUtXG5mbG93Y2hhcnQgVERcbnN1YmdyYXBoIFNhbmRib3ggSW50ZXJmYWNlXG5BW1NhbmRib3ggVHJhaXRdXG5CW1NhbmRib3hDb25maWcgVHJhaXRdXG5DW1NhbmRib3hQcm9ncmFtIFRyYWl0XVxuZW5kXG5zdWJncmFwaCBJbXBsZW1lbnRhdGlvbnNcbkEtLT5EW0xpbnV4IFNhbmRib3hdXG5BLS0-RVtHZW5lcmljIFNhbmRib3hdXG5lbmRcbkQtLT5GW1p5Z290ZSBQcm9jZXNzIE1vZGVsXVxuRC0tPkdbTGludXggU2VjdXJpdHkgRmVhdHVyZXNdXG5HLS0-SFtOYW1lc3BhY2VzXVxuRy0tPklbU2VjY29tcCBGaWx0ZXJzXVxuRy0tPktbUmVzb3VyY2UgTGltaXRzXVxuRy0tPkxbXCJVc2VyZmF1bHRmZCAoRHluYW1pYyBQYWdpbmcpXCJdXG5FLS0-TVtTaWduYWwgSGFuZGxlcnNdXG5FLS0-TltNZW1vcnkgSXNvbGF0aW9uXVxuQi0tPk9bTGludXggU2FuZGJveENvbmZpZ11cbkItLT5QW0dlbmVyaWMgU2FuZGJveENvbmZpZ11cbkMtLT5RW0xpbnV4IFNhbmRib3hQcm9ncmFtXVxuQy0tPlJbR2VuZXJpYyBTYW5kYm94UHJvZ3JhbV1cbiUlLSIsIm1lcm1haWQiOm51bGx9" /></p>
+
+<p>Sources: <a href="https://github.com/paritytech/polkavm/blob/910adbda/crates/polkavm/src/sandbox.rs#L88-L138">crates/polkavm/src/sandbox.rs88-138</a> <a href="https://github.com/paritytech/polkavm/blob/910adbda/crates/polkavm/src/sandbox/linux.rs#L37-L192">crates/polkavm/src/sandbox/linux.rs37-192</a> <a href="https://github.com/paritytech/polkavm/blob/910adbda/crates/polkavm/src/sandbox/generic.rs#L92-L139">crates/polkavm/src/sandbox/generic.rs92-139</a></p>
+
+<h2 id="sandbox-interface">Sandbox Interface</h2>
+
+<p>The <code class="language-plaintext highlighter-rouge">Sandbox</code> trait defines a common interface for all sandbox implementations. It specifies methods for:</p>
+
+<ul>
+  <li>Creating and managing sandbox instances</li>
+  <li>Loading compiled modules</li>
+  <li>Executing code within the sandbox</li>
+  <li>Accessing and manipulating memory and registers</li>
+  <li>Handling interrupts and traps</li>
+</ul>
+
+<p>The trait ensures that different sandboxing implementations can be used interchangeably while providing the same level of functionality.</p>
+
+<p>Sources: <a href="https://github.com/paritytech/polkavm/blob/910adbda/crates/polkavm/src/sandbox.rs#L88-L138">crates/polkavm/src/sandbox.rs88-138</a> <a href="https://github.com/paritytech/polkavm/blob/910adbda/crates/polkavm/src/sandbox.rs#L152-L223">crates/polkavm/src/sandbox.rs152-223</a> <a href="https://github.com/paritytech/polkavm/blob/910adbda/crates/polkavm/src/sandbox.rs#L321-L424">crates/polkavm/src/sandbox.rs321-424</a></p>
+
+<h2 id="linux-sandbox-implementation">Linux Sandbox Implementation</h2>
+
+<p>The Linux sandbox implementation leverages the advanced security features available in the Linux kernel to provide strong isolation guarantees.</p>
+
+<h3 id="zygote-process-model">Zygote Process Model</h3>
+
+<p>The Linux sandbox uses a “zygote” process model, where a master process (the zygote) is forked to create child processes that execute guest code. This approach allows for:</p>
+
+<ol>
+  <li>Fast creation of new sandbox instances</li>
+  <li>Strong process-level isolation</li>
+  <li>Efficient resource management</li>
+</ol>
+
+<p><img class="mermaid" src="https://mermaid.ink/svg/eyJjb2RlIjoiJSUtXG5zZXF1ZW5jZURpYWdyYW1cbnBhcnRpY2lwYW50IEEgYXMgSG9zdCBQcm9jZXNzXG5wYXJ0aWNpcGFudCBCIGFzIEdsb2JhbFN0YXRlXG5wYXJ0aWNpcGFudCBDIGFzIFp5Z290ZSBQcm9jZXNzXG5wYXJ0aWNpcGFudCBEIGFzIENoaWxkIFNhbmRib3ggUHJvY2Vzc1xuQS0-PkI6IG5ldyhjb25maWcpXG5CLT4-QzogcHJlcGFyZV96eWdvdGUoKVxuQy0tPj5COiB6eWdvdGVfbWVtZmRcbkEtPj5DOiBjbG9uZShTQU5EQk9YX0ZMQUdTKVxuQS0-PkI6IHNwYXduKClcbkItPj5EOiBmb3JrIGZyb20genlnb3RlXG5CLT4-RDogc2VuZCBzaGFyZWQgbWVtb3J5IGRlc2NyaXB0b3JzXG5CLT4-RDogc2V0IHVwIHNpZ25hbCBoYW5kbGVyc1xuQi0-PkQ6IHNldCB1cCBzZWNjb21wIGZpbHRlcnNcbkEtPj5EOiBsb2FkX21vZHVsZShtb2R1bGUpXG5BLT4-RDogcnVuKClcbkQtLT4-QTogcmV0dXJuIGludGVycnVwdFxubm90ZSBvdmVyIEEsRDogU2FuZGJveCBjYW4gYmUgcmVjeWNsZWQgZm9yIGZ1dHVyZSB1c2VcbiUlLSIsIm1lcm1haWQiOm51bGx9" /></p>
+
+<p>The zygote process is created with a carefully controlled environment, and when a new sandbox is needed, the zygote is forked to create a new process. This new process inherits the initialized state but runs with its own memory space and restricted permissions.</p>
+
+<p>Sources: <a href="https://github.com/paritytech/polkavm/blob/910adbda/crates/polkavm/src/sandbox/linux.rs#L150-L179">crates/polkavm/src/sandbox/linux.rs150-179</a> <a href="https://github.com/paritytech/polkavm/blob/910adbda/crates/polkavm/src/sandbox/linux.rs#L644-L672">crates/polkavm/src/sandbox/linux.rs644-672</a> <a href="https://github.com/paritytech/polkavm/blob/910adbda/crates/polkavm/src/sandbox/linux.rs#L739-L799">crates/polkavm/src/sandbox/linux.rs739-799</a></p>
+
+<h3 id="security-mechanisms">Security Mechanisms</h3>
+
+<p>The Linux sandbox employs multiple security mechanisms to provide isolation:</p>
+
+<ol>
+  <li><strong>Namespaces</strong>: The sandbox uses Linux namespaces (<code class="language-plaintext highlighter-rouge">CLONE_NEWCGROUP</code>, <code class="language-plaintext highlighter-rouge">CLONE_NEWIPC</code>, <code class="language-plaintext highlighter-rouge">CLONE_NEWNET</code>, etc.) to isolate the process from the host system’s resources.</li>
+  <li><strong>Seccomp Filters</strong>: A seccomp filter is applied to restrict the system calls that the sandboxed process can make. This limits the potential attack surface.</li>
+  <li><strong>Resource Limits</strong>: Resource limits are set on the sandboxed process to prevent it from consuming excessive resources.</li>
+  <li><strong>Capability Restrictions</strong>: All capabilities are dropped from the sandboxed process, ensuring it can’t perform privileged operations.</li>
+  <li><strong>Filesystem Isolation</strong>: The filesystem is completely hidden from the sandboxed process using <code class="language-plaintext highlighter-rouge">pivot_root</code> and <code class="language-plaintext highlighter-rouge">umount2</code>.</li>
+</ol>
+
+<p>Sources: <a href="https://github.com/paritytech/polkavm/blob/910adbda/crates/polkavm/src/sandbox/linux.rs#L47-L53">crates/polkavm/src/sandbox/linux.rs47-53</a> <a href="https://github.com/paritytech/polkavm/blob/910adbda/crates/polkavm/src/sandbox/linux.rs#L747-L795">crates/polkavm/src/sandbox/linux.rs747-795</a> <a href="https://github.com/paritytech/polkavm/blob/910adbda/crates/polkavm/src/sandbox/linux.rs#L857-L878">crates/polkavm/src/sandbox/linux.rs857-878</a></p>
+
+<h2 id="memory-protection-and-isolation">Memory Protection and Isolation</h2>
+
+<p>Memory protection is a key aspect of sandboxing in PolkaVM. The system ensures that guest programs can only access memory regions they’re allowed to, preventing unauthorized access to host memory or memory belonging to other guests.</p>
+
+<h3 id="memory-layout">Memory Layout</h3>
+
+<p>PolkaVM uses a carefully designed memory layout with different regions for code, data, and control structures.</p>
+
+<p><img class="mermaid" src="https://mermaid.ink/svg/eyJjb2RlIjoiJSUtXG5mbG93Y2hhcnQgVERcbnN1YmdyYXBoIE1lbW9yeSBQcm90ZWN0aW9uXG5BW01lbW9yeSBQZXJtaXNzaW9uIE1hcHBpbmddXG5CW1NpZ25hbCBIYW5kbGluZyBmb3IgQWNjZXNzIFZpb2xhdGlvbnNdXG5DW01lbW9yeSBNYXBwaW5nIENvbnRyb2xdXG5EW1wiRHluYW1pYyBQYWdpbmcgKHVzZXJmYXVsdGZkKVwiXVxuZW5kXG5zdWJncmFwaCBWaXJ0dWFsIE1lbW9yeSBMYXlvdXRcbnN1YmdyYXBoIFwiR3Vlc3QgTWVtb3J5IFJlZ2lvbnMgKDB4MC0weEZGRkZGRkZGKVwiXG5FW0d1ZXN0IENvZGVdXG5GW0d1ZXN0IFJlYWQtb25seSBEYXRhXVxuR1tHdWVzdCBSZWFkLXdyaXRlIERhdGFdXG5IW0d1ZXN0IFN0YWNrXVxuSVtcIkd1ZXN0IEhlYXAgKER5bmFtaWNhbGx5IEdyb3duKVwiXVxuZW5kXG5zdWJncmFwaCBIb3N0LW9ubHkgUmVnaW9uc1xuSltcIlZNX0FERFJfTkFUSVZFX0NPREUgKDB4MTAwMDAwMDAwKVwiXVxuS1tcIlZNX0FERFJfSlVNUF9UQUJMRSAoMHg4MDAwMDAwMDApXCJdXG5MW1wiVk1fQUREUl9WTUNUWCAoMHg0MDAwMDAwMDApXCJdXG5NW1wiVk1fQUREUl9TSUdTVEFDSyAoMHg1MDAwMDAwMDApXCJdXG5OW1wiVk1fQUREUl9OQVRJVkVfU1RBQ0sgKDB4NjAwMDAwMDAwKVwiXVxuZW5kXG5PW1wiVk1fQUREUl9TSEFSRURfTUVNT1JZICgweDcwMDAwMDAwMClcIl1cbmVuZFxuQS0tPkVcbkEtLT5GXG5BLS0-R1xuSS0tPkRcbkItLT5DXG4lJS0iLCJtZXJtYWlkIjpudWxsfQ" /></p>
+
+<p>Sources: <a href="https://github.com/paritytech/polkavm/blob/910adbda/crates/polkavm-common/src/zygote.rs#L87-L120">crates/polkavm-common/src/zygote.rs87-120</a> <a href="https://github.com/paritytech/polkavm/blob/910adbda/crates/polkavm/src/sandbox/linux.rs#L913-L921">crates/polkavm/src/sandbox/linux.rs913-921</a></p>
+
+<h3 id="dynamic-paging">Dynamic Paging</h3>
+
+<p>On Linux systems with kernel 6.8 or newer, PolkaVM can use <code class="language-plaintext highlighter-rouge">userfaultfd</code> for dynamic paging. This allows memory to be mapped on-demand when accessed, leading to more efficient memory usage. When a page fault occurs, the host can handle it and potentially map the required memory.</p>
+
+<p><img class="mermaid" src="https://mermaid.ink/svg/eyJjb2RlIjoiJSUtXG5zZXF1ZW5jZURpYWdyYW1cbnBhcnRpY2lwYW50IEEgYXMgR3Vlc3QgQ29kZVxucGFydGljaXBhbnQgQiBhcyBWTSBSdW50aW1lXG5wYXJ0aWNpcGFudCBDIGFzIEhvc3QgUHJvY2Vzc1xucGFydGljaXBhbnQgRCBhcyBMaW51eCBLZXJuZWxcbkEtPj5COiBBY2Nlc3MgdW5tYXBwZWQgbWVtb3J5XG5CLT4-RDogUGFnZSBmYXVsdFxuRC0-PkM6IHVzZXJmYXVsdGZkIG5vdGlmaWNhdGlvblxuQy0-PkI6IEhhbmRsZSBwYWdlIGZhdWx0XG5DLT4-RDogTWFwIG1lbW9yeSBwYWdlXG5ELT4-QjogUmVzdW1lIGV4ZWN1dGlvblxuQi0-PkE6IENvbnRpbnVlIHdpdGggbWVtb3J5IGFjY2Vzc1xuJSUtIiwibWVybWFpZCI6bnVsbH0" /></p>
+
+<p>Dynamic paging is particularly useful for efficiently implementing the guest heap, which can grow as needed without pre-allocating large amounts of memory.</p>
+
+<p>Sources: <a href="https://github.com/paritytech/polkavm/blob/910adbda/crates/polkavm/src/sandbox/linux.rs#L98-L149">crates/polkavm/src/sandbox/linux.rs98-149</a> <a href="https://github.com/paritytech/polkavm/blob/910adbda/crates/polkavm/src/sandbox/linux.rs#L594-L610">crates/polkavm/src/sandbox/linux.rs594-610</a></p>
+
+<h3 id="memory-access-control">Memory Access Control</h3>
+
+<p>Memory access control is enforced through multiple mechanisms:</p>
+
+<ol>
+  <li><strong>Memory Mapping</strong>: Memory regions are mapped with specific permissions (read, write, execute).</li>
+  <li><strong>Page Protection</strong>: The <code class="language-plaintext highlighter-rouge">mprotect</code> system call is used to change permissions on memory regions.</li>
+  <li><strong>Signal Handling</strong>: Attempts to access memory with insufficient permissions trigger signals (SIGSEGV, SIGBUS) that are caught and handled.</li>
+  <li><strong>Explicit Permission Checks</strong>: The sandbox API includes methods to check if memory regions are accessible.</li>
+</ol>
+
+<p>When a memory access violation occurs, it’s converted into a clean trap that the host can handle, rather than crashing the entire process.</p>
+
+<p>Sources: <a href="https://github.com/paritytech/polkavm/blob/910adbda/crates/polkavm/src/sandbox/linux.rs#L1066-L1092">crates/polkavm/src/sandbox/linux.rs1066-1092</a> <a href="https://github.com/paritytech/polkavm/blob/910adbda/crates/polkavm/src/sandbox/linux.rs#L2282-L2364">crates/polkavm/src/sandbox/linux.rs2282-2364</a></p>
+
+<h2 id="communication-between-host-and-sandbox">Communication Between Host and Sandbox</h2>
+
+<p>Communication between the host and sandbox processes happens primarily through shared memory, with additional synchronization mechanisms.</p>
+
+<p><img class="mermaid" src="https://mermaid.ink/svg/eyJjb2RlIjoiJSUtXG5mbG93Y2hhcnQgVERcbnN1YmdyYXBoIENvbW11bmljYXRpb24gTWVjaGFuaXNtc1xuQVtTaGFyZWQgTWVtb3J5XVxuQltGdXRleCBTeW5jaHJvbml6YXRpb25dXG5DW1NpZ25hbCBQaXBlXVxuRFtcInVzZXJmYXVsdGZkIChEeW5hbWljIFBhZ2luZylcIl1cbmVuZFxuc3ViZ3JhcGggSG9zdCBQcm9jZXNzXG5FW0VuZ2luZV1cbkZbUmF3SW5zdGFuY2VdXG5HW1wiVm1DdHggKFNoYXJlZCBNZW1vcnkpXCJdXG5lbmRcbnN1YmdyYXBoIFNhbmRib3ggUHJvY2Vzc1xuSFtHdWVzdCBQcm9ncmFtXVxuSVtcIlZtQ3R4IChTaGFyZWQgTWVtb3J5KVwiXVxuSltTaWduYWwgSGFuZGxlcnNdXG5lbmRcbiUlLVxuRS0tPnxVc2VyZmF1bHRGRHxIXG5FLS0-RlxuRi0tPkdcbkc8LS0-fFNoYXJlZE1lbW9yeXxJXG5JPC0tPnxGdXRleHxHXG5HPC0tPklcbkUtLT58U2lnbmFsUGlwZXxKXG5JLS0-SFxuSC0tPkpcbkotLT5JXG4lJS0iLCJtZXJtYWlkIjpudWxsfQ" /></p>
+
+<p>The <code class="language-plaintext highlighter-rouge">VmCtx</code> structure is mapped into shared memory accessible by both the host and sandbox processes. It contains:</p>
+
+<ol>
+  <li><strong>Registers</strong>: The state of the virtual machine’s registers</li>
+  <li><strong>Gas Counter</strong>: For metering resource usage</li>
+  <li><strong>Program Counters</strong>: Tracking execution position</li>
+  <li><strong>Futex</strong>: For synchronization between host and sandbox</li>
+  <li><strong>Heap Information</strong>: Managing the heap state</li>
+  <li><strong>Message Buffer</strong>: For error reporting</li>
+</ol>
+
+<p>The host and sandbox use futex operations to synchronize state transitions, such as when the sandbox is idle, executing, or has encountered an interrupt.</p>
+
+<p>Sources: <a href="https://github.com/paritytech/polkavm/blob/910adbda/crates/polkavm-common/src/zygote.rs#L139-L408">crates/polkavm-common/src/zygote.rs139-408</a> <a href="https://github.com/paritytech/polkavm/blob/910adbda/crates/polkavm/src/sandbox/linux.rs#L1063-L1061">crates/polkavm/src/sandbox/linux.rs1063-1061</a></p>
+
+<h2 id="sandbox-lifecycle-management">Sandbox Lifecycle Management</h2>
+
+<p>Sandbox instances in PolkaVM are managed efficiently to minimize the overhead of creating new sandboxes.</p>
+
+<h3 id="worker-cache">Worker Cache</h3>
+
+<p>The <code class="language-plaintext highlighter-rouge">WorkerCache</code> component allows for efficient reuse of sandbox instances. Instead of destroying a sandbox after use, it can be returned to a pool for later reuse. This significantly reduces the overhead of creating new sandboxes, especially on Linux where fork operations and security setup are expensive.</p>
+
+<p>The worker cache maintains a pool of idle sandbox instances up to a configurable limit. When a new sandbox is needed, an idle one can be reused from the pool if available.</p>
+
+<p>Sources: <a href="https://github.com/paritytech/polkavm/blob/910adbda/crates/polkavm/src/sandbox.rs#L321-L424">crates/polkavm/src/sandbox.rs321-424</a> <a href="https://github.com/paritytech/polkavm/blob/910adbda/crates/polkavm/src/sandbox/linux.rs#L4124-L4187">crates/polkavm/src/sandbox/linux.rs4124-4187</a></p>
+
+<h2 id="error-handling-and-traps">Error Handling and Traps</h2>
+
+<p>PolkaVM handles errors and exceptions that occur during sandbox execution through a trap mechanism.</p>
+
+<h3 id="interrupt-kinds">Interrupt Kinds</h3>
+
+<p>When a sandbox’s execution is interrupted, the reason is represented by an <code class="language-plaintext highlighter-rouge">InterruptKind</code> enum:</p>
+
+<ol>
+  <li><strong>Finished</strong>: The program has completed execution normally</li>
+  <li><strong>Trap</strong>: A trap (e.g., division by zero) has occurred</li>
+  <li><strong>Ecalli</strong>: A host call has been requested</li>
+  <li><strong>NotEnoughGas</strong>: The gas limit has been exceeded</li>
+  <li><strong>Segfault</strong>: A memory access violation has occurred</li>
+</ol>
+
+<h3 id="signal-handling">Signal Handling</h3>
+
+<p>On Linux, signals like SIGSEGV (segmentation fault), SIGBUS (bus error), and SIGILL (illegal instruction) are caught by a signal handler. The handler analyzes the signal, captures the program state, and communicates the issue back to the host through the shared <code class="language-plaintext highlighter-rouge">VmCtx</code>.</p>
+
+<p>For example, when a page fault occurs due to accessing unmapped memory, the signal handler captures the fault address and notifies the host, which can then handle it appropriately (e.g., by mapping the required memory if it’s part of the heap).</p>
+
+<p>Sources: <a href="https://github.com/paritytech/polkavm/blob/910adbda/crates/polkavm/src/sandbox/linux.rs#L293-L421">crates/polkavm/src/sandbox/linux.rs293-421</a> <a href="https://github.com/paritytech/polkavm/blob/910adbda/crates/polkavm-zygote/src/main.rs#L293-L408">crates/polkavm-zygote/src/main.rs293-408</a></p>
+
+<h2 id="generic-sandbox-implementation">Generic Sandbox Implementation</h2>
+
+<p>In addition to the Linux-specific sandbox, PolkaVM provides a generic sandbox implementation that works on other platforms. This implementation uses more portable mechanisms but may offer fewer isolation guarantees.</p>
+
+<p>The generic sandbox uses:</p>
+
+<ol>
+  <li>Signal handlers for catching traps and memory violations</li>
+  <li>Memory mapping with protection for isolation</li>
+  <li>Position-independent execution with controlled entry and exit points</li>
+</ol>
+
+<p>While the generic sandbox doesn’t provide process-level isolation, it still ensures that guest programs can’t access unauthorized memory or execute unauthorized operations.</p>
+
+<p>Sources: <a href="https://github.com/paritytech/polkavm/blob/910adbda/crates/polkavm/src/sandbox/generic.rs#L92-L139">crates/polkavm/src/sandbox/generic.rs92-139</a> <a href="https://github.com/paritytech/polkavm/blob/910adbda/crates/polkavm/src/sandbox/generic.rs#L292-L362">crates/polkavm/src/sandbox/generic.rs292-362</a></p>
+
+<h2 id="security-considerations">Security Considerations</h2>
+
+<p>When using PolkaVM’s sandboxing capabilities, consider the following:</p>
+
+<ol>
+  <li><strong>Isolation Strength</strong>: The Linux sandbox provides stronger isolation guarantees than the generic sandbox.</li>
+  <li><strong>Kernel Requirements</strong>: For full functionality on Linux, a kernel version 6.8 or newer is recommended for dynamic paging support.</li>
+  <li><strong>Resource Limits</strong>: Configure appropriate gas limits to prevent infinite loops or excessive resource consumption.</li>
+  <li><strong>Host Function Exposure</strong>: Be cautious about which host functions you expose to guest programs, as they represent entry points back into the host environment.</li>
+</ol>
+
+<p>The sandboxing system is designed with security as a primary goal, but no sandboxing solution can provide absolute guarantees. Use defense in depth and carefully consider what capabilities you expose to guest programs.</p>
+
+<p>Sources: <a href="https://github.com/paritytech/polkavm/blob/910adbda/crates/polkavm/src/sandbox/linux.rs#L98-L149">crates/polkavm/src/sandbox/linux.rs98-149</a> <a href="https://github.com/paritytech/polkavm/blob/910adbda/crates/polkavm/src/sandbox.rs#L427-L428">crates/polkavm/src/sandbox.rs427-428</a></p>
+
+<h2 id="summary">Summary</h2>
+
+<p>PolkaVM’s sandboxing system provides strong isolation for executing untrusted code. The Linux sandbox implementation offers robust process-level isolation using advanced kernel features, while the generic sandbox provides a more portable option with memory-level isolation.</p>
+
+<p>The system is designed to be efficient, with features like worker caching to minimize overhead, and secure, with multiple layers of protection to prevent unauthorized access and resource abuse.</p>
+
+<p>For developers integrating PolkaVM, understanding the sandboxing mechanisms is crucial for building secure applications that can safely execute untrusted code.</p>]]></content><author><name>Joe</name></author><category term="Technics" /><category term="JAM" /><category term="PolkaVM" /><category term="Sandboxing" /><summary type="html"><![CDATA[Sandboxing is a critical security feature in PolkaVM that isolates guest program execution from the host system. This isolation is essential for preventing malicious or erroneous code from affecting the host environment or accessing unauthorized resources. This document explains how PolkaVM implements sandboxing, the different sandbox implementations available, and the security mechanisms they employ.]]></summary></entry><entry><title type="html">Unlock Untrusted Code - PolkaVM’s Architecture Deep Dive</title><link href="/technics/2025/05/24/Unlock-Untrusted-Code.html" rel="alternate" type="text/html" title="Unlock Untrusted Code - PolkaVM’s Architecture Deep Dive" /><published>2025-05-24T00:00:00+00:00</published><updated>2025-05-24T00:00:00+00:00</updated><id>/technics/2025/05/24/Unlock-Untrusted-Code</id><content type="html" xml:base="/technics/2025/05/24/Unlock-Untrusted-Code.html"><![CDATA[<h2 id="overview">Overview</h2>
+
+<p>PolkaVM is a high-performance, sandboxed virtual machine designed to securely execute RISC-V programs. It serves as a lightweight and efficient execution environment with a strong focus on security, determinism, and performance. This page provides a high-level introduction to the PolkaVM system, its architecture, and key components.</p>
+
+<p>For detailed information about the execution engine internals, see <a href="https://iurdao.github.io/technics/2025/05/24/Inside-PolkaVM-Unveiling-the-Core-VM-Engine.html">Core VM Engine</a>. For information about the sandboxing mechanism, see <a href="https://iurdao.github.io/technics/2025/05/24/Sandboxing.html">Sandboxing</a>.</p>
+
+<h2 id="purpose-and-goals">Purpose and Goals</h2>
+
+<p>PolkaVM aims to provide a secure, deterministic, and efficient execution environment for untrusted code. Its primary design goals include:</p>
+
+<ol>
+  <li><strong>Security</strong>: Isolate executing code using sandboxing techniques to prevent unauthorized system access</li>
+  <li><strong>Performance</strong>: Offer high-speed execution through a JIT compiler backend when available</li>
+  <li><strong>Determinism</strong>: Ensure consistent execution results regardless of the host environment</li>
+  <li><strong>Resource Control</strong>: Limit resource consumption through gas metering</li>
+  <li><strong>Portability</strong>: Run on various operating systems with platform-specific optimizations</li>
+</ol>
+
+<p>Sources: <a href="https://github.com/paritytech/polkavm/blob/910adbda/crates/polkavm/src/lib.rs#L1-L171">crates/polkavm/src/lib.rs1-171</a> <a href="https://github.com/paritytech/polkavm/blob/910adbda/Cargo.toml#L1-L202">Cargo.toml1-202</a></p>
+
+<h2 id="system-architecture">System Architecture</h2>
+
+<p>PolkaVM’s architecture consists of several key components that work together to provide a secure and efficient execution environment.</p>
+
+<p>Sources: <a href="https://github.com/paritytech/polkavm/blob/910adbda/crates/polkavm/src/lib.rs#L1-L171">crates/polkavm/src/lib.rs1-171</a> <a href="https://github.com/paritytech/polkavm/blob/910adbda/Cargo.toml#L1-L202">Cargo.toml1-202</a> <a href="https://github.com/paritytech/polkavm/blob/910adbda/crates/polkavm/src/config.rs#L1-L534">crates/polkavm/src/config.rs1-534</a></p>
+
+<h3 id="core-components">Core Components</h3>
+
+<h4 id="engine">Engine</h4>
+
+<p>The <code class="language-plaintext highlighter-rouge">Engine</code> is the central component of PolkaVM that manages the execution environment. It handles the creation of modules and provides configuration options for the VM.</p>
+
+<p>Key features:</p>
+
+<ul>
+  <li>Backend selection (Compiler or Interpreter)</li>
+  <li>Sandbox configuration</li>
+  <li>Worker management</li>
+  <li>Caching behavior</li>
+</ul>
+
+<p><img class="mermaid" src="https://mermaid.ink/svg/eyJjb2RlIjoiZmxvd2NoYXJ0IFREXG5BW0NvbmZpZ10gLS0-IEJbQmFja2VuZEtpbmRdXG5BLS0-Q1tTYW5kYm94S2luZF1cbkEtLT5EW01vZHVsZUNvbmZpZ11cbkIgLS0-IEVbQ29tcGlsZXJdXG5CLS0-RltJbnRlcnByZXRlcl1cbkMtLT5HW0xpbnV4XVxuQy0tPkhbR2VuZXJpY11cbkQtLT5JW0dhc01ldGVyaW5nS2luZF0iLCJtZXJtYWlkIjpudWxsfQ" /></p>
+
+<p>Sources: <a href="https://github.com/paritytech/polkavm/blob/910adbda/crates/polkavm/src/config.rs#L1-L534">crates/polkavm/src/config.rs1-534</a> <a href="https://github.com/paritytech/polkavm/blob/910adbda/crates/polkavm/src/lib.rs#L139-L148">crates/polkavm/src/lib.rs139-148</a></p>
+
+<h4 id="module-and-instance">Module and Instance</h4>
+
+<p>The <code class="language-plaintext highlighter-rouge">Module</code> represents a compiled program ready for execution, while a <code class="language-plaintext highlighter-rouge">RawInstance</code> represents an active execution state.</p>
+
+<ul>
+  <li><strong>Module</strong>: Created from a <code class="language-plaintext highlighter-rouge">ProgramBlob</code>, contains the compiled code and metadata</li>
+  <li><strong>RawInstance</strong>: Created from a <code class="language-plaintext highlighter-rouge">Module</code>, maintains the execution state including registers, memory, and gas counter</li>
+</ul>
+
+<p>The execution flow involves:</p>
+
+<ol>
+  <li>Creating a <code class="language-plaintext highlighter-rouge">Module</code> from a <code class="language-plaintext highlighter-rouge">ProgramBlob</code></li>
+  <li>Instantiating a <code class="language-plaintext highlighter-rouge">RawInstance</code> from the <code class="language-plaintext highlighter-rouge">Module</code></li>
+  <li>Running the instance, which produces an <code class="language-plaintext highlighter-rouge">InterruptKind</code> result</li>
+</ol>
+
+<p>Sources: <a href="https://github.com/paritytech/polkavm/blob/910adbda/crates/polkavm/src/lib.rs#L139-L148">crates/polkavm/src/lib.rs139-148</a> <a href="https://github.com/paritytech/polkavm/blob/910adbda/crates/polkavm/src/utils.rs#L93-L139">crates/polkavm/src/utils.rs93-139</a></p>
+
+<h4 id="execution-backends">Execution Backends</h4>
+
+<p>PolkaVM supports two execution backends:</p>
+
+<ol>
+  <li><strong>Compiler Backend</strong>: JIT-compiles the program to native code for high performance</li>
+  <li><strong>Interpreter Backend</strong>: Interprets the program’s instructions directly, used as a fallback when compilation is not available</li>
+</ol>
+
+<p>The appropriate backend is selected based on platform support and configuration.</p>
+
+<p>Sources: <a href="https://github.com/paritytech/polkavm/blob/910adbda/crates/polkavm/src/config.rs#L7-L49">crates/polkavm/src/config.rs7-49</a></p>
+
+<h4 id="sandboxing">Sandboxing</h4>
+
+<p>The sandbox component provides isolation for executing untrusted code, preventing it from accessing the host system directly:</p>
+
+<ol>
+  <li><strong>Linux Sandbox</strong>: Uses Linux-specific features like zygote processes, seccomp, and namespaces for efficient isolation</li>
+  <li><strong>Generic Sandbox</strong>: A more portable implementation for other platforms</li>
+</ol>
+
+<p><img class="mermaid" src="https://mermaid.ink/svg/eyJjb2RlIjoiJSUtXG5mbG93Y2hhcnQgVERcbkFbU2FuZGJveCBUcmFpdF0gLS0-IEJbTGludXggU2FuZGJveF1cbkEtLT5DW1NhbmRib3hLaW5kXVxuQi0tPkRbWnlnb3RlIFByb2Nlc3NdXG5CIC0tPiBFW0xpbnV4IFNlY3VyaXR5IEZlYXR1cmVzXVxuRS0tPkZbc2VjY29tcF1cbkUtLT5HW05hbWVzcGFjZXNdXG5FLS0-SFt1c2VyZmF1bHRmZF1cbkMtLT5JW1NpZ25hbCBIYW5kbGVyc11cbiUlLSIsIm1lcm1haWQiOm51bGx9" /></p>
+
+<p>Sources: <a href="https://github.com/paritytech/polkavm/blob/910adbda/crates/polkavm/src/config.rs#L51-L98">crates/polkavm/src/config.rs51-98</a> <a href="https://github.com/paritytech/polkavm/blob/910adbda/.github/workflows/rust.yml#L1-L133">.github/workflows/rust.yml1-133</a></p>
+
+<h4 id="program-representation">Program Representation</h4>
+
+<p>Programs in PolkaVM are represented as a <code class="language-plaintext highlighter-rouge">ProgramBlob</code>, which contains:</p>
+
+<ul>
+  <li><strong>Code</strong>: The instructions to be executed</li>
+  <li><strong>Read-Only Data</strong>: Constant data used by the program</li>
+  <li><strong>Read-Write Data</strong>: Mutable data used by the program</li>
+  <li><strong>Jump Table</strong>: Information for optimizing jumps in the code</li>
+</ul>
+
+<p>Sources: <a href="https://github.com/paritytech/polkavm/blob/910adbda/crates/polkavm/src/lib.rs#L117-L137">crates/polkavm/src/lib.rs117-137</a></p>
+
+<h4 id="gas-metering">Gas Metering</h4>
+
+<p>PolkaVM provides resource control through gas metering, allowing limits on how much computation a program can perform:</p>
+
+<ol>
+  <li><strong>Synchronous Gas Metering</strong>: Checks gas consumption after every instruction</li>
+  <li><strong>Asynchronous Gas Metering</strong>: Periodically checks gas consumption for better performance</li>
+</ol>
+
+<p>Sources: <a href="https://github.com/paritytech/polkavm/blob/910adbda/crates/polkavm/src/config.rs#L369-L385">crates/polkavm/src/config.rs369-385</a> <a href="https://github.com/paritytech/polkavm/blob/910adbda/crates/polkavm/src/lib.rs#L139-L146">crates/polkavm/src/lib.rs139-146</a></p>
+
+<h2 id="memory-management">Memory Management</h2>
+
+<p>PolkaVM manages memory for guest programs using a structured memory layout:</p>
+
+<p><img class="mermaid" src="https://mermaid.ink/svg/eyJjb2RlIjoiJSUtXG5mbG93Y2hhcnQgVERcbiUlLVxuQVtWTSBNZW1vcnkgU3BhY2VdIC0tPiBCW0d1YXJkIFBhZ2VzXVxuQSAtLT4gQ1tDb2RlIFNlY3Rpb25dXG5BIC0tPiBEW1JlYWQtT25seSBEYXRhIFNlY3Rpb25dXG5BIC0tPiBFW1JlYWQtV3JpdGUgRGF0YSBTZWN0aW9uXVxuQSAtLT4gRltTdGFjayBSZWdpb25dXG5BIC0tPiBHW0F1eGlsaWFyeSBEYXRhIFJlZ2lvbl1cbkEgLS0-IEhbXCJIZWFwICh2aWEgc2JyaylcIl1cbiUlLSIsIm1lcm1haWQiOm51bGx9" /></p>
+
+<p>The system supports dynamic paging, allowing memory to be mapped on-demand when accessed, which can improve performance for certain workloads.</p>
+
+<p>Sources: <a href="https://github.com/paritytech/polkavm/blob/910adbda/crates/polkavm/src/utils.rs#L24-L44">crates/polkavm/src/utils.rs24-44</a> <a href="https://github.com/paritytech/polkavm/blob/910adbda/crates/polkavm/src/config.rs#L426-L447">crates/polkavm/src/config.rs426-447</a></p>
+
+<h2 id="execution-flow">Execution Flow</h2>
+
+<p>The execution of a program in PolkaVM follows this general flow:</p>
+
+<p><img class="mermaid" src="https://mermaid.ink/svg/eyJjb2RlIjoiJSUtXG5zZXF1ZW5jZURpYWdyYW1cbnBhcnRpY2lwYW50IEEgYXMgSG9zdCBQcm9ncmFtXG5wYXJ0aWNpcGFudCBCIGFzIEVuZ2luZVxucGFydGljaXBhbnQgQyBhcyBNb2R1bGVcbnBhcnRpY2lwYW50IEQgYXMgUmF3SW5zdGFuY2VcbnBhcnRpY2lwYW50IEUgYXMgRXhlY3V0aW9uIEJhY2tlbmRcbkEtPj5COiBjcmVhdGUoY29uZmlnKVxuQS0-PkI6IG5ldyBtb2R1bGUoYmxvYilcbkItPj5DOiBmcm9tX2Jsb2IoZW5naW5lLCBjb25maWcsIGJsb2IpXG5DLS0-PkI6IE1vZHVsZVxuQi0tPj5BOiBNb2R1bGVcbkEtPj5DOiBpbnN0YW50aWF0ZSgpXG5DLT4-RDogbmV3KG1vZHVsZSlcbkMtPj5FOiBpbml0aWFsaXplXG5DLS0-PkE6IGluaXRpYWxpemVcbkEtPj5EOiBzZXRfcmVnKC4uLilcbkEtPj5EOiBydW4oKVxuRC0-PkU6IHJ1bigpXG5hbHQgTm9ybWFsIEV4ZWN1dGlvblxuRS0tPj5EOiBJbnRlcnJ1cHRLaW5kOjpGaW5pc2hlZFxuRC0tPj5BOiBJbnRlcnJ1cHRLaW5kOjpGaW5pc2hlZFxuZWxzZSBIb3N0IENhbGxcbkUtLT4-RDogSW50ZXJydXB0S2luZDo6RWNhbGxpKG4pXG5ELS0-PkE6IEludGVycnVwdEtpbmQ6OkVjYWxsaShuKVxuQS0-PkQ6IHNldF9yZWcoLi4uKVxuQS0-PkQ6IHJ1bigpXG5lbHNlIEVycm9yIENvbmRpdGlvblxuRS0tPj5EOiBJbnRlcnJ1cHRLaW5kOjpUcmFwL05vdEVub3VnaEdhcy9TZWdmYXVsdFxuRC0tPj5BOiBJbnRlcnJ1cHRLaW5kOjpUcmFwL05vdEVub3VnaEdhcy9TZWdmYXVsdFxuZW5kXG4lJS0iLCJtZXJtYWlkIjpudWxsfQ" /></p>
+
+<p>When a program executes, it may be interrupted for various reasons, represented by the <code class="language-plaintext highlighter-rouge">InterruptKind</code> enum:</p>
+
+<ul>
+  <li><strong>Finished</strong>: The program completed execution normally</li>
+  <li><strong>Trap</strong>: The program encountered an error or invalid operation</li>
+  <li><strong>Ecalli</strong>: The program is calling out to a host function</li>
+  <li><strong>Segfault</strong>: The program attempted an invalid memory access</li>
+  <li><strong>NotEnoughGas</strong>: The program ran out of its gas allocation</li>
+  <li><strong>Step</strong>: Returned when step tracing is enabled, after each instruction</li>
+</ul>
+
+<p>Sources: <a href="https://github.com/paritytech/polkavm/blob/910adbda/crates/polkavm/src/utils.rs#L93-L139">crates/polkavm/src/utils.rs93-139</a></p>
+
+<h2 id="tools-and-utilities">Tools and Utilities</h2>
+
+<p>PolkaVM provides several tools for working with programs:</p>
+
+<ol>
+  <li><strong>polkatool</strong>: Command-line utility for linking, assembling, disassembling and analyzing PolkaVM programs</li>
+  <li><strong>benchtool</strong>: Benchmarking tool for comparing PolkaVM with other VMs</li>
+  <li><strong>spectool</strong>: Test case generation and execution tool</li>
+</ol>
+
+<p>Sources: <a href="https://github.com/paritytech/polkavm/blob/910adbda/Cargo.toml#L1-L202">Cargo.toml1-202</a> <a href="https://github.com/paritytech/polkavm/blob/910adbda/tools/benchtool/Cargo.lock#L1-L5358">tools/benchtool/Cargo.lock1-5358</a></p>
+
+<h2 id="configuration-options">Configuration Options</h2>
+
+<p>PolkaVM can be configured through a variety of options in the <code class="language-plaintext highlighter-rouge">Config</code> and <code class="language-plaintext highlighter-rouge">ModuleConfig</code> structs:</p>
+
+<table>
+  <thead>
+    <tr>
+      <th>Configuration</th>
+      <th>Description</th>
+      <th>Default</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Backend</td>
+      <td>Execution backend (Compiler/Interpreter)</td>
+      <td>Auto-detect</td>
+    </tr>
+    <tr>
+      <td>Sandbox</td>
+      <td>Sandboxing mechanism (Linux/Generic)</td>
+      <td>Auto-detect</td>
+    </tr>
+    <tr>
+      <td>Gas Metering</td>
+      <td>Resource control method (Sync/Async/None)</td>
+      <td>None</td>
+    </tr>
+    <tr>
+      <td>Worker Count</td>
+      <td>Number of worker sandboxes to keep alive</td>
+      <td>2</td>
+    </tr>
+    <tr>
+      <td>Dynamic Paging</td>
+      <td>Enable on-demand memory mapping</td>
+      <td>False</td>
+    </tr>
+    <tr>
+      <td>Cache Enabled</td>
+      <td>Enable module caching</td>
+      <td>True with module-cache feature</td>
+    </tr>
+    <tr>
+      <td>Sandboxing Enabled</td>
+      <td>Enable security sandboxing</td>
+      <td>True</td>
+    </tr>
+    <tr>
+      <td>Page Size</td>
+      <td>Size of memory pages</td>
+      <td>4096 (4KB)</td>
+    </tr>
+    <tr>
+      <td>Step Tracing</td>
+      <td>Enable instruction-by-instruction tracing</td>
+      <td>False</td>
+    </tr>
+  </tbody>
+</table>
+
+<p>Sources: <a href="https://github.com/paritytech/polkavm/blob/910adbda/crates/polkavm/src/config.rs#L100-L367">crates/polkavm/src/config.rs100-367</a> <a href="https://github.com/paritytech/polkavm/blob/910adbda/crates/polkavm/src/config.rs#L392-L534">crates/polkavm/src/config.rs392-534</a></p>
+
+<h2 id="platform-support">Platform Support</h2>
+
+<p>PolkaVM primarily targets the following platforms:</p>
+
+<ul>
+  <li><strong>Linux</strong> (x86_64): Full support with the compiler backend and Linux-specific sandboxing</li>
+  <li><strong>macOS</strong> (x86_64): Support with the generic sandbox when the feature is enabled</li>
+  <li><strong>FreeBSD</strong> (x86_64): Support with the generic sandbox when the feature is enabled</li>
+  <li><strong>Windows</strong> (x86_64): Limited support</li>
+</ul>
+
+<p>The compiler backend is only available on x86_64 architecture, while the interpreter backend works across all supported platforms.</p>
+
+<p>Sources: <a href="https://github.com/paritytech/polkavm/blob/910adbda/.github/workflows/rust.yml#L1-L133">.github/workflows/rust.yml1-133</a> <a href="https://github.com/paritytech/polkavm/blob/910adbda/crates/polkavm/src/lib.rs#L9-L51">crates/polkavm/src/lib.rs9-51</a> <a href="https://github.com/paritytech/polkavm/blob/910adbda/ci/jobs/check-freebsd.sh#L1-L11">ci/jobs/check-freebsd.sh1-11</a></p>
+
+<h2 id="system-requirements">System Requirements</h2>
+
+<p>For optimal performance with the Linux sandbox and dynamic paging:</p>
+
+<ul>
+  <li>Linux 6.7+ kernel</li>
+  <li>Unprivileged userfaultfd must be enabled (<code class="language-plaintext highlighter-rouge">/proc/sys/vm/unprivileged_userfaultfd</code> must be set to <code class="language-plaintext highlighter-rouge">1</code>)</li>
+  <li>For some features, unprivileged user namespaces must be allowed</li>
+</ul>
+
+<p>Sources: <a href="https://github.com/paritytech/polkavm/blob/910adbda/crates/polkavm/src/config.rs#L299-L308">crates/polkavm/src/config.rs299-308</a> <a href="https://github.com/paritytech/polkavm/blob/910adbda/.github/workflows/rust.yml#L1-L133">.github/workflows/rust.yml1-133</a></p>]]></content><author><name>Joe</name></author><category term="Technics" /><category term="JAM" /><category term="PolkaVM" /><summary type="html"><![CDATA[Overview]]></summary></entry></feed>

@@ -1,0 +1,1357 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="google-translate-customization" content="108d9124921d80c3-80e20d618ff053c8-g4f02ec6f3dba68b7-c">
+<!-- Begin Jekyll SEO tag v2.8.0 -->
+<title>Isolate or Integrate? PolkaVM’s Sandboxing Choices Explained 🤔 | Industry-University-Research Dao</title>
+<meta name="generator" content="Jekyll v4.4.1">
+<meta property="og:title" content="Isolate or Integrate? PolkaVM’s Sandboxing Choices Explained 🤔">
+<meta name="author" content="Joe">
+<meta property="og:locale" content="en_US">
+<meta name="description" content="Sandboxing is a critical security feature in PolkaVM that isolates guest program execution from the host system. This isolation is essential for preventing malicious or erroneous code from affecting the host environment or accessing unauthorized resources. This document explains how PolkaVM implements sandboxing, the different sandbox implementations available, and the security mechanisms they employ.">
+<meta property="og:description" content="Sandboxing is a critical security feature in PolkaVM that isolates guest program execution from the host system. This isolation is essential for preventing malicious or erroneous code from affecting the host environment or accessing unauthorized resources. This document explains how PolkaVM implements sandboxing, the different sandbox implementations available, and the security mechanisms they employ.">
+<link rel="canonical" href="/technics/2025/05/24/Sandboxing.html">
+<meta property="og:url" content="/technics/2025/05/24/Sandboxing.html">
+<meta property="og:site_name" content="Industry-University-Research Dao">
+<meta property="og:type" content="article">
+<meta property="article:published_time" content="2025-05-24T00:00:00+00:00">
+<meta name="twitter:card" content="summary">
+<meta property="twitter:title" content="Isolate or Integrate? PolkaVM’s Sandboxing Choices Explained 🤔">
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"BlogPosting","author":{"@type":"Person","name":"Joe"},"dateModified":"2025-05-24T00:00:00+00:00","datePublished":"2025-05-24T00:00:00+00:00","description":"Sandboxing is a critical security feature in PolkaVM that isolates guest program execution from the host system. This isolation is essential for preventing malicious or erroneous code from affecting the host environment or accessing unauthorized resources. This document explains how PolkaVM implements sandboxing, the different sandbox implementations available, and the security mechanisms they employ.","headline":"Isolate or Integrate? PolkaVM’s Sandboxing Choices Explained 🤔","mainEntityOfPage":{"@type":"WebPage","@id":"/technics/2025/05/24/Sandboxing.html"},"url":"/technics/2025/05/24/Sandboxing.html"}</script>
+<!-- End Jekyll SEO tag -->
+<link rel="icon" href="">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/typeface-noto-sans@0.0.72/index.min.css">
+  <link rel="stylesheet" href="/assets/css/main.css">
+  <script src="/assets/js/main.js"></script><link type="application/atom+xml" rel="alternate" href="/feed.xml" title="Industry-University-Research Dao">
+<link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/styles/default.min.css">
+<script src="//cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/highlight.min.js"></script>
+<!-- and it's easy to individually load additional languages -->
+<script charset="UTF-8" src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/languages/go.min.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<script>
+// Init highlight js
+document.addEventListener('DOMContentLoaded', function(event) {
+  var els = document.querySelectorAll('pre code')
+
+  function addLangData(block) {
+    var outer = block.parentElement.parentElement.parentElement;
+    var lang = block.getAttribute('data-lang');
+    for (var i = 0; i < outer.classList.length; i++) {
+      var cls = outer.classList[i];
+      if (cls.startsWith('language-')) {
+        lang = cls;
+        break;
+      }
+    }
+    if (!lang) {
+      cls = block.getAttribute('class');
+      lang = cls ? cls.replace('hljs ', '') : '';
+    }
+    if (lang.startsWith('language-')) {
+      lang = lang.substr(9);
+    }
+    block.setAttribute('class', 'hljs ' + lang);
+    block.parentNode.setAttribute('data-lang', lang);
+  }
+
+  function addBadge(block) {
+    var enabled = ('true' || 'true').toLowerCase();
+    if (enabled == 'true') {
+      var pre = block.parentElement;
+      pre.classList.add('badge');
+    }
+  }
+
+  function handle(block) {
+    addLangData(block);
+    addBadge(block)
+    hljs.highlightBlock(block);
+  }
+
+  for (var i = 0; i < els.length; i++) {
+    var el = els[i];
+    handle(el);
+  }
+});
+</script>
+
+<style>
+  /* code language badge */
+  pre.badge::before {
+    content: attr(data-lang);
+    color: #fff;
+    background-color: #ff4e00;
+    padding: 0 .5em;
+    border-radius: 0 2px;
+    text-transform: uppercase;
+    text-align: center;
+    min-width: 32px;
+    display: inline-block;
+    position: absolute;
+    right: 0;
+  }
+
+  /* fix wrong badge display for firefox browser */
+  code > table pre::before {
+    display: none;
+  }
+</style>
+<script src="//cdnjs.cloudflare.com/ajax/libs/photoswipe/4.1.3/photoswipe.min.js"></script>
+<script src="//cdnjs.cloudflare.com/ajax/libs/photoswipe/4.1.3/photoswipe-ui-default.min.js"></script>
+<link href="https://cdnjs.cloudflare.com/ajax/libs/photoswipe/4.1.3/photoswipe.css" rel="stylesheet">
+<link href="https://cdnjs.cloudflare.com/ajax/libs/photoswipe/4.1.3/default-skin/default-skin.css" rel="stylesheet">
+<style>
+  .pswp .pswp__container .pswp__img {
+    background-color: white;
+  }
+</style>
+
+<script>
+  function initPhotoSwipe() {
+    var mainEl = document.querySelector("section.main");
+
+    var imgEls = mainEl.querySelectorAll("img:not(.emoji)");
+    imgEls.forEach((imgEl) => {
+      imgEl.outerHTML = `
+    <a class="photo-swipe"
+      href="${imgEl.src}"
+      data-width="${imgEl.getAttribute("width") || imgEl.width * 2}"
+      data-height="${imgEl.getAttribute("height") || imgEl.height * 2}"
+      data-caption="${imgEl.getAttribute("caption") || imgEl.alt}"
+      target="_blank">
+      ${imgEl.outerHTML}
+    </a>`;
+    });
+
+    // Init empty gallery array
+    var container = [];
+
+    // Loop over gallery items and push it to the array
+    var linkEls = mainEl.querySelectorAll("a.photo-swipe");
+    linkEls.forEach((link) => {
+      var item = {
+        src: link.getAttribute("href"),
+        w: link.dataset.width,
+        h: link.dataset.height,
+        title: link.dataset.caption || "",
+      };
+      container.push(item);
+    });
+
+    // Define click event on gallery item
+    linkEls.forEach((link, index) => {
+      link.addEventListener("click", (event) => {
+        // Prevent location change
+        event.preventDefault();
+
+        // Define object and gallery options
+        var pswp = document.querySelector(".pswp");
+
+        var zoomLevel = 1;
+
+        // Define object and gallery options
+        var options = {
+          index: index,
+          bgOpacity: 0.85,
+          showHideOpacity: true,
+          closeOnScroll: true,
+          maxSpreadZoom: 1,
+          getDoubleTapZoom: (isMouseClick, item) => {
+            if (item.detail) {
+              zoomLevel += item.detail.origEvent.shiftKey ? -1 : 1;
+              item.detail = undefined;
+            } else {
+              zoomLevel = zoomLevel === 1 ? 2 : 1;
+            }
+            if (zoomLevel <= 1) {
+              zoomLevel = 1;
+              setTimeout(() => pswp.classList.remove("pswp--zoomed-in"), 0);
+            }
+            return item.initialZoomLevel * zoomLevel;
+          },
+        };
+
+        // Initialize PhotoSwipe
+        var gallery = new PhotoSwipe(
+          pswp,
+          PhotoSwipeUI_Default,
+          container,
+          options
+        );
+
+        gallery.init();
+
+        // Custom zoom event
+        gallery.container.addEventListener("pswpTap", (e) => {
+          gallery.currItem.detail = e.detail;
+        });
+      });
+    });
+  }
+
+  window.addEventListener("load", initPhotoSwipe);
+</script>
+
+<!-- Root element of PhotoSwipe. Must have class pswp. -->
+</head>
+<body>
+<div class="pswp" tabindex="-1" role="dialog" aria-hidden="true">
+  <!-- Background of PhotoSwipe.
+           It's a separate element as animating opacity is faster than rgba(). -->
+  <div class="pswp__bg"></div>
+  <!-- Slides wrapper with overflow:hidden. -->
+  <div class="pswp__scroll-wrap">
+    <!-- Container that holds slides.
+              PhotoSwipe keeps only 3 of them in the DOM to save memory.
+              Don't modify these 3 pswp__item elements, data is added later on. -->
+    <div class="pswp__container">
+      <div class="pswp__item"></div>
+      <div class="pswp__item"></div>
+      <div class="pswp__item"></div>
+    </div>
+    <!-- Default (PhotoSwipeUI_Default) interface on top of sliding area. Can be changed. -->
+    <div class="pswp__ui pswp__ui--hidden">
+      <div class="pswp__top-bar">
+        <!--  Controls are self-explanatory. Order can be changed. -->
+        <div class="pswp__counter"></div>
+        <button class="pswp__button pswp__button--close" title="Close (Esc)"></button>
+        <button class="pswp__button pswp__button--share" title="Share"></button>
+        <button class="pswp__button pswp__button--fs" title="Toggle fullscreen"></button>
+        <button class="pswp__button pswp__button--zoom" title="Zoom in/out"></button>
+        <!-- element will get class pswp__preloader--active when preloader is running -->
+        <div class="pswp__preloader">
+          <div class="pswp__preloader__icn">
+            <div class="pswp__preloader__cut">
+              <div class="pswp__preloader__donut"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="pswp__share-modal pswp__share-modal--hidden pswp__single-tap">
+        <div class="pswp__share-tooltip"></div>
+      </div>
+      <button class="pswp__button pswp__button--arrow--left" title="Previous (arrow left)"></button>
+      <button class="pswp__button pswp__button--arrow--right" title="Next (arrow right)"></button>
+      <div class="pswp__caption">
+        <div class="pswp__caption__center"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<header class="site-header " role="banner">
+
+  <div class="wrapper">
+    <div class="site-header-inner">
+<span class="site-brand"><a class="site-brand-inner" rel="author" href="/">
+  <img class="site-favicon" title="Industry-University-Research Dao" src="" onerror="this.style.display='none'">
+  Industry-University-Research Dao
+</a>
+</span><nav class="site-nav">
+          <input type="checkbox" id="nav-trigger" class="nav-trigger">
+          <label for="nav-trigger">
+            <span class="menu-icon">
+              <svg viewbox="0 0 18 15" width="18px" height="15px">
+                <path d="M18,1.484c0,0.82-0.665,1.484-1.484,1.484H1.484C0.665,2.969,0,2.304,0,1.484l0,0C0,0.665,0.665,0,1.484,0 h15.032C17.335,0,18,0.665,18,1.484L18,1.484z M18,7.516C18,8.335,17.335,9,16.516,9H1.484C0.665,9,0,8.335,0,7.516l0,0 c0-0.82,0.665-1.484,1.484-1.484h15.032C17.335,6.031,18,6.696,18,7.516L18,7.516z M18,13.516C18,14.335,17.335,15,16.516,15H1.484 C0.665,15,0,14.335,0,13.516l0,0c0-0.82,0.665-1.483,1.484-1.483h15.032C17.335,12.031,18,12.695,18,13.516L18,13.516z"></path>
+              </svg>
+            </span>
+          </label>
+
+          <div class="trigger">
+<a class="page-link" href="/about.html">ABOUT</a><a class="page-link" href="/archives.html">ARCHIVES</a><a class="page-link" href="/categories.html">CATEGORIES</a><a class="page-link" href="/">HOME</a><a class="page-link" href="/tags.html">TAGS</a>
+
+
+
+
+
+
+
+
+
+<span class="page-link">
+
+
+
+<div id="google_translate_element" style="display: none;">
+</div>
+
+<span class="ct-language">
+  <ul class="list-unstyled ct-language-dropdown">
+    
+      <li>
+        <a href="#" class="lang-select" data-lang="en">
+          
+          <img src="https://cdn.countryflags.com/thumbs/united-states-of-america/flag-400.png" title="English">
+          
+        </a>
+      </li>
+    
+      <li>
+        <a href="#" class="lang-select" data-lang="fr">
+          
+          <img src="https://cdn.countryflags.com/thumbs/france/flag-400.png" title="French">
+          
+        </a>
+      </li>
+    
+      <li>
+        <a href="#" class="lang-select" data-lang="zh-CN">
+          
+          <img src="https://cdn.countryflags.com/thumbs/china/flag-400.png" title="Chinese(Simple)">
+          
+        </a>
+      </li>
+    
+      <li>
+        <a href="#" class="lang-select" data-lang="ja">
+          
+          <img src="https://cdn.countryflags.com/thumbs/japan/flag-400.png" title="Japanese">
+          
+        </a>
+      </li>
+    
+      <li>
+        <a href="#" class="lang-select" data-lang="ko">
+          
+          <img src="https://cdn.countryflags.com/thumbs/south-korea/flag-400.png" title="Korean">
+          
+        </a>
+      </li>
+    
+      <li>
+        <a href="#" class="lang-select" data-lang="ru">
+          
+          <img src="https://cdn.countryflags.com/thumbs/russia/flag-400.png" title="Russian">
+          
+        </a>
+      </li>
+    
+  </ul>
+</span>
+
+<script type="text/javascript">
+function googleTranslateElementInit() {
+  new google.translate.TranslateElement({
+    pageLanguage: 'en',
+    autoDisplay: false,
+    layout: google.translate.TranslateElement.InlineLayout.VERTICAL
+  }, 'google_translate_element');
+
+  // Links to cross-origin destinations are unsafe
+  var gll = document.getElementsByClassName('goog-logo-link')[0];
+  if (gll) {
+    gll.setAttribute('rel', 'noopener');
+  }
+
+  function restoreLang() {
+    var iframe = document.getElementsByClassName('goog-te-banner-frame')[0];
+    if (!iframe) return;
+
+    var innerDoc = iframe.contentDocument || iframe.contentWindow.document;
+    var restore_el = innerDoc.getElementsByTagName("button");
+
+    for (var i = 0; i < restore_el.length; i++) {
+      if (restore_el[i].id.indexOf("restore") >= 0) {
+        restore_el[i].click();
+        var close_el = innerDoc.getElementsByClassName("goog-close-link");
+        close_el[0].click();
+        return;
+      }
+    }
+  }
+
+  function triggerHtmlEvent(element, eventName) {
+    var event;
+    if (document.createEvent) {
+      event = document.createEvent('HTMLEvents');
+      event.initEvent(eventName, true, true);
+      element.dispatchEvent(event);
+    } else {
+      event = document.createEventObject();
+      event.eventType = eventName;
+      element.fireEvent('on' + event.eventType, event);
+    }
+  }
+
+  var googleCombo = document.querySelector("select.goog-te-combo");
+  var langSelect = document.querySelector('.ct-language');
+  langSelect.addEventListener('click', function(event) {
+    if (!event.target) {
+      return;
+    }
+
+    var selected = document.querySelector('.ct-language .ct-language-selected');
+    if (selected) {
+      selected.classList.remove('ct-language-selected');
+    }
+
+    var target = event.target;
+    while (target && target !== langSelect ) {
+      if (target.matches('.lang-select')) {
+        break;
+      }
+      target = target.parentElement;
+    }
+
+    if (target && target.matches('.lang-select')) {
+      var lang = target.getAttribute('data-lang');
+      if (googleCombo.value == lang) {
+        restoreLang();
+      } else {
+        target.parentElement.classList.add('ct-language-selected');
+        googleCombo.value = lang;
+        triggerHtmlEvent(googleCombo, 'change');
+      }
+    }
+
+    event.preventDefault();
+  });
+}
+</script>
+
+<script type="text/javascript" src="//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"></script>
+</span>
+</div>
+        </nav>
+</div>
+  </div>
+</header>
+
+<script>
+  function initHeader() {
+    var lastScrollY = getScrollPos().y;
+    var documentElement = document.documentElement;
+
+    function storeScrollData() {
+      var y = getScrollPos().y;var scrollStatus = "";
+
+      if (y <= 0) {
+        scrollStatus = "top";
+      } else if ((window.innerHeight + y) >= document.body.offsetHeight) {
+        scrollStatus = "bottom";
+      } else {
+        var isScrollDown = (y - lastScrollY > 0) ? true : false;
+        scrollStatus = isScrollDown ? "down" : "up";
+      }
+
+      lastScrollY = y;
+      documentElement.setAttribute("data-scroll-status", scrollStatus);
+    }
+
+    window.addEventListener('scroll', function(e) {
+      storeScrollData();
+    });
+
+    storeScrollData();
+  }
+  document.addEventListener('DOMContentLoaded', initHeader);
+</script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<script>
+  function hashLocate(hashValue) {
+    hashValue = hashValue.replace(/^.*#h-/, '');
+    hashValue = decodeURIComponent(hashValue);
+    var element = document.getElementById(hashValue);
+
+    if (!element) {
+      return;
+    }
+
+    var header = document.querySelector('header.site-header');
+    var headerRect = header.getBoundingClientRect();
+    var headerTop = Math.floor(headerRect.top);
+    var headerHeight = Math.floor(headerRect.height);
+    var scrollPos = getScrollPos();
+    var offsetY = element.offsetTop - (headerTop + headerHeight + 20);
+
+    if (offsetY == scrollPos.y) {
+      return;
+    }
+
+    if (headerTop == 0  && offsetY > scrollPos.y) {
+      offsetY += headerHeight + 2;
+    } else if (headerTop < 0  && offsetY < scrollPos.y) {
+      offsetY -= headerHeight - 2;
+    }
+
+    smoothScrollTo(offsetY);
+  }
+
+  // The first event occurred
+  window.addEventListener('load', function(event) {
+    if (window.location.hash) {
+      hashLocate(window.location.hash);
+    }
+  });
+
+  // The first event occurred
+  window.addEventListener('click', function(event) {
+    if (event.target.tagName.toLowerCase() == 'a') {
+      hashLocate(event.target.getAttribute('href'));
+    }
+  });
+</script>
+<div class="theme-toggle">
+  <input type="checkbox" id="theme-switch">
+  <label for="theme-switch">
+    <div class="toggle"></div>
+    <div class="names">
+      <p class="light">Light</p>
+      <p class="dark">Dark</p>
+    </div>
+  </label>
+</div>
+
+
+
+
+<script>
+  (function() {
+    var sw = document.getElementById('theme-switch');
+    var html = document.getElementsByTagName('html')[0];
+    var nightModeOption = ('auto' || 'auto').toLowerCase();
+    var storage = nightModeOption === 'manual'
+        ? localStorage
+        : sessionStorage;
+    var themeData = loadThemeData();
+
+    function saveThemeData(data) {
+      storage.setItem('theme', JSON.stringify(data));
+    }
+
+    function loadThemeData() {
+      var data = storage.getItem('theme');
+      try {
+        data = JSON.parse(data ? data : '');
+      } catch(e) {
+        data = { nightShift: undefined, autoToggleAt: 0 };
+        saveThemeData(data);
+      }
+      return data;
+    }
+
+    function handleThemeToggle(nightShift) {
+      themeData.nightShift = nightShift;
+      saveThemeData(themeData);
+      html.dataset.theme = nightShift ? 'dark' : 'light';
+      setTimeout(function() {
+        sw.checked = nightShift ? true : false;
+      }, 50);
+    }
+
+    function autoThemeToggle() {
+      // Next time point of theme toggle
+      var now = new Date();
+      var toggleAt = new Date();
+      var hours = now.getHours();
+      var nightShift = hours >= 19 || hours <=7;
+
+      if (nightShift) {
+        if (hours > 7) {
+          toggleAt.setDate(toggleAt.getDate() + 1);
+        }
+        toggleAt.setHours(7);
+      } else {
+        toggleAt.setHours(19);
+      }
+
+      toggleAt.setMinutes(0);
+      toggleAt.setSeconds(0);
+      toggleAt.setMilliseconds(0)
+
+      var delay = toggleAt.getTime() - now.getTime();
+
+      // auto toggle theme mode
+      setTimeout(function() {
+        handleThemeToggle(!nightShift);
+      }, delay);
+
+      return {
+        nightShift: nightShift,
+        toggleAt: toggleAt.getTime()
+      };
+    }
+
+    // Listen the theme toggle event
+    sw.addEventListener('change', function(event) {
+      handleThemeToggle(event.target.checked);
+    });
+
+    if (nightModeOption == 'auto') {
+      var data = autoThemeToggle();
+
+      // Toggle theme by local setting
+      if (data.toggleAt > themeData.autoToggleAt) {
+        themeData.autoToggleAt = data.toggleAt;
+        handleThemeToggle(data.nightShift);
+      } else {
+        handleThemeToggle(themeData.nightShift);
+      }
+    } else if (nightModeOption == 'manual') {
+      handleThemeToggle(themeData.nightShift);
+    } else {
+      var nightShift = themeData.nightShift;
+      if (nightShift === undefined) {
+        nightShift = nightModeOption === 'on';
+      }
+      handleThemeToggle(nightShift);
+    }
+  })();
+</script>
+<div id="click-to-top" class="click-to-top">
+  <i class="fa fa-arrow-up"></i>
+</div>
+<script>
+  (function () {
+    const clickToTop = document.getElementById('click-to-top');
+    window.addEventListener('scroll', () => {
+      if (window.scrollY > 100) {
+        clickToTop.classList.add('show')
+      }else {
+        clickToTop.classList.remove('show')
+      }
+    });
+    clickToTop.addEventListener('click', () => {
+      window.smoothScrollTo(0);
+    });
+  })();
+</script>
+<main class="page-content" aria-label="Content">
+      <div class="wrapper">
+        <div class="framework">
+  <section class="main">
+
+     <div class="post">
+  <section>
+
+
+
+
+
+
+
+
+
+<header class="post-header">
+  <h1 class="post-title p-name" itemprop="name headline">Isolate or Integrate? PolkaVM's Sandboxing Choices Explained 🤔</h1>
+  <h2 class="post-subtitle">Linux sandbox vs. Generic sandbox – Which implementation is right for your needs? Understand the trade-offs and security considerations</h2>
+
+  <p class="post-meta">
+    <time class="dt-published" datetime="2025-05-24T00:00:00+00:00" itemprop="datePublished"><i class="fa fa-calendar"></i> May 24, 2025
+    </time>
+
+    
+    
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    <span class="post-reading-time left-vsplit"><i class="fa fa-clock-o"></i> About 8 mins</span>
+  </p>
+<div class="post-tags">
+<a class="post-tag" href="/tags.html#JAM">#JAM</a><a class="post-tag" href="/tags.html#PolkaVM">#PolkaVM</a><a class="post-tag" href="/tags.html#Sandboxing">#Sandboxing</a>
+</div></header>
+<article class="post h-entry" itemscope itemtype="http://schema.org/BlogPosting">
+
+    <div class="post-content e-content" itemprop="articleBody">
+
+      <p>Sandboxing is a critical security feature in PolkaVM that isolates guest program execution from the host system. This isolation is essential for preventing malicious or erroneous code from affecting the host environment or accessing unauthorized resources. This document explains how PolkaVM implements sandboxing, the different sandbox implementations available, and the security mechanisms they employ.</p>
+
+<p>For information about how program code is executed within the sandbox, see <a href="https://iurdao.github.io/technics/2025/05/24/Inside-PolkaVM-Unveiling-the-Core-VM-Engine.html">Core VM Engine</a>.</p>
+
+<h2 id="architecture-overview">Architecture Overview</h2>
+
+<p>PolkaVM implements a trait-based architecture for sandboxing, with specialized implementations for different operating systems. The system is designed to be extensible while providing secure isolation guarantees.</p>
+
+<p><img class="mermaid" src="https://mermaid.ink/svg/eyJjb2RlIjoiJSUtXG5mbG93Y2hhcnQgVERcbnN1YmdyYXBoIFNhbmRib3ggSW50ZXJmYWNlXG5BW1NhbmRib3ggVHJhaXRdXG5CW1NhbmRib3hDb25maWcgVHJhaXRdXG5DW1NhbmRib3hQcm9ncmFtIFRyYWl0XVxuZW5kXG5zdWJncmFwaCBJbXBsZW1lbnRhdGlvbnNcbkEtLT5EW0xpbnV4IFNhbmRib3hdXG5BLS0-RVtHZW5lcmljIFNhbmRib3hdXG5lbmRcbkQtLT5GW1p5Z290ZSBQcm9jZXNzIE1vZGVsXVxuRC0tPkdbTGludXggU2VjdXJpdHkgRmVhdHVyZXNdXG5HLS0-SFtOYW1lc3BhY2VzXVxuRy0tPklbU2VjY29tcCBGaWx0ZXJzXVxuRy0tPktbUmVzb3VyY2UgTGltaXRzXVxuRy0tPkxbXCJVc2VyZmF1bHRmZCAoRHluYW1pYyBQYWdpbmcpXCJdXG5FLS0-TVtTaWduYWwgSGFuZGxlcnNdXG5FLS0-TltNZW1vcnkgSXNvbGF0aW9uXVxuQi0tPk9bTGludXggU2FuZGJveENvbmZpZ11cbkItLT5QW0dlbmVyaWMgU2FuZGJveENvbmZpZ11cbkMtLT5RW0xpbnV4IFNhbmRib3hQcm9ncmFtXVxuQy0tPlJbR2VuZXJpYyBTYW5kYm94UHJvZ3JhbV1cbiUlLSIsIm1lcm1haWQiOm51bGx9"></p>
+
+<p>Sources: <a href="https://github.com/paritytech/polkavm/blob/910adbda/crates/polkavm/src/sandbox.rs#L88-L138">crates/polkavm/src/sandbox.rs88-138</a> <a href="https://github.com/paritytech/polkavm/blob/910adbda/crates/polkavm/src/sandbox/linux.rs#L37-L192">crates/polkavm/src/sandbox/linux.rs37-192</a> <a href="https://github.com/paritytech/polkavm/blob/910adbda/crates/polkavm/src/sandbox/generic.rs#L92-L139">crates/polkavm/src/sandbox/generic.rs92-139</a></p>
+
+<h2 id="sandbox-interface">Sandbox Interface</h2>
+
+<p>The <code class="language-plaintext highlighter-rouge">Sandbox</code> trait defines a common interface for all sandbox implementations. It specifies methods for:</p>
+
+<ul>
+  <li>Creating and managing sandbox instances</li>
+  <li>Loading compiled modules</li>
+  <li>Executing code within the sandbox</li>
+  <li>Accessing and manipulating memory and registers</li>
+  <li>Handling interrupts and traps</li>
+</ul>
+
+<p>The trait ensures that different sandboxing implementations can be used interchangeably while providing the same level of functionality.</p>
+
+<p>Sources: <a href="https://github.com/paritytech/polkavm/blob/910adbda/crates/polkavm/src/sandbox.rs#L88-L138">crates/polkavm/src/sandbox.rs88-138</a> <a href="https://github.com/paritytech/polkavm/blob/910adbda/crates/polkavm/src/sandbox.rs#L152-L223">crates/polkavm/src/sandbox.rs152-223</a> <a href="https://github.com/paritytech/polkavm/blob/910adbda/crates/polkavm/src/sandbox.rs#L321-L424">crates/polkavm/src/sandbox.rs321-424</a></p>
+
+<h2 id="linux-sandbox-implementation">Linux Sandbox Implementation</h2>
+
+<p>The Linux sandbox implementation leverages the advanced security features available in the Linux kernel to provide strong isolation guarantees.</p>
+
+<h3 id="zygote-process-model">Zygote Process Model</h3>
+
+<p>The Linux sandbox uses a “zygote” process model, where a master process (the zygote) is forked to create child processes that execute guest code. This approach allows for:</p>
+
+<ol>
+  <li>Fast creation of new sandbox instances</li>
+  <li>Strong process-level isolation</li>
+  <li>Efficient resource management</li>
+</ol>
+
+<p><img class="mermaid" src="https://mermaid.ink/svg/eyJjb2RlIjoiJSUtXG5zZXF1ZW5jZURpYWdyYW1cbnBhcnRpY2lwYW50IEEgYXMgSG9zdCBQcm9jZXNzXG5wYXJ0aWNpcGFudCBCIGFzIEdsb2JhbFN0YXRlXG5wYXJ0aWNpcGFudCBDIGFzIFp5Z290ZSBQcm9jZXNzXG5wYXJ0aWNpcGFudCBEIGFzIENoaWxkIFNhbmRib3ggUHJvY2Vzc1xuQS0-PkI6IG5ldyhjb25maWcpXG5CLT4-QzogcHJlcGFyZV96eWdvdGUoKVxuQy0tPj5COiB6eWdvdGVfbWVtZmRcbkEtPj5DOiBjbG9uZShTQU5EQk9YX0ZMQUdTKVxuQS0-PkI6IHNwYXduKClcbkItPj5EOiBmb3JrIGZyb20genlnb3RlXG5CLT4-RDogc2VuZCBzaGFyZWQgbWVtb3J5IGRlc2NyaXB0b3JzXG5CLT4-RDogc2V0IHVwIHNpZ25hbCBoYW5kbGVyc1xuQi0-PkQ6IHNldCB1cCBzZWNjb21wIGZpbHRlcnNcbkEtPj5EOiBsb2FkX21vZHVsZShtb2R1bGUpXG5BLT4-RDogcnVuKClcbkQtLT4-QTogcmV0dXJuIGludGVycnVwdFxubm90ZSBvdmVyIEEsRDogU2FuZGJveCBjYW4gYmUgcmVjeWNsZWQgZm9yIGZ1dHVyZSB1c2VcbiUlLSIsIm1lcm1haWQiOm51bGx9"></p>
+
+<p>The zygote process is created with a carefully controlled environment, and when a new sandbox is needed, the zygote is forked to create a new process. This new process inherits the initialized state but runs with its own memory space and restricted permissions.</p>
+
+<p>Sources: <a href="https://github.com/paritytech/polkavm/blob/910adbda/crates/polkavm/src/sandbox/linux.rs#L150-L179">crates/polkavm/src/sandbox/linux.rs150-179</a> <a href="https://github.com/paritytech/polkavm/blob/910adbda/crates/polkavm/src/sandbox/linux.rs#L644-L672">crates/polkavm/src/sandbox/linux.rs644-672</a> <a href="https://github.com/paritytech/polkavm/blob/910adbda/crates/polkavm/src/sandbox/linux.rs#L739-L799">crates/polkavm/src/sandbox/linux.rs739-799</a></p>
+
+<h3 id="security-mechanisms">Security Mechanisms</h3>
+
+<p>The Linux sandbox employs multiple security mechanisms to provide isolation:</p>
+
+<ol>
+  <li>
+<strong>Namespaces</strong>: The sandbox uses Linux namespaces (<code class="language-plaintext highlighter-rouge">CLONE_NEWCGROUP</code>, <code class="language-plaintext highlighter-rouge">CLONE_NEWIPC</code>, <code class="language-plaintext highlighter-rouge">CLONE_NEWNET</code>, etc.) to isolate the process from the host system’s resources.</li>
+  <li>
+<strong>Seccomp Filters</strong>: A seccomp filter is applied to restrict the system calls that the sandboxed process can make. This limits the potential attack surface.</li>
+  <li>
+<strong>Resource Limits</strong>: Resource limits are set on the sandboxed process to prevent it from consuming excessive resources.</li>
+  <li>
+<strong>Capability Restrictions</strong>: All capabilities are dropped from the sandboxed process, ensuring it can’t perform privileged operations.</li>
+  <li>
+<strong>Filesystem Isolation</strong>: The filesystem is completely hidden from the sandboxed process using <code class="language-plaintext highlighter-rouge">pivot_root</code> and <code class="language-plaintext highlighter-rouge">umount2</code>.</li>
+</ol>
+
+<p>Sources: <a href="https://github.com/paritytech/polkavm/blob/910adbda/crates/polkavm/src/sandbox/linux.rs#L47-L53">crates/polkavm/src/sandbox/linux.rs47-53</a> <a href="https://github.com/paritytech/polkavm/blob/910adbda/crates/polkavm/src/sandbox/linux.rs#L747-L795">crates/polkavm/src/sandbox/linux.rs747-795</a> <a href="https://github.com/paritytech/polkavm/blob/910adbda/crates/polkavm/src/sandbox/linux.rs#L857-L878">crates/polkavm/src/sandbox/linux.rs857-878</a></p>
+
+<h2 id="memory-protection-and-isolation">Memory Protection and Isolation</h2>
+
+<p>Memory protection is a key aspect of sandboxing in PolkaVM. The system ensures that guest programs can only access memory regions they’re allowed to, preventing unauthorized access to host memory or memory belonging to other guests.</p>
+
+<h3 id="memory-layout">Memory Layout</h3>
+
+<p>PolkaVM uses a carefully designed memory layout with different regions for code, data, and control structures.</p>
+
+<p><img class="mermaid" src="https://mermaid.ink/svg/eyJjb2RlIjoiJSUtXG5mbG93Y2hhcnQgVERcbnN1YmdyYXBoIE1lbW9yeSBQcm90ZWN0aW9uXG5BW01lbW9yeSBQZXJtaXNzaW9uIE1hcHBpbmddXG5CW1NpZ25hbCBIYW5kbGluZyBmb3IgQWNjZXNzIFZpb2xhdGlvbnNdXG5DW01lbW9yeSBNYXBwaW5nIENvbnRyb2xdXG5EW1wiRHluYW1pYyBQYWdpbmcgKHVzZXJmYXVsdGZkKVwiXVxuZW5kXG5zdWJncmFwaCBWaXJ0dWFsIE1lbW9yeSBMYXlvdXRcbnN1YmdyYXBoIFwiR3Vlc3QgTWVtb3J5IFJlZ2lvbnMgKDB4MC0weEZGRkZGRkZGKVwiXG5FW0d1ZXN0IENvZGVdXG5GW0d1ZXN0IFJlYWQtb25seSBEYXRhXVxuR1tHdWVzdCBSZWFkLXdyaXRlIERhdGFdXG5IW0d1ZXN0IFN0YWNrXVxuSVtcIkd1ZXN0IEhlYXAgKER5bmFtaWNhbGx5IEdyb3duKVwiXVxuZW5kXG5zdWJncmFwaCBIb3N0LW9ubHkgUmVnaW9uc1xuSltcIlZNX0FERFJfTkFUSVZFX0NPREUgKDB4MTAwMDAwMDAwKVwiXVxuS1tcIlZNX0FERFJfSlVNUF9UQUJMRSAoMHg4MDAwMDAwMDApXCJdXG5MW1wiVk1fQUREUl9WTUNUWCAoMHg0MDAwMDAwMDApXCJdXG5NW1wiVk1fQUREUl9TSUdTVEFDSyAoMHg1MDAwMDAwMDApXCJdXG5OW1wiVk1fQUREUl9OQVRJVkVfU1RBQ0sgKDB4NjAwMDAwMDAwKVwiXVxuZW5kXG5PW1wiVk1fQUREUl9TSEFSRURfTUVNT1JZICgweDcwMDAwMDAwMClcIl1cbmVuZFxuQS0tPkVcbkEtLT5GXG5BLS0-R1xuSS0tPkRcbkItLT5DXG4lJS0iLCJtZXJtYWlkIjpudWxsfQ"></p>
+
+<p>Sources: <a href="https://github.com/paritytech/polkavm/blob/910adbda/crates/polkavm-common/src/zygote.rs#L87-L120">crates/polkavm-common/src/zygote.rs87-120</a> <a href="https://github.com/paritytech/polkavm/blob/910adbda/crates/polkavm/src/sandbox/linux.rs#L913-L921">crates/polkavm/src/sandbox/linux.rs913-921</a></p>
+
+<h3 id="dynamic-paging">Dynamic Paging</h3>
+
+<p>On Linux systems with kernel 6.8 or newer, PolkaVM can use <code class="language-plaintext highlighter-rouge">userfaultfd</code> for dynamic paging. This allows memory to be mapped on-demand when accessed, leading to more efficient memory usage. When a page fault occurs, the host can handle it and potentially map the required memory.</p>
+
+<p><img class="mermaid" src="https://mermaid.ink/svg/eyJjb2RlIjoiJSUtXG5zZXF1ZW5jZURpYWdyYW1cbnBhcnRpY2lwYW50IEEgYXMgR3Vlc3QgQ29kZVxucGFydGljaXBhbnQgQiBhcyBWTSBSdW50aW1lXG5wYXJ0aWNpcGFudCBDIGFzIEhvc3QgUHJvY2Vzc1xucGFydGljaXBhbnQgRCBhcyBMaW51eCBLZXJuZWxcbkEtPj5COiBBY2Nlc3MgdW5tYXBwZWQgbWVtb3J5XG5CLT4-RDogUGFnZSBmYXVsdFxuRC0-PkM6IHVzZXJmYXVsdGZkIG5vdGlmaWNhdGlvblxuQy0-PkI6IEhhbmRsZSBwYWdlIGZhdWx0XG5DLT4-RDogTWFwIG1lbW9yeSBwYWdlXG5ELT4-QjogUmVzdW1lIGV4ZWN1dGlvblxuQi0-PkE6IENvbnRpbnVlIHdpdGggbWVtb3J5IGFjY2Vzc1xuJSUtIiwibWVybWFpZCI6bnVsbH0"></p>
+
+<p>Dynamic paging is particularly useful for efficiently implementing the guest heap, which can grow as needed without pre-allocating large amounts of memory.</p>
+
+<p>Sources: <a href="https://github.com/paritytech/polkavm/blob/910adbda/crates/polkavm/src/sandbox/linux.rs#L98-L149">crates/polkavm/src/sandbox/linux.rs98-149</a> <a href="https://github.com/paritytech/polkavm/blob/910adbda/crates/polkavm/src/sandbox/linux.rs#L594-L610">crates/polkavm/src/sandbox/linux.rs594-610</a></p>
+
+<h3 id="memory-access-control">Memory Access Control</h3>
+
+<p>Memory access control is enforced through multiple mechanisms:</p>
+
+<ol>
+  <li>
+<strong>Memory Mapping</strong>: Memory regions are mapped with specific permissions (read, write, execute).</li>
+  <li>
+<strong>Page Protection</strong>: The <code class="language-plaintext highlighter-rouge">mprotect</code> system call is used to change permissions on memory regions.</li>
+  <li>
+<strong>Signal Handling</strong>: Attempts to access memory with insufficient permissions trigger signals (SIGSEGV, SIGBUS) that are caught and handled.</li>
+  <li>
+<strong>Explicit Permission Checks</strong>: The sandbox API includes methods to check if memory regions are accessible.</li>
+</ol>
+
+<p>When a memory access violation occurs, it’s converted into a clean trap that the host can handle, rather than crashing the entire process.</p>
+
+<p>Sources: <a href="https://github.com/paritytech/polkavm/blob/910adbda/crates/polkavm/src/sandbox/linux.rs#L1066-L1092">crates/polkavm/src/sandbox/linux.rs1066-1092</a> <a href="https://github.com/paritytech/polkavm/blob/910adbda/crates/polkavm/src/sandbox/linux.rs#L2282-L2364">crates/polkavm/src/sandbox/linux.rs2282-2364</a></p>
+
+<h2 id="communication-between-host-and-sandbox">Communication Between Host and Sandbox</h2>
+
+<p>Communication between the host and sandbox processes happens primarily through shared memory, with additional synchronization mechanisms.</p>
+
+<p><img class="mermaid" src="https://mermaid.ink/svg/eyJjb2RlIjoiJSUtXG5mbG93Y2hhcnQgVERcbnN1YmdyYXBoIENvbW11bmljYXRpb24gTWVjaGFuaXNtc1xuQVtTaGFyZWQgTWVtb3J5XVxuQltGdXRleCBTeW5jaHJvbml6YXRpb25dXG5DW1NpZ25hbCBQaXBlXVxuRFtcInVzZXJmYXVsdGZkIChEeW5hbWljIFBhZ2luZylcIl1cbmVuZFxuc3ViZ3JhcGggSG9zdCBQcm9jZXNzXG5FW0VuZ2luZV1cbkZbUmF3SW5zdGFuY2VdXG5HW1wiVm1DdHggKFNoYXJlZCBNZW1vcnkpXCJdXG5lbmRcbnN1YmdyYXBoIFNhbmRib3ggUHJvY2Vzc1xuSFtHdWVzdCBQcm9ncmFtXVxuSVtcIlZtQ3R4IChTaGFyZWQgTWVtb3J5KVwiXVxuSltTaWduYWwgSGFuZGxlcnNdXG5lbmRcbiUlLVxuRS0tPnxVc2VyZmF1bHRGRHxIXG5FLS0-RlxuRi0tPkdcbkc8LS0-fFNoYXJlZE1lbW9yeXxJXG5JPC0tPnxGdXRleHxHXG5HPC0tPklcbkUtLT58U2lnbmFsUGlwZXxKXG5JLS0-SFxuSC0tPkpcbkotLT5JXG4lJS0iLCJtZXJtYWlkIjpudWxsfQ"></p>
+
+<p>The <code class="language-plaintext highlighter-rouge">VmCtx</code> structure is mapped into shared memory accessible by both the host and sandbox processes. It contains:</p>
+
+<ol>
+  <li>
+<strong>Registers</strong>: The state of the virtual machine’s registers</li>
+  <li>
+<strong>Gas Counter</strong>: For metering resource usage</li>
+  <li>
+<strong>Program Counters</strong>: Tracking execution position</li>
+  <li>
+<strong>Futex</strong>: For synchronization between host and sandbox</li>
+  <li>
+<strong>Heap Information</strong>: Managing the heap state</li>
+  <li>
+<strong>Message Buffer</strong>: For error reporting</li>
+</ol>
+
+<p>The host and sandbox use futex operations to synchronize state transitions, such as when the sandbox is idle, executing, or has encountered an interrupt.</p>
+
+<p>Sources: <a href="https://github.com/paritytech/polkavm/blob/910adbda/crates/polkavm-common/src/zygote.rs#L139-L408">crates/polkavm-common/src/zygote.rs139-408</a> <a href="https://github.com/paritytech/polkavm/blob/910adbda/crates/polkavm/src/sandbox/linux.rs#L1063-L1061">crates/polkavm/src/sandbox/linux.rs1063-1061</a></p>
+
+<h2 id="sandbox-lifecycle-management">Sandbox Lifecycle Management</h2>
+
+<p>Sandbox instances in PolkaVM are managed efficiently to minimize the overhead of creating new sandboxes.</p>
+
+<h3 id="worker-cache">Worker Cache</h3>
+
+<p>The <code class="language-plaintext highlighter-rouge">WorkerCache</code> component allows for efficient reuse of sandbox instances. Instead of destroying a sandbox after use, it can be returned to a pool for later reuse. This significantly reduces the overhead of creating new sandboxes, especially on Linux where fork operations and security setup are expensive.</p>
+
+<p>The worker cache maintains a pool of idle sandbox instances up to a configurable limit. When a new sandbox is needed, an idle one can be reused from the pool if available.</p>
+
+<p>Sources: <a href="https://github.com/paritytech/polkavm/blob/910adbda/crates/polkavm/src/sandbox.rs#L321-L424">crates/polkavm/src/sandbox.rs321-424</a> <a href="https://github.com/paritytech/polkavm/blob/910adbda/crates/polkavm/src/sandbox/linux.rs#L4124-L4187">crates/polkavm/src/sandbox/linux.rs4124-4187</a></p>
+
+<h2 id="error-handling-and-traps">Error Handling and Traps</h2>
+
+<p>PolkaVM handles errors and exceptions that occur during sandbox execution through a trap mechanism.</p>
+
+<h3 id="interrupt-kinds">Interrupt Kinds</h3>
+
+<p>When a sandbox’s execution is interrupted, the reason is represented by an <code class="language-plaintext highlighter-rouge">InterruptKind</code> enum:</p>
+
+<ol>
+  <li>
+<strong>Finished</strong>: The program has completed execution normally</li>
+  <li>
+<strong>Trap</strong>: A trap (e.g., division by zero) has occurred</li>
+  <li>
+<strong>Ecalli</strong>: A host call has been requested</li>
+  <li>
+<strong>NotEnoughGas</strong>: The gas limit has been exceeded</li>
+  <li>
+<strong>Segfault</strong>: A memory access violation has occurred</li>
+</ol>
+
+<h3 id="signal-handling">Signal Handling</h3>
+
+<p>On Linux, signals like SIGSEGV (segmentation fault), SIGBUS (bus error), and SIGILL (illegal instruction) are caught by a signal handler. The handler analyzes the signal, captures the program state, and communicates the issue back to the host through the shared <code class="language-plaintext highlighter-rouge">VmCtx</code>.</p>
+
+<p>For example, when a page fault occurs due to accessing unmapped memory, the signal handler captures the fault address and notifies the host, which can then handle it appropriately (e.g., by mapping the required memory if it’s part of the heap).</p>
+
+<p>Sources: <a href="https://github.com/paritytech/polkavm/blob/910adbda/crates/polkavm/src/sandbox/linux.rs#L293-L421">crates/polkavm/src/sandbox/linux.rs293-421</a> <a href="https://github.com/paritytech/polkavm/blob/910adbda/crates/polkavm-zygote/src/main.rs#L293-L408">crates/polkavm-zygote/src/main.rs293-408</a></p>
+
+<h2 id="generic-sandbox-implementation">Generic Sandbox Implementation</h2>
+
+<p>In addition to the Linux-specific sandbox, PolkaVM provides a generic sandbox implementation that works on other platforms. This implementation uses more portable mechanisms but may offer fewer isolation guarantees.</p>
+
+<p>The generic sandbox uses:</p>
+
+<ol>
+  <li>Signal handlers for catching traps and memory violations</li>
+  <li>Memory mapping with protection for isolation</li>
+  <li>Position-independent execution with controlled entry and exit points</li>
+</ol>
+
+<p>While the generic sandbox doesn’t provide process-level isolation, it still ensures that guest programs can’t access unauthorized memory or execute unauthorized operations.</p>
+
+<p>Sources: <a href="https://github.com/paritytech/polkavm/blob/910adbda/crates/polkavm/src/sandbox/generic.rs#L92-L139">crates/polkavm/src/sandbox/generic.rs92-139</a> <a href="https://github.com/paritytech/polkavm/blob/910adbda/crates/polkavm/src/sandbox/generic.rs#L292-L362">crates/polkavm/src/sandbox/generic.rs292-362</a></p>
+
+<h2 id="security-considerations">Security Considerations</h2>
+
+<p>When using PolkaVM’s sandboxing capabilities, consider the following:</p>
+
+<ol>
+  <li>
+<strong>Isolation Strength</strong>: The Linux sandbox provides stronger isolation guarantees than the generic sandbox.</li>
+  <li>
+<strong>Kernel Requirements</strong>: For full functionality on Linux, a kernel version 6.8 or newer is recommended for dynamic paging support.</li>
+  <li>
+<strong>Resource Limits</strong>: Configure appropriate gas limits to prevent infinite loops or excessive resource consumption.</li>
+  <li>
+<strong>Host Function Exposure</strong>: Be cautious about which host functions you expose to guest programs, as they represent entry points back into the host environment.</li>
+</ol>
+
+<p>The sandboxing system is designed with security as a primary goal, but no sandboxing solution can provide absolute guarantees. Use defense in depth and carefully consider what capabilities you expose to guest programs.</p>
+
+<p>Sources: <a href="https://github.com/paritytech/polkavm/blob/910adbda/crates/polkavm/src/sandbox/linux.rs#L98-L149">crates/polkavm/src/sandbox/linux.rs98-149</a> <a href="https://github.com/paritytech/polkavm/blob/910adbda/crates/polkavm/src/sandbox.rs#L427-L428">crates/polkavm/src/sandbox.rs427-428</a></p>
+
+<h2 id="summary">Summary</h2>
+
+<p>PolkaVM’s sandboxing system provides strong isolation for executing untrusted code. The Linux sandbox implementation offers robust process-level isolation using advanced kernel features, while the generic sandbox provides a more portable option with memory-level isolation.</p>
+
+<p>The system is designed to be efficient, with features like worker caching to minimize overhead, and secure, with multiple layers of protection to prevent unauthorized access and resource abuse.</p>
+
+<p>For developers integrating PolkaVM, understanding the sandboxing mechanisms is crucial for building secure applications that can safely execute untrusted code.</p>
+
+
+    </div>
+
+</article>
+<div class="post-nav">
+<a class="previous" href="/technics/2025/05/24/Inside-PolkaVM-Unveiling-the-Core-VM-Engine.html" title="Inside PolkaVM - Unveiling the Core VM Engine">Inside PolkaVM - Unveiling the Core...</a><a class="next" href="/technics/2025/05/24/Unlock-Untrusted-Code.html" title="Unlock Untrusted Code - PolkaVM's Architecture Deep Dive">Unlock Untrusted Code - PolkaVM's Architecture...</a>
+</div>
+<div class="post-related">
+      <div>Related Articles</div>
+      <ul>
+        <li><a class="post-link" href="/technics/2025/05/24/Inside-PolkaVM-Unveiling-the-Core-VM-Engine.html" title="Unlock Untrusted Code - PolkaVM's Architecture Deep Dive">Inside PolkaVM - Unveiling the Core VM Engine</a></li>
+<li><a class="post-link" href="/technics/2025/05/24/Unlock-Untrusted-Code.html" title="Unlock Untrusted Code - PolkaVM's Architecture Deep Dive">Unlock Untrusted Code - PolkaVM's Architecture Deep Dive</a></li>
+<li><a class="post-link" href="/technics/2025/05/26/PolkaVM-DOOM-Analysis.html" title="Unlock Untrusted Code - PolkaVM's Architecture Deep Dive">Level Up Your Understanding of PolkaVM:The DOOM Edition ⬆️</a></li>
+<li><a class="post-link" href="/technics/2025/05/26/Guest-Programs.html" title="Unlock Untrusted Code - PolkaVM's Architecture Deep Dive">Beyond WASM:The Future is RISC-V with PolkaVM Guest Programs ✨</a></li>
+</ul>
+    </div>
+<div class="post-comments"></div></section>
+</div>
+
+
+  </section>
+  <section class="sidebar" style="margin-left: 15px;">
+    <!-- Get sidebar items --><style type="text/css" media="screen">
+.post-menu ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+</style>
+
+<div class="post-menu">
+  <div class="post-menu-title">TOC</div>
+  <div class="post-menu-content"></div>
+</div>
+
+<script>
+  function generateContent() {
+    var menu = document.querySelector(".post-menu");
+    var menuContent =  menu.querySelector(".post-menu-content");
+    var headings = document.querySelector(".post-content").querySelectorAll("h2, h3, h4, h5, h6");
+
+    // Hide menu when no headings
+    if (headings.length === 0) {
+      return menu.style.display = "none";
+    }
+
+    // Generate post menu
+    var menuHTML = '';
+    for (var i = 0; i < headings.length; i++) {
+      var h = headings[i];
+      menuHTML += (
+        '<li class="h-' + h.tagName.toLowerCase() + '">'
+        + '<a href="#h-' + h.getAttribute('id') + '">' + h.textContent + '</a></li>');
+    }
+
+    menuContent.innerHTML = '<ul>' + menuHTML + '</ul>';
+
+    // The header element
+    var header = document.querySelector('header.site-header');
+
+    function doMenuCollapse(index, over_items) {
+      var items = menuContent.firstChild.children;
+
+      if (over_items == undefined) {
+        over_items = 20;
+      }
+
+      if (items.length < over_items) {
+        return;
+      }
+
+      var activeItem = items[index];
+      var beginItem = activeItem
+      var endItem = activeItem
+      var beginIndex = index;
+      var endIndex = index + 1;
+      while (beginIndex >= 0
+        && !items[beginIndex].classList.contains('h-h2')) {
+        beginIndex -= 1;
+      }
+      while (endIndex < items.length
+        && !items[endIndex].classList.contains('h-h2')) {
+        endIndex += 1;
+      }
+      for (var i = 0; i < beginIndex; i++) {
+        item = items[i]
+        if (!item.classList.contains('h-h2')) {
+          item.style.display = 'none';
+        }
+      }
+      for (var i = beginIndex + 1; i < endIndex; i++) {
+        item = items[i]
+        // if (!item.classList.contains('h-h2')) {
+          item.style.display = '';
+        // }
+      }
+      for (var i = endIndex; i < items.length; i++) {
+        item = items[i]
+        if (!item.classList.contains('h-h2')) {
+          item.style.display = 'none';
+        }
+      }
+    }
+
+    // Init menu collapsed
+    doMenuCollapse(-1);
+
+    // Active the menu item
+    window.addEventListener('scroll', function (event) {
+      var lastActive = menuContent.querySelector('.active');
+      var changed = true;
+      var activeIndex = -1;
+      for (var i = headings.length - 1; i >= 0; i--) {
+        var h = headings[i];
+        var headingRect = h.getBoundingClientRect();
+        var headerRect = header.getBoundingClientRect();
+        var headerTop = Math.floor(headerRect.top);
+        var headerHeight = Math.floor(headerRect.height);
+        var headerHeight = headerTop + headerHeight + 20;
+        if (headingRect.top <= headerHeight) {
+          var id = 'h-' + h.getAttribute('id');
+          var a = menuContent.querySelector('a[href="#' + id  + '"]');
+          var curActive = a.parentNode;
+          if (curActive) {
+            curActive.classList.add('active');
+            activeIndex = i;
+          }
+          if (lastActive == curActive) {
+            changed = false;
+          }
+          break;
+        }
+      }
+      if (changed) {
+        if (lastActive) {
+          lastActive.classList.remove('active');
+        }
+        doMenuCollapse(activeIndex);
+      }
+      event.preventDefault();
+    });
+  }
+  generateContent();
+</script>
+</section>
+</div>
+
+      </div>
+    </main><footer class="site-footer h-card">
+  <data class="u-url" href="/"></data>
+
+  <div class="wrapper">
+    <div class="site-footer-inner">
+<div>IURDao 2017-2025 Joe</div>
+      <div class="footer-col rss-subscribe">Subscribe <a href="/feed.xml">via RSS</a>
+</div>
+    </div>
+  </div>
+</footer>
+
+</body>
+</html>
